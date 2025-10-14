@@ -5,7 +5,7 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/firebase";
 import { Loading } from "@/components/loading";
 
@@ -17,6 +17,12 @@ export default function DashboardLayout({
   const auth = useAuth();
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // This effect runs only on the client, after the component has mounted.
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // If auth state is not loading and there's no user,
@@ -27,11 +33,10 @@ export default function DashboardLayout({
     }
   }, [loading, user, router]);
 
-  // While the authentication state is loading, display the loading component.
-  // Also, if there's no user object yet (even if loading is false),
-  // it might be a brief moment before the redirect kicks in.
-  // Showing the loader prevents a flash of unstyled/broken content and hydration errors.
-  if (loading || !user) {
+  // While the authentication state is loading, or before the client has mounted,
+  // display the loading component. This prevents hydration errors by ensuring
+  // server and initial client renders are identical.
+  if (loading || !user || !isClient) {
     return <Loading />;
   }
 
