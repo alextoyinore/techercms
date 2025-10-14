@@ -1,16 +1,19 @@
-import { Sidebar, SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+'use client';
+
+import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 import {
-  Auth,
   useAuthState,
   User,
 } from 'react-firebase-hooks/auth';
 import {getFirebaseAuth, getFirebaseApp} from '@/firebase';
 import {useAuth as useNextAuth} from '../auth-provider';
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function getAvatar(user: User) {
   if (user.photoURL) {
@@ -26,13 +29,23 @@ export default function DashboardLayout({
 }) {
   getFirebaseApp();
   const [user, loading, error] = useAuthState(getFirebaseAuth());
-  const {tokens} = useNextAuth();
-  if (loading) {
+  const {initialTokens} = useNextAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If the user is not loading and there are no tokens, redirect to login
+    if (!loading && !initialTokens) {
+      router.push('/');
+    }
+  }, [loading, initialTokens, router]);
+
+  if (loading || !user) {
     return <div>Loading...</div>;
   }
   if (error) {
     return <div>Error: {error.message}</div>;
   }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
