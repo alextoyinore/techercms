@@ -53,12 +53,12 @@ export function DashboardNav() {
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                className="w-full"
+                                className="w-full justify-start group-data-[state=collapsed]:justify-center"
                                 tooltip={item.label}
                             >
                                 <Link href={item.href}>
                                     <item.icon className="h-5 w-5" />
-                                    <span>{item.label}</span>
+                                    <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

@@ -21,8 +21,9 @@ function getAvatar(user: FirebaseUser) {
   if (user.photoURL) {
     return user.photoURL;
   }
-  return 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
+  return undefined; // Return undefined if no photoURL
 }
+
 function getName(user: FirebaseUser) {
   if (user.displayName) {
     return user.displayName;
@@ -35,6 +36,16 @@ function getEmail(user: FirebaseUser) {
     return user.email;
   }
   return '';
+}
+
+function getInitial(user: FirebaseUser) {
+    if (user.displayName) {
+        return user.displayName.charAt(0).toUpperCase();
+    }
+    if (user.email) {
+        return user.email.charAt(0).toUpperCase();
+    }
+    return "U";
 }
 
 export function UserNav({user}: {user: FirebaseUser | null}) {
@@ -57,13 +68,13 @@ export function UserNav({user}: {user: FirebaseUser | null}) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-10 w-full justify-start gap-2 px-2"
+          className="relative h-10 w-full justify-start gap-2 px-2 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage src={getAvatar(user)} alt="@user" />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarFallback>{getInitial(user)}</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col items-start_ text-left">
+          <div className="flex flex-col items-start_ text-left group-data-[state=collapsed]:hidden">
             <p className="text-sm font-medium leading-none">{getName(user)}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {getEmail(user)}
