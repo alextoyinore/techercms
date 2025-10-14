@@ -18,7 +18,10 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
+    SidebarTrigger,
 } from "@/components/ui/sidebar";
+import type { User } from "firebase/auth";
+import { UserNav } from "./user-nav";
 
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -31,18 +34,23 @@ const navItems = [
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-export function DashboardNav() {
+export function DashboardNav({ user }: { user: User | null }) {
     const pathname = usePathname();
 
     return (
         <div className="flex flex-col h-full">
-            <div className="p-2 md:px-4 md:py-6">
+            <div className="p-2 md:px-4 md:py-6 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2 group-data-[state=collapsed]:justify-center">
                     <Gem className="w-6 h-6 text-primary" />
                     <span className="text-lg font-headline font-bold text-sidebar-foreground group-data-[state=collapsed]:hidden">
                         Techer CMS
                     </span>
                 </Link>
+                {/* Mobile-only header elements */}
+                <div className="lg:hidden flex items-center gap-2">
+                    <UserNav user={user} />
+                    <SidebarTrigger />
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">

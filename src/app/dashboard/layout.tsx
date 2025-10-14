@@ -1,6 +1,6 @@
 'use client';
 
-import { Sidebar, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -50,18 +50,14 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
         <Sidebar collapsible="icon" className="flex flex-col border-r">
-          <DashboardNav />
+          <DashboardNav user={user} />
           <div className="mt-auto p-4 hidden lg:block">
             <UserNav user={user} />
           </div>
         </Sidebar>
         <div className="flex flex-col flex-1">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
-            <div className="flex-1" />
-            <div className="lg:hidden">
-              <UserNav user={user} />
-            </div>
-            <SidebarTrigger className="lg:hidden" />
+          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6 lg:hidden">
+            {/* Header content for mobile is now handled within DashboardNav */}
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
