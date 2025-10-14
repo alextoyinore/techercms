@@ -51,17 +51,17 @@ export default function DashboardLayout({
       <div className="min-h-screen w-full bg-background text-foreground flex">
         <Sidebar collapsible="icon" className="flex flex-col border-r">
           <DashboardNav />
-          <div className="mt-auto p-4">
+          <div className="mt-auto p-4 hidden lg:block">
             <UserNav user={user} />
           </div>
         </Sidebar>
         <div className="flex flex-col flex-1">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
             <SidebarTrigger className="lg:hidden" />
-            <div className="flex-1">
-              {/* This div will grow to fill the space */}
+            <div className="flex-1" />
+            <div className="lg:hidden">
+              <UserNav user={user} />
             </div>
-            {/* Any other header content can be added here, aligned to the right */}
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
