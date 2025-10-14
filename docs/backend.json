@@ -72,6 +72,14 @@
           "type": "string",
           "description": "The main body content of the post."
         },
+        "excerpt": {
+          "type": "string",
+          "description": "A short summary of the post."
+        },
+        "featuredImageUrl": {
+          "type": "string",
+          "description": "The URL for the post's main image."
+        },
         "status": {
           "type": "string",
           "description": "The publication status of the post.",

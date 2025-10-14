@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -8,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, PlusCircle, Loader2, X } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, X, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useMemoFirebase } from '@/firebase';
@@ -22,6 +22,7 @@ import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
+import { Textarea } from '@/components/ui/textarea';
 
 type Category = {
   id: string;
@@ -37,6 +38,8 @@ export default function NewPostPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [excerpt, setExcerpt] = useState('');
+  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
@@ -91,11 +94,13 @@ export default function NewPostPage() {
     const newPost = {
         title,
         content,
+        excerpt,
+        featuredImageUrl,
         slug,
         status,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
-        tagIds: tags, // In a real app, you might want to store tag IDs instead of names
+        tagIds: tags, 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -118,7 +123,6 @@ export default function NewPostPage() {
     }
   };
 
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="New Post" description="Create a new masterpiece.">
@@ -132,7 +136,7 @@ export default function NewPostPage() {
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-          <Card className="w-full">
+          <Card>
             <CardHeader>
               <CardTitle className="font-headline">Post Details</CardTitle>
             </CardHeader>
@@ -160,6 +164,40 @@ export default function NewPostPage() {
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
+          <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Excerpt</CardTitle>
+                <CardDescription>A short summary of the post.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Textarea 
+                    id="excerpt"
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                    placeholder="Write a brief excerpt..."
+                    disabled={isSubmitting}
+                />
+            </CardContent>
+          </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Featured Image</CardTitle>
+                    <CardDescription>Set a main image for this post.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                    <Input 
+                        id="featured-image"
+                        placeholder="https://example.com/image.jpg"
+                        value={featuredImageUrl}
+                        onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                        disabled={isSubmitting}
+                    />
+                    <Button variant="outline" disabled={isSubmitting}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload
+                    </Button>
+                </CardContent>
+            </Card>
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Categories</CardTitle>
