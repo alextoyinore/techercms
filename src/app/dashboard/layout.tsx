@@ -10,6 +10,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/firebase";
+import { Loading } from "@/components/loading";
 
 export default function DashboardLayout({
   children,
@@ -29,7 +30,7 @@ export default function DashboardLayout({
   }, [loading, user, router]);
 
   if (loading || !user) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
   if (error) {
     return <div>Error: {error.message}</div>;

@@ -22,6 +22,7 @@ import { Eye, EyeOff, Gem } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loading } from '@/components/loading';
 
 const provider = new GoogleAuthProvider();
 
@@ -111,7 +112,7 @@ export function AuthForm() {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   if (loading || user) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
