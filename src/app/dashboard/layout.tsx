@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 import {
   Auth,
-  useAuth as useFirebaseAuth,
+  useAuthState,
   User,
 } from 'react-firebase-hooks/auth';
-import {getFirebaseAuth, getFirebaseApp} from '@/firebase/firebase';
+import {getFirebaseAuth, getFirebaseApp} from '@/firebase';
 import {useAuth as useNextAuth} from '../auth-provider';
 
 function getAvatar(user: User) {
@@ -25,7 +25,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   getFirebaseApp();
-  const [user, loading, error] = useFirebaseAuth(getFirebaseAuth());
+  const [user, loading, error] = useAuthState(getFirebaseAuth());
   const {tokens} = useNextAuth();
   if (loading) {
     return <div>Loading...</div>;

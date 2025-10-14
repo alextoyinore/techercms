@@ -5,7 +5,7 @@ import {
   GoogleAuthProvider,
   User,
 } from 'firebase/auth';
-import {useAuth} from 'react-firebase-hooks/auth';
+import {useAuthState} from 'react-firebase-hooks/auth';
 import {useRouter} from 'next/navigation';
 import {useCallback} from 'react';
 import {Button} from '@/components/ui/button';
@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {Gem} from 'lucide-react';
-import {getFirebaseAuth} from '@/firebase/firebase';
+import {getFirebaseAuth} from '@/firebase';
 import {sessionLogin} from './actions';
 
 const provider = new GoogleAuthProvider();
@@ -28,7 +28,7 @@ function GoogleSignInButton({
   onUser: (user: User | null) => void;
 }) {
   const handleSignIn = async () => {
-    const auth = getAuth();
+    const auth = getFirebaseAuth();
     try {
       const result = await signInWithPopup(auth, provider);
       onUser(result.user);
@@ -46,7 +46,7 @@ function GoogleSignInButton({
 
 export function AuthForm() {
   const router = useRouter();
-  const [user, loading, error] = useAuth(getFirebaseAuth());
+  const [user, loading, error] = useAuthState(getFirebaseAuth());
   const onUser = useCallback(
     async (user: User | null) => {
       if (user) {
