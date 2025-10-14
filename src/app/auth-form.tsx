@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {Gem} from 'lucide-react';
+import {Eye, EyeOff, Gem} from 'lucide-react';
 import {useAuth} from '@/firebase';
 import {sessionLogin} from './actions';
 import {Input} from '@/components/ui/input';
@@ -57,6 +57,7 @@ export function AuthForm() {
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onUser = useCallback(
     async (user: User | null) => {
@@ -97,6 +98,8 @@ export function AuthForm() {
     }
   };
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   if (loading || user) {
     return <div>Loading...</div>;
   }
@@ -129,15 +132,26 @@ export function AuthForm() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute bottom-0 right-0 h-10 w-10 flex items-center justify-center text-muted-foreground"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                <span className="sr-only">
+                  {showPassword ? 'Hide password' : 'Show password'}
+                </span>
+              </button>
             </div>
             {authError && <p className="text-sm text-destructive">{authError}</p>}
             {error && <p className="text-sm text-destructive">{error.message}</p>}
