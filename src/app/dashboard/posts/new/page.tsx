@@ -181,7 +181,7 @@ export default function NewPostPage() {
             <CardHeader>
               <CardTitle className="font-headline">Categories</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-2">
+            <CardContent className="flex flex-row flex-wrap gap-x-4 gap-y-2">
               {isLoadingCategories && <p>Loading categories...</p>}
               {categories?.map((category) => (
                 <div key={category.id} className="flex items-center space-x-2">
