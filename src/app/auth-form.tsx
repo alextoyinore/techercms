@@ -129,7 +129,7 @@ export function AuthForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="mx-auto w-full max-w-xs">
+      <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="text-center p-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Gem className="h-8 w-8 text-primary" />
