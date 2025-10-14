@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -49,15 +50,16 @@ export function DashboardNav() {
                 <SidebarMenu className="px-4">
                     {navItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
-                            <Link href={item.href} legacyBehavior passHref>
-                                <SidebarMenuButton
-                                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                    className="w-full"
-                                >
+                            <SidebarMenuButton
+                                asChild
+                                isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                                className="w-full"
+                            >
+                                <Link href={item.href}>
                                     <item.icon className="h-5 w-5" />
                                     <span>{item.label}</span>
-                                </SidebarMenuButton>
-                            </Link>
+                                </Link>
+                            </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
                 </SidebarMenu>
