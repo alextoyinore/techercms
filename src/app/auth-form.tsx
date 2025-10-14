@@ -23,6 +23,7 @@ import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loading } from '@/components/loading';
+import { Separator } from '@/components/ui/separator';
 
 const provider = new GoogleAuthProvider();
 
@@ -147,7 +148,8 @@ export function AuthForm() {
             Enter your credentials to {isRegister ? 'join' : 'access your account'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <Separator />
+        <CardContent className="pt-6">
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
