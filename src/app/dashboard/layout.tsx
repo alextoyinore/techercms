@@ -4,19 +4,42 @@ import { UserNav } from "@/components/user-nav";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
+import {
+  Auth,
+  useAuth as useFirebaseAuth,
+  User,
+} from 'react-firebase-hooks/auth';
+import {getFirebaseAuth, getFirebaseApp} from '@/firebase/firebase';
+import {useAuth as useNextAuth} from '../auth-provider';
+
+function getAvatar(user: User) {
+  if (user.photoURL) {
+    return user.photoURL;
+  }
+  return 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
+}
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  getFirebaseApp();
+  const [user, loading, error] = useFirebaseAuth(getFirebaseAuth());
+  const {tokens} = useNextAuth();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
         <Sidebar className="hidden lg:flex lg:flex-col lg:border-r">
           <DashboardNav />
           <div className="mt-auto p-4">
-            <UserNav />
+            <UserNav user={user} />
           </div>
         </Sidebar>
         <div className="flex flex-col flex-1">
@@ -32,7 +55,7 @@ export default function DashboardLayout({
                 <div className="flex flex-col h-full">
                   <DashboardNav />
                   <div className="mt-auto p-4">
-                    <UserNav />
+                    <UserNav user={user} />
                   </div>
                 </div>
               </SheetContent>
