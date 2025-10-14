@@ -1,11 +1,8 @@
 'use client';
 
-import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
+import { Sidebar, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -47,7 +44,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
-        <Sidebar collapsible="icon" className="hidden lg:flex lg:flex-col lg:border-r">
+        <Sidebar collapsible="icon" className="flex flex-col border-r">
           <DashboardNav />
           <div className="mt-auto p-4">
             <UserNav user={user} />
@@ -55,23 +52,7 @@ export default function DashboardLayout({
         </Sidebar>
         <div className="flex flex-col flex-1">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button size="icon" variant="outline" className="lg:hidden">
-                  <PanelLeft className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="lg:hidden p-0 max-w-xs">
-                 <SheetTitle className="sr-only">Menu</SheetTitle>
-                <div className="flex flex-col h-full">
-                  <DashboardNav />
-                  <div className="mt-auto p-4">
-                    <UserNav user={user} />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <SidebarTrigger className="lg:hidden" />
             <div className="flex-1">
               {/* Header content can go here if needed */}
             </div>
