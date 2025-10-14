@@ -8,6 +8,9 @@ import Table from '@tiptap/extension-table';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import TableRow from '@tiptap/extension-table-row';
+import Link from '@tiptap/extension-link';
+import TextStyle from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import {
   Bold,
   Italic,
@@ -36,7 +39,8 @@ import {
   Split,
   FlipHorizontal,
   FlipVertical,
-  RectangleHorizontal
+  RectangleHorizontal,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
@@ -75,6 +79,11 @@ const RichTextEditor = ({
       TableRow,
       TableHeader,
       TableCell,
+      TextStyle,
+      Color,
+      Link.configure({
+        openOnClick: false,
+      }),
     ],
     content: content,
     editorProps: {
@@ -95,6 +104,23 @@ const RichTextEditor = ({
     if (url && editor) {
       editor.chain().focus().setImage({ src: url }).run();
     }
+  }, [editor]);
+
+  const setLink = useCallback(() => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL', previousUrl);
+
+    if (url === null) {
+      return;
+    }
+
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
   if (!editor) {
@@ -167,6 +193,13 @@ const RichTextEditor = ({
         >
           <Strikethrough className="h-4 w-4" />
         </Toggle>
+        <input
+            type="color"
+            className='w-6 h-6 p-0 bg-transparent border-none'
+            onInput={(event: React.ChangeEvent<HTMLInputElement>) => editor.chain().focus().setColor(event.target.value).run()}
+            value={editor.getAttributes('textStyle').color}
+            disabled={disabled}
+        />
         <Separator orientation="vertical" className="h-6" />
         <Toggle
           size="sm"
@@ -237,6 +270,14 @@ const RichTextEditor = ({
           <Minus className="h-4 w-4" />
         </Toggle>
         <Separator orientation="vertical" className="h-6" />
+        <Toggle
+            size="sm"
+            onPressedChange={setLink}
+            pressed={editor.isActive('link')}
+            disabled={disabled}
+        >
+            <LinkIcon className="h-4 w-4" />
+        </Toggle>
         <Toggle
           size="sm"
           onPressedChange={addImage}
