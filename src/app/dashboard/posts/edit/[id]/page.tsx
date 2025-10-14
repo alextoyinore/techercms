@@ -267,7 +267,7 @@ export default function EditPostPage() {
           </Card>
         </div>
 
-        <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
+        <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-20">
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Publish</CardTitle>
