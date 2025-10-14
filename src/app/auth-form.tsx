@@ -39,7 +39,7 @@ async function setSession(idToken: string) {
   return response.ok;
 }
 
-function GoogleSignInButton({ onAuthStart, onAuthEnd }: { onAuthStart: () => void; onAuthEnd: () => void; }) {
+function GoogleSignInButton() {
   const auth = useAuth();
   const router = useRouter();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -47,7 +47,6 @@ function GoogleSignInButton({ onAuthStart, onAuthEnd }: { onAuthStart: () => voi
   const handleSignIn = async () => {
     if (!auth) return;
     setIsSigningIn(true);
-    onAuthStart();
     try {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
@@ -59,7 +58,6 @@ function GoogleSignInButton({ onAuthStart, onAuthEnd }: { onAuthStart: () => voi
       console.error(error);
     } finally {
       setIsSigningIn(false);
-      onAuthEnd();
     }
   };
   return (
@@ -87,10 +85,6 @@ export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const onUserAuthenticated = useCallback(() => {
-    router.push('/dashboard');
-  }, [router]);
-
   useEffect(() => {
     if (user) {
       router.push('/dashboard');
@@ -111,7 +105,7 @@ export function AuthForm() {
       const idToken = await userCredential.user.getIdToken();
       const success = await setSession(idToken);
       if (success) {
-        onUserAuthenticated();
+        router.push('/dashboard');
       } else {
         setAuthError('Failed to create session. Please try again.');
       }
@@ -203,10 +197,7 @@ export function AuthForm() {
                 </span>
               </div>
             </div>
-            <GoogleSignInButton
-              onAuthStart={() => setIsAuthenticating(true)}
-              onAuthEnd={() => setIsAuthenticating(false)}
-            />
+            <GoogleSignInButton />
           </div>
         </CardContent>
         <CardFooter className="justify-center p-4">
