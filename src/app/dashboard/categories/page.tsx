@@ -1,8 +1,10 @@
+'use client';
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -17,18 +19,72 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
-import { PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
+import { collection, DocumentData } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
-const mockCategories = [
-  { id: "1", name: "Web Dev", slug: "web-dev", count: 15 },
-  { id: "2", name: "Tutorial", slug: "tutorial", count: 8 },
-  { id: "3", name: "AI", slug: "ai", count: 5 },
-  { id: "4", name: "Tech", slug: "tech", count: 12 },
-  { id: "5", name: "Design", slug: "design", count: 20 },
-  { id: "6", name: "UX", slug: "ux", count: 7 },
-];
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 export default function CategoriesPage() {
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const categoriesCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'categories');
+  }, [firestore]);
+
+  const { data: categories, isLoading } = useCollection<Category>(categoriesCollection);
+
+  const handleAddCategory = async () => {
+    if (!name || !slug) {
+      toast({
+        variant: "destructive",
+        title: "Missing Fields",
+        description: "Please fill out both Name and Slug.",
+      });
+      return;
+    }
+
+    if (!firestore) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Firestore is not available.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await addDocumentNonBlocking(collection(firestore, "categories"), { name, slug });
+      toast({
+        title: "Category Added",
+        description: `"${name}" has been successfully added.`,
+      });
+      setName("");
+      setSlug("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "Could not add the category.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -44,15 +100,27 @@ export default function CategoriesPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Slug</TableHead>
-                    <TableHead>Post Count</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockCategories.map((category) => (
+                  {isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center">
+                        Loading categories...
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isLoading && categories?.length === 0 && (
+                     <TableRow>
+                        <TableCell colSpan={2} className="text-center">
+                            No categories found. Add one to get started.
+                        </TableCell>
+                     </TableRow>
+                  )}
+                  {categories?.map((category) => (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell>{category.slug}</TableCell>
-                      <TableCell>{category.count}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -68,17 +136,38 @@ export default function CategoriesPage() {
             <CardContent className="p-4 grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Category Name" />
+                <Input 
+                  id="name" 
+                  placeholder="Category Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isSubmitting}
+                />
                 <p className="text-sm text-muted-foreground">The name is how it appears on your site.</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" placeholder="category-slug" />
+                <Input 
+                  id="slug" 
+                  placeholder="category-slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  disabled={isSubmitting}
+                />
                  <p className="text-sm text-muted-foreground">The “slug” is the URL-friendly version of the name.</p>
               </div>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Category
+              <Button onClick={handleAddCategory} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Category
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
