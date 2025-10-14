@@ -1,11 +1,11 @@
+'use client';
+
 import Link from "next/link";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -24,17 +24,61 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
-  } from "@/components/ui/dropdown-menu"
+  } from "@/components/ui/dropdown-menu";
+import { collection, doc, Timestamp } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns';
 
-const mockPosts = [
-  { id: '1', title: "The Ultimate Guide to Next.js 14", status: "Published", author: "Jane Doe", categories: ["Web Dev", "Tutorial"], date: "2023-10-26" },
-  { id: '2', title: "AI in 2024: Trends to Watch", status: "Draft", author: "John Smith", categories: ["AI", "Tech"], date: "2023-10-25" },
-  { id: '3', title: "A Deep Dive into Server Components", status: "Published", author: "Jane Doe", categories: ["Web Dev"], date: "2023-10-24" },
-  { id: '4', title: "Designing for Accessibility", status: "Review", author: "Emily White", categories: ["Design", "UX"], date: "2023-10-23" },
-  { id: '5', title: "Getting Started with Tailwind CSS", status: "Published", author: "Michael Brown", categories: ["CSS", "Tutorial"], date: "2023-10-22" },
-];
+type Post = {
+    id: string;
+    title: string;
+    status: 'draft' | 'published' | 'archived';
+    authorId: string;
+    categoryIds: string[];
+    createdAt: Timestamp;
+};
 
 export default function PostsPage() {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const postsCollection = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'posts');
+    }, [firestore]);
+
+    const { data: posts, isLoading } = useCollection<Post>(postsCollection);
+    
+    // Sort posts by creation date, newest first
+    const sortedPosts = useMemo(() => {
+      if (!posts) return [];
+      return [...posts].sort((a, b) => {
+        const dateA = a.createdAt?.toDate() ?? new Date(0);
+        const dateB = b.createdAt?.toDate() ?? new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+    }, [posts]);
+
+
+    const handleDelete = (postId: string, postTitle: string) => {
+        if (!firestore) return;
+        try {
+            deleteDocumentNonBlocking(doc(firestore, "posts", postId));
+            toast({
+                title: "Post Deleted",
+                description: `"${postTitle}" has been deleted.`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error Deleting Post",
+                description: error.message || "Could not delete the post.",
+            });
+        }
+    }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Posts" description="Manage and create your blog posts.">
@@ -46,14 +90,12 @@ export default function PostsPage() {
         </Button>
       </PageHeader>
       <Card>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Categories</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -61,20 +103,32 @@ export default function PostsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockPosts.map((post) => (
+              {isLoading && (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                        Loading posts...
+                    </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && sortedPosts.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                        No posts found. Create one to get started.
+                    </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && sortedPosts.map((post) => (
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
-                    <Badge variant={post.status === "Published" ? "default" : "secondary"}>
+                    <Badge variant={post.status === "published" ? "default" : "secondary"}>
                       {post.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{post.author}</TableCell>
-                  <TableCell className="space-x-1">
-                    {post.categories.map(cat => <Badge key={cat} variant="outline">{cat}</Badge>)}
-                  </TableCell>
-                  <TableCell>{post.date}</TableCell>
                   <TableCell>
+                    {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-right">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -84,8 +138,12 @@ export default function PostsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href={`/dashboard/posts/edit/${post.id}`}>Edit</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(post.id, post.title)} className="text-destructive">
+                            Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
