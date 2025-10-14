@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +45,9 @@ export default function NewPostPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categoriesCollection = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -69,6 +72,55 @@ export default function NewPostPage() {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
   
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      toast({
+        variant: "destructive",
+        title: "Cloudinary not configured",
+        description: "Please set up your Cloudinary environment variables.",
+      });
+      return;
+    }
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setFeaturedImageUrl(data.secure_url);
+      toast({
+        title: "Image Uploaded",
+        description: "Your featured image has been successfully uploaded.",
+      });
+
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message || "Could not upload the image.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title) {
         toast({
@@ -137,31 +189,24 @@ export default function NewPostPage() {
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Post Details</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Title</Label>
-                <Input 
-                    id="title" 
-                    placeholder="Your amazing post title" 
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    disabled={isSubmitting}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="content">Content</Label>
-                <RichTextEditor
-                  content={content}
-                  onChange={setContent}
-                  disabled={isSubmitting}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-2">
+            <Label htmlFor="title">Title</Label>
+            <Input 
+                id="title" 
+                placeholder="Your amazing post title" 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isSubmitting}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="content">Content</Label>
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
+              disabled={isSubmitting}
+            />
+          </div>
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
@@ -203,12 +248,32 @@ export default function NewPostPage() {
                             placeholder="https://example.com/image.jpg"
                             value={featuredImageUrl}
                             onChange={(e) => setFeaturedImageUrl(e.target.value)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || isUploading}
                         />
                     </div>
-                    <Button variant="outline" disabled={isSubmitting}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleImageUpload} 
+                      className="hidden" 
+                      accept="image/*"
+                    />
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      disabled={isSubmitting || isUploading}
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload
+                        </>
+                      )}
                     </Button>
                 </CardContent>
             </Card>
@@ -272,10 +337,10 @@ export default function NewPostPage() {
               <CardTitle className="font-headline">Publish</CardTitle>
             </CardHeader>
             <CardContent className="border-t pt-6 flex justify-between gap-2">
-              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting}>
+              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Draft'}
               </Button>
-              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting}>
+              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Publish'}
               </Button>
             </CardContent>
