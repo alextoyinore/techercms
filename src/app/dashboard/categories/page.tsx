@@ -62,10 +62,10 @@ export default function CategoriesPage() {
         </div>
         <div className="md:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Add New Category</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="font-headline text-xl">Add New Category</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4">
+            <CardContent className="p-4 grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
                 <Input id="name" placeholder="Category Name" />

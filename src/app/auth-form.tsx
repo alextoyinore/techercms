@@ -135,9 +135,9 @@ export function AuthForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="mx-auto w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
+      <Card className="mx-auto w-full max-w-xs">
+        <CardHeader className="text-center p-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <Gem className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-headline font-bold">Techer CMS</h1>
           </div>
@@ -146,8 +146,8 @@ export function AuthForm() {
           </CardDescription>
         </CardHeader>
         <Separator />
-        <CardContent className="pt-6">
-          <div className="grid gap-4">
+        <CardContent className="p-4">
+          <div className="grid gap-3">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -213,7 +213,7 @@ export function AuthForm() {
             />
           </div>
         </CardContent>
-        <CardFooter className="justify-center">
+        <CardFooter className="justify-center p-4">
           <Button variant="link" onClick={() => setIsRegister(!isRegister)} disabled={isAuthenticating}>
             {isRegister
               ? 'Already have an account? Sign In'

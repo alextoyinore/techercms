@@ -62,10 +62,10 @@ export default function TagsPage() {
         </div>
         <div className="md:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Add New Tag</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="font-headline text-xl">Add New Tag</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4">
+            <CardContent className="grid gap-4 p-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
                 <Input id="name" placeholder="Tag Name" />
