@@ -32,6 +32,31 @@
         "name",
         "slug"
       ]
+    },
+    "Tag": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Tag",
+      "type": "object",
+      "description": "Represents a tag for organizing content within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Tag entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the tag."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the tag name."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug"
+      ]
     }
   },
   "auth": {
@@ -57,8 +82,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/tags/{tagId}",
+        "definition": {
+          "entityName": "Tag",
+          "schema": {
+            "$ref": "#/backend/entities/Tag"
+          },
+          "description": "Stores tag data. `tagId` is the unique identifier for each tag.",
+          "params": [
+            {
+              "name": "tagId",
+              "description": "The unique identifier of the tag."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure, focusing on path-based ownership for categories. Categories are stored under a top-level `/categories` collection. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all categories are managed centrally (no user-specific categories). Since the category is a global concept for this CMS, this is acceptable. Future evolution might require the categories to be specific to a user, if the user wants to override the name of a category for example.\n\nThe structure supports QAPs because listing categories is straightforward against the `/categories` collection and security rules can be applied at the collection level to restrict creation, modification, or deletion based on user roles (if implemented). Since there are no roles, the app will only allow authenticated users to perform CRUD operations on the `/categories` collection. It also supports the integrity of fields such as `id`, `name`, `slug` and `parentCategoryId`. Note that while `parentCategoryId` can be used to infer some hierarchy, this is not secure to use in the security rules and should be avoided."
+    "reasoning": "The data structure is designed to be simple and secure. Categories and Tags are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all categories and tags are managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
   }
 }
