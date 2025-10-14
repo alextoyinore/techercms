@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Open_Sans, Roboto_Slab } from "next/font/google";
+import { Inter, Lexend } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 
-const openSans = Open_Sans({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-open-sans",
+  variable: "--font-inter",
 });
 
-const robotoSlab = Roboto_Slab({
+const lexend = Lexend({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-roboto-slab",
+  variable: "--font-lexend",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${openSans.variable} ${robotoSlab.variable}`}>
+    <html lang="en" className={`${inter.variable} ${lexend.variable}`}>
       <body className="font-body antialiased">
           <FirebaseClientProvider>
             {children}
