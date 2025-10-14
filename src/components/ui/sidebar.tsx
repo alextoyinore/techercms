@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { PanelLeft, ChevronLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -369,13 +369,24 @@ const SidebarFooter = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { isMobile } = useSidebar();
+  
+  if (isMobile) {
+    return null;
+  }
+  
   return (
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-2 mt-auto border-t border-sidebar-border", className)}
       {...props}
-    />
+    >
+        <SidebarTrigger className="w-full justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground">
+            <ChevronLeft className="mr-2 h-4 w-4 transition-transform duration-300 group-data-[state=collapsed]:rotate-180" />
+            <span className="group-data-[state=collapsed]:hidden">Collapse</span>
+        </SidebarTrigger>
+    </div>
   )
 })
 SidebarFooter.displayName = "SidebarFooter"

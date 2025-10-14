@@ -49,7 +49,6 @@ export function DashboardNav({ user }: { user: User | null }) {
                 {/* Mobile-only header elements */}
                 <div className="lg:hidden flex items-center gap-2">
                     <UserNav user={user} />
-                    <SidebarTrigger />
                 </div>
             </div>
 
