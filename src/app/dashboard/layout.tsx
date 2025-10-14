@@ -10,26 +10,19 @@ import {
   useAuthState,
   User,
 } from 'react-firebase-hooks/auth';
-import {getFirebaseAuth, getFirebaseApp} from '@/firebase';
-import {useAuth as useNextAuth} from '../auth-provider';
+import {useAuth as useFirebaseNextAuth} from '../auth-provider';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-function getAvatar(user: User) {
-  if (user.photoURL) {
-    return user.photoURL;
-  }
-  return 'https://i.pravatar.cc/150?u=a042581f4e29026704d';
-}
+import { useAuth } from "@/firebase";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  getFirebaseApp();
-  const [user, loading, error] = useAuthState(getFirebaseAuth());
-  const {initialTokens} = useNextAuth();
+  const auth = useAuth();
+  const [user, loading, error] = useAuthState(auth);
+  const {initialTokens} = useFirebaseNextAuth();
   const router = useRouter();
 
   useEffect(() => {

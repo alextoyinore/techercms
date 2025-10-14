@@ -6,6 +6,7 @@ import { AuthProvider } from "./auth-provider";
 import { cookies } from "next/headers";
 import { authConfig } from "./config";
 import {getTokens} from 'next-firebase-auth-edge/lib/next/tokens';
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -34,7 +35,11 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${openSans.variable} ${robotoSlab.variable}`}>
       <body className="font-body antialiased">
-        <AuthProvider initialTokens={tokens}>{children}</AuthProvider>
+        <AuthProvider initialTokens={tokens}>
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

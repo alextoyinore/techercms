@@ -1,11 +1,10 @@
 'use client';
 import {
-  getAuth,
-  signInWithPopup,
   GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from 'firebase/auth';
 import {useAuthState} from 'react-firebase-hooks/auth';
 import {useRouter} from 'next/navigation';
@@ -20,7 +19,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {Gem} from 'lucide-react';
-import {getFirebaseAuth} from '@/firebase';
+import {useAuth} from '@/firebase';
 import {sessionLogin} from './actions';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -32,8 +31,9 @@ function GoogleSignInButton({
 }: {
   onUser: (user: User | null) => void;
 }) {
+  const auth = useAuth();
   const handleSignIn = async () => {
-    const auth = getFirebaseAuth();
+    if (!auth) return;
     try {
       const result = await signInWithPopup(auth, provider);
       onUser(result.user);
@@ -51,7 +51,8 @@ function GoogleSignInButton({
 
 export function AuthForm() {
   const router = useRouter();
-  const [user, loading, error] = useAuthState(getFirebaseAuth());
+  const auth = useAuth();
+  const [user, loading, error] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -62,7 +63,6 @@ export function AuthForm() {
       if (user) {
         const idToken = await user.getIdToken();
         await sessionLogin(idToken);
-        // router.push('/dashboard') is now handled in useEffect
       }
     },
     []
@@ -70,13 +70,14 @@ export function AuthForm() {
 
   useEffect(() => {
     if (user) {
-      onUser(user);
-      router.push('/dashboard');
+      onUser(user).then(() => {
+        router.push('/dashboard');
+      });
     }
   }, [user, router, onUser]);
 
   const handleEmailAuth = async () => {
-    const auth = getFirebaseAuth();
+    if (!auth) return;
     setAuthError(null);
     try {
       let userCredential;
