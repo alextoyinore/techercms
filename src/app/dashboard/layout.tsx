@@ -30,7 +30,7 @@ export default function DashboardLayout({
   // While the authentication state is loading, display the loading component.
   // Also, if there's no user object yet (even if loading is false),
   // it might be a brief moment before the redirect kicks in.
-  // Showing the loader prevents a flash of unstyled/broken content.
+  // Showing the loader prevents a flash of unstyled/broken content and hydration errors.
   if (loading || !user) {
     return <Loading />;
   }
