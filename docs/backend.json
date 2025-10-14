@@ -17,14 +17,6 @@
         "slug": {
           "type": "string",
           "description": "A URL-friendly version of the category name."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the category."
-        },
-        "parentCategoryId": {
-          "type": "string",
-          "description": "Reference to the parent Category. (Relationship: Category 1:N Category)"
         }
       },
       "required": [
@@ -56,6 +48,74 @@
         "id",
         "name",
         "slug"
+      ]
+    },
+    "Post": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Post",
+      "type": "object",
+      "description": "Represents a single content entry in the CMS, like a blog post or an article.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Post entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the post."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the post title."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main body content of the post."
+        },
+        "status": {
+          "type": "string",
+          "description": "The publication status of the post.",
+          "enum": [
+            "draft",
+            "published",
+            "archived"
+          ]
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who authored the post."
+        },
+        "categoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of Category IDs associated with the post."
+        },
+        "tagIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of Tag IDs associated with the post."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the post was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the post was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "slug",
+        "status",
+        "authorId"
       ]
     }
   },
@@ -98,8 +158,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+          "entityName": "Post",
+          "schema": {
+            "$ref": "#/backend/entities/Post"
+          },
+          "description": "Stores post data. `postId` is the unique identifier for each post.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier for the post."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Categories and Tags are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all categories and tags are managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
+    "reasoning": "The data structure is designed to be simple and secure. Categories, Tags, and Posts are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
   }
 }
