@@ -37,23 +37,24 @@ export function DashboardNav() {
 
     return (
         <div className="flex flex-col h-full">
-            <div className="px-4 py-6">
-                <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="p-2 md:px-4 md:py-6">
+                <Link href="/dashboard" className="flex items-center gap-2 group-data-[state=collapsed]:justify-center">
                     <Gem className="w-8 h-8 text-primary" />
-                    <span className="text-xl font-headline font-bold text-sidebar-foreground">
+                    <span className="text-xl font-headline font-bold text-sidebar-foreground group-data-[state=collapsed]:hidden">
                         Techer CMS
                     </span>
                 </Link>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                <SidebarMenu className="px-4">
+                <SidebarMenu className="px-2 md:px-4">
                     {navItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                                 className="w-full"
+                                tooltip={item.label}
                             >
                                 <Link href={item.href}>
                                     <item.icon className="h-5 w-5" />
