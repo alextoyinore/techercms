@@ -57,11 +57,11 @@ export default function DashboardLayout({
         </Sidebar>
         <div className="flex flex-col flex-1">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
-            <SidebarTrigger className="lg:hidden" />
             <div className="flex-1" />
             <div className="lg:hidden">
               <UserNav user={user} />
             </div>
+            <SidebarTrigger className="lg:hidden" />
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
