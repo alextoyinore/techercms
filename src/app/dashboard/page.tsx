@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
     Card,
     CardContent,
@@ -6,18 +9,25 @@ import {
   } from "@/components/ui/card";
   import { FileText, ImageIcon, Folder, Tag, Users } from "lucide-react";
   import { PageHeader } from "@/components/page-header";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useAuth } from "@/firebase";
   
   export default function Dashboard() {
+    const auth = useAuth();
+    const [user] = useAuthState(auth);
+
     const stats = [
       { title: "Total Posts", value: "1,234", icon: FileText },
       { title: "Media Items", value: "567", icon: ImageIcon },
       { title: "Categories", value: "23", icon: Folder },
       { title: "Tags", value: "89", icon: Tag },
     ];
+
+    const displayName = user?.displayName || 'User';
   
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title="Dashboard" description="Welcome back, Admin!" />
+        <PageHeader title="Dashboard" description={`Welcome back, ${displayName}!`} />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <Card key={stat.title}>
