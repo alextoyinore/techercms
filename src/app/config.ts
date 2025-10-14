@@ -9,20 +9,6 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-function getServiceAccount(): ServiceAccount {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!privateKey) {
-    throw new Error('FIREBASE_PRIVATE_KEY is not set');
-  }
-
-  return {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    privateKey: privateKey.replace(/\\n/g, '\n'),
-  };
-}
-
-
 export const authConfig: AuthOptions = {
   apiKey: firebaseConfig.apiKey,
   cookieName: 'AuthToken',
@@ -34,5 +20,9 @@ export const authConfig: AuthOptions = {
     sameSite: 'lax',
     maxAge: 12 * 60 * 60 * 24,
   },
-  serviceAccount: getServiceAccount(),
+  serviceAccount: {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY!,
+  },
 };
