@@ -2,6 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
 import {
   Bold,
   Italic,
@@ -12,9 +13,11 @@ import {
   Heading3,
   Strikethrough,
   Code,
+  ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Toggle } from '@/components/ui/toggle';
+import { useCallback } from 'react';
 
 const RichTextEditor = ({
   content,
@@ -39,6 +42,7 @@ const RichTextEditor = ({
           },
         },
       }),
+      Image,
     ],
     content: content,
     editorProps: {
@@ -52,6 +56,14 @@ const RichTextEditor = ({
     },
     editable: !disabled,
   });
+
+  const addImage = useCallback(() => {
+    const url = window.prompt('URL');
+
+    if (url && editor) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
 
   if (!editor) {
     return null;
@@ -133,6 +145,13 @@ const RichTextEditor = ({
           disabled={disabled}
         >
           <ListOrdered className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressedChange={addImage}
+          disabled={disabled}
+        >
+          <ImageIcon className="h-4 w-4" />
         </Toggle>
         <Toggle
           size="sm"
