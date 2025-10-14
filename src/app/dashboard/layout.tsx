@@ -59,8 +59,9 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-16 sm:px-6">
             <SidebarTrigger className="lg:hidden" />
             <div className="flex-1">
-              {/* Header content can go here if needed */}
+              {/* This div will grow to fill the space */}
             </div>
+            {/* Any other header content can be added here, aligned to the right */}
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
