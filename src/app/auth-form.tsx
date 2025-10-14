@@ -6,54 +6,34 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Eye, EyeOff, Gem, Loader2 } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loading } from '@/components/loading';
 import { Separator } from '@/components/ui/separator';
 
 const provider = new GoogleAuthProvider();
 
-async function setSession(idToken: string) {
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ idToken }),
-  });
-
-  return response.ok;
-}
-
-function GoogleSignInButton() {
+function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => void, onSuccess: (user: User) => void }) {
   const auth = useAuth();
-  const router = useRouter();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSignIn = async () => {
     if (!auth) return;
+    onAuthStart();
     setIsSigningIn(true);
     try {
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      const success = await setSession(idToken);
-      if (success) {
-        router.push('/dashboard');
-      }
+      onSuccess(result.user);
     } catch (error) {
       console.error(error);
     } finally {
@@ -77,7 +57,6 @@ function GoogleSignInButton() {
 export function AuthForm() {
   const router = useRouter();
   const auth = useAuth();
-  const [user, loading, error] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -85,11 +64,9 @@ export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
+  const onUserAuthenticated = (user: User) => {
+    router.push('/dashboard');
+  };
 
   const handleEmailAuth = async () => {
     if (!auth) return;
@@ -102,13 +79,7 @@ export function AuthForm() {
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
-      const idToken = await userCredential.user.getIdToken();
-      const success = await setSession(idToken);
-      if (success) {
-        router.push('/dashboard');
-      } else {
-        setAuthError('Failed to create session. Please try again.');
-      }
+      onUserAuthenticated(userCredential.user);
     } catch (error: any) {
       setAuthError(error.message);
       console.error(error);
@@ -119,13 +90,9 @@ export function AuthForm() {
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  if (loading || user) {
-    return <Loading />;
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="mx-auto w-full max-w-sm">
+      <Card className="mx-auto w-full max-w-[350px]">
         <CardHeader className="text-center p-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Gem className="h-8 w-8 text-primary" />
@@ -174,7 +141,6 @@ export function AuthForm() {
               </button>
             </div>
             {authError && <p className="text-sm text-destructive">{authError}</p>}
-            {error && <p className="text-sm text-destructive">{error.message}</p>}
             <Button onClick={handleEmailAuth} className="w-full" disabled={isAuthenticating}>
               {isAuthenticating ? (
                 <>
@@ -197,7 +163,7 @@ export function AuthForm() {
                 </span>
               </div>
             </div>
-            <GoogleSignInButton />
+            <GoogleSignInButton onAuthStart={() => setIsAuthenticating(true)} onSuccess={onUserAuthenticated} />
           </div>
         </CardContent>
         <CardFooter className="justify-center p-4">

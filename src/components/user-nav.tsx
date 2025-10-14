@@ -37,11 +37,6 @@ function getEmail(user: FirebaseUser) {
   return '';
 }
 
-async function handleLogoutApi() {
-  const response = await fetch('/api/logout', { method: 'POST' });
-  return response.ok;
-}
-
 export function UserNav({user}: {user: FirebaseUser | null}) {
   const router = useRouter();
   const auth = useAuth();
@@ -50,7 +45,6 @@ export function UserNav({user}: {user: FirebaseUser | null}) {
     if (auth) {
       await auth.signOut();
     }
-    await handleLogoutApi();
     router.push('/');
   };
 
