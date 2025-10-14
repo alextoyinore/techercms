@@ -136,7 +136,7 @@ export function AuthForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm">
-        <CardHeader>
+        <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Gem className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-headline font-bold">Techer CMS</h1>
