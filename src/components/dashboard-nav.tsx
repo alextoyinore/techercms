@@ -1,0 +1,67 @@
+'use client';
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+    LayoutDashboard,
+    FileText,
+    Image as ImageIcon,
+    Folder,
+    Tag,
+    Paintbrush,
+    Sparkles,
+    Settings,
+    Gem
+} from "lucide-react";
+import {
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+} from "@/components/ui/sidebar";
+
+const navItems = [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/dashboard/posts", icon: FileText, label: "Posts" },
+    { href: "/dashboard/media", icon: ImageIcon, label: "Media" },
+    { href: "/dashboard/categories", icon: Folder, label: "Categories" },
+    { href: "/dashboard/tags", icon: Tag, label: "Tags" },
+    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes" },
+    { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+];
+
+export function DashboardNav() {
+    const pathname = usePathname();
+
+    return (
+        <div className="flex flex-col h-full">
+            <div className="px-4 py-6">
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    <Gem className="w-8 h-8 text-primary" />
+                    <span className="text-xl font-headline font-bold text-sidebar-foreground">
+                        Techer CMS
+                    </span>
+                </Link>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+                <SidebarMenu className="px-4">
+                    {navItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <Link href={item.href} legacyBehavior passHref>
+                                <SidebarMenuButton
+                                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                                    className="w-full"
+                                >
+                                    <item.icon className="h-5 w-5" />
+                                    <span>{item.label}</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+            </div>
+        </div>
+    );
+}
