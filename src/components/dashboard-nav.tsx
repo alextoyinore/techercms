@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -39,8 +38,8 @@ export function DashboardNav() {
         <div className="flex flex-col h-full">
             <div className="p-2 md:px-4 md:py-6">
                 <Link href="/dashboard" className="flex items-center gap-2 group-data-[state=collapsed]:justify-center">
-                    <Gem className="w-8 h-8 text-primary" />
-                    <span className="text-xl font-headline font-bold text-sidebar-foreground group-data-[state=collapsed]:hidden">
+                    <Gem className="w-6 h-6 text-primary" />
+                    <span className="text-lg font-headline font-bold text-sidebar-foreground group-data-[state=collapsed]:hidden">
                         Techer CMS
                     </span>
                 </Link>
@@ -57,7 +56,7 @@ export function DashboardNav() {
                                 tooltip={item.label}
                             >
                                 <Link href={item.href}>
-                                    <item.icon className="h-5 w-5" />
+                                    <item.icon className="h-4 w-4" />
                                     <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
                                 </Link>
                             </SidebarMenuButton>
