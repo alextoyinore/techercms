@@ -94,6 +94,12 @@ export function AuthForm() {
     router.push('/dashboard');
   }, [router]);
 
+  useEffect(() => {
+    if (!loading && user) {
+      onUserAuthenticated();
+    }
+  }, [loading, user, onUserAuthenticated]);
+
   const handleEmailAuth = async () => {
     if (!auth) return;
     setAuthError(null);
@@ -122,9 +128,6 @@ export function AuthForm() {
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  // This component should only be visible when there is no authenticated user.
-  // The middleware redirects authenticated users to /dashboard.
-  // The `loading` state from useAuthState handles the initial check.
   if (loading || user) {
     return <Loading />;
   }
