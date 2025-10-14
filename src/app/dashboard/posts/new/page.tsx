@@ -189,24 +189,28 @@ export default function NewPostPage() {
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Title</Label>
-            <Input 
-                id="title" 
-                placeholder="Your amazing post title" 
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={isSubmitting}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="content">Content</Label>
-            <RichTextEditor
-              content={content}
-              onChange={setContent}
-              disabled={isSubmitting}
-            />
-          </div>
+          <Card>
+            <CardContent className="p-4 grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Title</Label>
+                <Input 
+                    id="title" 
+                    placeholder="Your amazing post title" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isSubmitting}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="content">Content</Label>
+                <RichTextEditor
+                  content={content}
+                  onChange={setContent}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
