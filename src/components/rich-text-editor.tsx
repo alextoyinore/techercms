@@ -195,7 +195,7 @@ const RichTextEditor = ({
         </Toggle>
         <input
             type="color"
-            className='w-6 h-6 p-0 bg-transparent border-none'
+            className='w-6 h-6 p-0.5 bg-transparent border rounded-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-50'
             onInput={(event: React.ChangeEvent<HTMLInputElement>) => editor.chain().focus().setColor(event.target.value).run()}
             value={editor.getAttributes('textStyle').color}
             disabled={disabled}
