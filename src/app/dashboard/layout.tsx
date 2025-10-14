@@ -47,7 +47,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
-        <Sidebar className="hidden lg:flex lg:flex-col lg:border-r">
+        <Sidebar collapsible="icon" className="hidden lg:flex lg:flex-col lg:border-r">
           <DashboardNav />
           <div className="mt-auto p-4">
             <UserNav user={user} />
