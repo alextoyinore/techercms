@@ -39,14 +39,9 @@ async function setSession(idToken: string) {
   return response.ok;
 }
 
-function GoogleSignInButton({
-  onSuccess,
-  onAuthStart,
-}: {
-  onSuccess: () => void;
-  onAuthStart: () => void;
-}) {
+function GoogleSignInButton({ onAuthStart, onAuthEnd }: { onAuthStart: () => void; onAuthEnd: () => void; }) {
   const auth = useAuth();
+  const router = useRouter();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSignIn = async () => {
@@ -58,12 +53,13 @@ function GoogleSignInButton({
       const idToken = await result.user.getIdToken();
       const success = await setSession(idToken);
       if (success) {
-        onSuccess();
+        router.push('/dashboard');
       }
     } catch (error) {
       console.error(error);
     } finally {
       setIsSigningIn(false);
+      onAuthEnd();
     }
   };
   return (
@@ -94,6 +90,12 @@ export function AuthForm() {
   const onUserAuthenticated = useCallback(() => {
     router.push('/dashboard');
   }, [router]);
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleEmailAuth = async () => {
     if (!auth) return;
@@ -202,8 +204,8 @@ export function AuthForm() {
               </div>
             </div>
             <GoogleSignInButton
-              onSuccess={onUserAuthenticated}
               onAuthStart={() => setIsAuthenticating(true)}
+              onAuthEnd={() => setIsAuthenticating(false)}
             />
           </div>
         </CardContent>
