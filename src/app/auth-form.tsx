@@ -14,6 +14,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
+  CardFooter,
 } from '@/components/ui/card';
 import { Eye, EyeOff, Gem, Loader2 } from 'lucide-react';
 import { useAuth } from '@/firebase';
