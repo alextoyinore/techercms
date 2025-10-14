@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, PlusCircle, Loader2, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,6 +21,7 @@ import { useFirestore, useAuth, useCollection, useMemoFirebase } from '@/firebas
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
+import RichTextEditor from '@/components/rich-text-editor';
 
 type Category = {
   id: string;
@@ -149,12 +149,9 @@ export default function NewPostPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Start writing your content here..."
-                  className="min-h-[300px]"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                <RichTextEditor
+                  content={content}
+                  onChange={setContent}
                   disabled={isSubmitting}
                 />
               </div>
