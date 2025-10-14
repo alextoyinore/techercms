@@ -3,6 +3,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import TextAlign from '@tiptap/extension-text-align';
+import Table from '@tiptap/extension-table';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TableRow from '@tiptap/extension-table-row';
 import {
   Bold,
   Italic,
@@ -14,9 +19,19 @@ import {
   Strikethrough,
   Code,
   ImageIcon,
+  Pilcrow,
+  Quote,
+  Minus,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Table as TableIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Toggle } from '@/components/ui/toggle';
+import { Separator } from '@/components/ui/separator';
 import { useCallback } from 'react';
 
 const RichTextEditor = ({
@@ -43,6 +58,15 @@ const RichTextEditor = ({
         },
       }),
       Image,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: content,
     editorProps: {
@@ -104,6 +128,15 @@ const RichTextEditor = ({
         </Toggle>
         <Toggle
           size="sm"
+          pressed={editor.isActive('paragraph')}
+          onPressedChange={() => editor.chain().focus().setParagraph().run()}
+          disabled={disabled}
+        >
+          <Pilcrow className="h-4 w-4" />
+        </Toggle>
+        <Separator orientation="vertical" className="h-6" />
+        <Toggle
+          size="sm"
           pressed={editor.isActive('bold')}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
@@ -126,6 +159,40 @@ const RichTextEditor = ({
         >
           <Strikethrough className="h-4 w-4" />
         </Toggle>
+        <Separator orientation="vertical" className="h-6" />
+        <Toggle
+          size="sm"
+          pressed={editor.isActive({ textAlign: 'left' })}
+          onPressedChange={() => editor.chain().focus().setTextAlign('left').run()}
+          disabled={disabled}
+        >
+          <AlignLeft className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive({ textAlign: 'center' })}
+          onPressedChange={() => editor.chain().focus().setTextAlign('center').run()}
+          disabled={disabled}
+        >
+          <AlignCenter className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive({ textAlign: 'right' })}
+          onPressedChange={() => editor.chain().focus().setTextAlign('right').run()}
+          disabled={disabled}
+        >
+          <AlignRight className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive({ textAlign: 'justify' })}
+          onPressedChange={() => editor.chain().focus().setTextAlign('justify').run()}
+          disabled={disabled}
+        >
+          <AlignJustify className="h-4 w-4" />
+        </Toggle>
+        <Separator orientation="vertical" className="h-6" />
         <Toggle
           size="sm"
           pressed={editor.isActive('bulletList')}
@@ -148,6 +215,22 @@ const RichTextEditor = ({
         </Toggle>
         <Toggle
           size="sm"
+          pressed={editor.isActive('blockquote')}
+          onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
+          disabled={disabled}
+        >
+          <Quote className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressedChange={() => editor.chain().focus().setHorizontalRule().run()}
+          disabled={disabled}
+        >
+          <Minus className="h-4 w-4" />
+        </Toggle>
+        <Separator orientation="vertical" className="h-6" />
+        <Toggle
+          size="sm"
           onPressedChange={addImage}
           disabled={disabled}
         >
@@ -163,7 +246,45 @@ const RichTextEditor = ({
         >
           <Code className="h-4 w-4" />
         </Toggle>
+        <Separator orientation="vertical" className="h-6" />
+        <Toggle
+          size="sm"
+          onPressed={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo() || disabled}
+        >
+          <Undo className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressed={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo() || disabled}
+        >
+          <Redo className="h-4 w-4" />
+        </Toggle>
       </div>
+
+      <div className="flex flex-wrap items-center gap-1 rounded-md border border-input p-1">
+        <Toggle
+            size="sm"
+            onPressed={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            disabled={disabled}
+        >
+            <TableIcon className="h-4 w-4" />
+        </Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().addColumnBefore().run()} disabled={!editor.can().addColumnBefore() || disabled}><span className="text-xs">Add Col Before</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().addColumnAfter().run()} disabled={!editor.can().addColumnAfter() || disabled}><span className="text-xs">Add Col After</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().deleteColumn().run()} disabled={!editor.can().deleteColumn() || disabled}><span className="text-xs">Del Col</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().addRowBefore().run()} disabled={!editor.can().addRowBefore() || disabled}><span className="text-xs">Add Row Before</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().addRowAfter().run()} disabled={!editor.can().addRowAfter() || disabled}><span className="text-xs">Add Row After</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().deleteRow().run()} disabled={!editor.can().deleteRow() || disabled}><span className="text-xs">Del Row</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().deleteTable().run()} disabled={!editor.can().deleteTable() || disabled}><span className="text-xs">Del Table</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells() || disabled}><span className="text-xs">Merge Cells</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().splitCell().run()} disabled={!editor.can().splitCell() || disabled}><span className="text-xs">Split Cell</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().toggleHeaderColumn().run()} disabled={!editor.can().toggleHeaderColumn() || disabled}><span className="text-xs">Toggle Header Col</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().toggleHeaderRow().run()} disabled={!editor.can().toggleHeaderRow() || disabled}><span className="text-xs">Toggle Header Row</span></Toggle>
+        <Toggle size="sm" onPressed={() => editor.chain().focus().toggleHeaderCell().run()} disabled={!editor.can().toggleHeaderCell() || disabled}><span className="text-xs">Toggle Header Cell</span></Toggle>
+      </div>
+
       <EditorContent editor={editor} />
     </div>
   );

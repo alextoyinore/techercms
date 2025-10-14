@@ -132,7 +132,7 @@ export default function NewPostPage() {
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle className="font-headline">Post Details</CardTitle>
             </CardHeader>
