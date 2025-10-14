@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -184,14 +185,27 @@ export default function NewPostPage() {
                     <CardTitle className="font-headline">Featured Image</CardTitle>
                     <CardDescription>Set a main image for this post.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-2">
-                    <Input 
-                        id="featured-image"
-                        placeholder="https://example.com/image.jpg"
-                        value={featuredImageUrl}
-                        onChange={(e) => setFeaturedImageUrl(e.target.value)}
-                        disabled={isSubmitting}
-                    />
+                <CardContent className="grid gap-4">
+                    {featuredImageUrl && (
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={featuredImageUrl}
+                          alt="Featured image preview"
+                          fill
+                          className="rounded-md object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="grid gap-2">
+                        <Label htmlFor="featured-image">Image URL</Label>
+                        <Input 
+                            id="featured-image"
+                            placeholder="https://example.com/image.jpg"
+                            value={featuredImageUrl}
+                            onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                            disabled={isSubmitting}
+                        />
+                    </div>
                     <Button variant="outline" disabled={isSubmitting}>
                         <Upload className="mr-2 h-4 w-4" />
                         Upload
