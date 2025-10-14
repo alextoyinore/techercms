@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import {useAuthState} from 'react-firebase-hooks/auth';
 import {useRouter} from 'next/navigation';
-import {useCallback, useState} from 'react';
+import {useCallback, useState, useEffect} from 'react';
 import {Button} from '@/components/ui/button';
 import {
   Card,
@@ -62,11 +62,18 @@ export function AuthForm() {
       if (user) {
         const idToken = await user.getIdToken();
         await sessionLogin(idToken);
-        router.push('/dashboard');
+        // router.push('/dashboard') is now handled in useEffect
       }
     },
-    [router]
+    []
   );
+
+  useEffect(() => {
+    if (user) {
+      onUser(user);
+      router.push('/dashboard');
+    }
+  }, [user, router, onUser]);
 
   const handleEmailAuth = async () => {
     const auth = getFirebaseAuth();
@@ -82,20 +89,17 @@ export function AuthForm() {
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
-      onUser(userCredential.user);
+      // onUser will be called by the useEffect hook when `user` state changes
     } catch (error: any) {
       setAuthError(error.message);
       console.error(error);
     }
   };
 
-  if (loading) {
+  if (loading || user) {
     return <div>Loading...</div>;
   }
-  if (user) {
-    router.push('/dashboard');
-    return null;
-  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm">
