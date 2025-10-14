@@ -6,11 +6,7 @@ import { UserNav } from "@/components/user-nav";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
-import {
-  useAuthState,
-  User,
-} from 'react-firebase-hooks/auth';
-import {useAuth as useFirebaseNextAuth} from '../auth-provider';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/firebase";
@@ -22,15 +18,15 @@ export default function DashboardLayout({
 }) {
   const auth = useAuth();
   const [user, loading, error] = useAuthState(auth);
-  const {initialTokens} = useFirebaseNextAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // If the user is not loading and there are no tokens, redirect to login
-    if (!loading && !initialTokens) {
+    // If not loading and no user, redirect to login.
+    // This is a client-side check. Middleware handles the server-side check.
+    if (!loading && !user) {
       router.push('/');
     }
-  }, [loading, initialTokens, router]);
+  }, [loading, user, router]);
 
   if (loading || !user) {
     return <div>Loading...</div>;

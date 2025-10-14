@@ -14,8 +14,8 @@ import {
 import {LogOut, Settings, User} from 'lucide-react';
 import Link from 'next/link';
 import {User as FirebaseUser} from 'firebase/auth';
-import {sessionLogout} from '@/app/actions';
 import {useRouter} from 'next/navigation';
+import { useAuth } from '@/firebase';
 
 function getAvatar(user: FirebaseUser) {
   if (user.photoURL) {
@@ -37,12 +37,23 @@ function getEmail(user: FirebaseUser) {
   return '';
 }
 
+async function handleLogoutApi() {
+  const response = await fetch('/api/logout', { method: 'POST' });
+  return response.ok;
+}
+
 export function UserNav({user}: {user: FirebaseUser | null}) {
   const router = useRouter();
+  const auth = useAuth();
+
   const handleLogout = async () => {
-    await sessionLogout();
+    if (auth) {
+      await auth.signOut();
+    }
+    await handleLogoutApi();
     router.push('/');
   };
+
   if (!user) {
     return null;
   }

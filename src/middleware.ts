@@ -1,39 +1,25 @@
-import type {NextRequest} from 'next/server';
-import {authMiddleware} from 'next-firebase-auth-edge';
-import {authConfig} from './app/config';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/', '/signup', '/api/login', '/api/logout'];
+const PROTECTED_PATHS = ['/dashboard'];
 
-export async function middleware(request: NextRequest) {
-  return authMiddleware(request, {
-    loginPath: '/api/login',
-    logoutPath: '/api/logout',
-    apiKey: authConfig.apiKey,
-    cookieName: authConfig.cookieName,
-    cookieSignatureKeys: authConfig.cookieSignatureKeys,
-    cookieSerializeOptions: authConfig.cookieSerializeOptions,
-    serviceAccount: authConfig.serviceAccount,
-    handleValidToken: async ({token, decodedToken}) => {
-      if (PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
-        return;
-      }
+export function middleware(request: NextRequest) {
+  const sessionCookie = request.cookies.get('__session');
+  const { pathname } = request.nextUrl;
 
-      console.log(
-        'Successfully authenticated',
-        decodedToken.email,
-        'doing nothing'
-      );
-      return;
-    },
-    handleInvalidToken: async () => {
-      console.log('Invalid token, redirecting to /');
-    },
-    handleError: async (error) => {
-      console.error('Unhandled authentication error', {error});
-    },
-  });
+  const isProtected = PROTECTED_PATHS.some(path => pathname.startsWith(path));
+
+  if (!sessionCookie && isProtected) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+  
+  if (sessionCookie && (pathname === '/' || pathname.startsWith('/signup'))) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next|favicon.ico|api/public-route).*)'],
+  matcher: ['/((?!api|_next/static|favicon.ico).*)'],
 };

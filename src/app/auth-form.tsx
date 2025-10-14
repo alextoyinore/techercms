@@ -6,10 +6,10 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
-import {useAuthState} from 'react-firebase-hooks/auth';
-import {useRouter} from 'next/navigation';
-import {useCallback, useState, useEffect} from 'react';
-import {Button} from '@/components/ui/button';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter } from 'next/navigation';
+import { useCallback, useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -18,28 +18,42 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {Eye, EyeOff, Gem} from 'lucide-react';
-import {useAuth} from '@/firebase';
-import {sessionLogin} from './actions';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
+import { Eye, EyeOff, Gem } from 'lucide-react';
+import { useAuth } from '@/firebase';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const provider = new GoogleAuthProvider();
 
+async function setSession(idToken: string) {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ idToken }),
+  });
+
+  return response.ok;
+}
+
 function GoogleSignInButton({
-  onUser,
+  onSuccess,
 }: {
-  onUser: (user: User | null) => void;
+  onSuccess: () => void;
 }) {
   const auth = useAuth();
   const handleSignIn = async () => {
     if (!auth) return;
     try {
       const result = await signInWithPopup(auth, provider);
-      onUser(result.user);
+      const idToken = await result.user.getIdToken();
+      const success = await setSession(idToken);
+      if (success) {
+        onSuccess();
+      }
     } catch (error) {
       console.error(error);
-      onUser(null);
     }
   };
   return (
@@ -59,23 +73,17 @@ export function AuthForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  const onUser = useCallback(
-    async (user: User | null) => {
-      if (user) {
-        const idToken = await user.getIdToken();
-        await sessionLogin(idToken);
-      }
-    },
-    []
-  );
+  const onUserAuthenticated = useCallback(() => {
+    router.push('/dashboard');
+  }, [router]);
 
   useEffect(() => {
     if (user) {
-      onUser(user).then(() => {
-        router.push('/dashboard');
-      });
+      // If user is already logged in via an existing session, redirect.
+      // This might happen if they land on the login page but have a valid cookie.
+      onUserAuthenticated();
     }
-  }, [user, router, onUser]);
+  }, [user, onUserAuthenticated]);
 
   const handleEmailAuth = async () => {
     if (!auth) return;
@@ -83,15 +91,17 @@ export function AuthForm() {
     try {
       let userCredential;
       if (isRegister) {
-        userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
-      // onUser will be called by the useEffect hook when `user` state changes
+      const idToken = await userCredential.user.getIdToken();
+      const success = await setSession(idToken);
+      if (success) {
+        onUserAuthenticated();
+      } else {
+        setAuthError('Failed to create session. Please try again.');
+      }
     } catch (error: any) {
       setAuthError(error.message);
       console.error(error);
@@ -168,7 +178,7 @@ export function AuthForm() {
                 </span>
               </div>
             </div>
-            <GoogleSignInButton onUser={onUser} />
+            <GoogleSignInButton onSuccess={onUserAuthenticated} />
           </div>
         </CardContent>
         <CardFooter className="justify-center">
