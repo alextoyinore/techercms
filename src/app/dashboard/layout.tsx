@@ -3,7 +3,7 @@
 import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -63,6 +63,7 @@ export default function DashboardLayout({
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="lg:hidden p-0 max-w-xs">
+                 <SheetTitle className="sr-only">Menu</SheetTitle>
                 <div className="flex flex-col h-full">
                   <DashboardNav />
                   <div className="mt-auto p-4">
