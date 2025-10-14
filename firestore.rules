@@ -1,43 +1,48 @@
 /**
- * @fileoverview Firestore Security Rules for the categories collection.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset allows authenticated users to manage categories. There is no concept of ownership.
+ * This ruleset enforces that only authenticated users can perform CRUD operations on categories.
  *
  * Data Structure:
- * Categories are stored in the top-level `/categories/{categoryId}` collection.
+ * All category data is stored in the top-level `/categories` collection.
  *
  * Key Security Decisions:
- * - All authenticated users can perform CRUD operations on categories.
- * - The rules enforce that the 'id' field of a category matches the document ID (`categoryId`).
+ * - Only authenticated users can create, update, or delete categories.
+ * - Unauthenticated users cannot create, update, or delete categories.
+ * - Listing categories is allowed for all users, including unauthenticated users.
+ * - The `parentCategoryId` is not used for security rules and should be avoided.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secures the `/categories/{categoryId}` collection. Allows authenticated users to perform CRUD operations.
+     * @description Allows authenticated users to manage categories.
      * @path /categories/{categoryId}
-     * @allow (create) - An authenticated user creates a new category with a matching ID: `request.auth.uid != null && request.resource.data.id == 'newCategoryId'`
-     * @allow (get) - Any authenticated user can retrieve a category: `request.auth.uid != null`
-     * @allow (list) - Any authenticated user can list categories: `request.auth.uid != null`
-     * @allow (update) - Any authenticated user can update a category with a matching ID and the document exists: `request.auth.uid != null && resource != null && request.resource.data.id == resource.data.id`
-     * @allow (delete) - Any authenticated user can delete a category if it exists: `request.auth.uid != null && resource != null`
-     * @deny (create) - An unauthenticated user attempts to create a category: `request.auth == null`
-     * @deny (create) - An authenticated user tries to create a category with a non-matching ID: `request.auth.uid != null && request.resource.data.id != 'newCategoryId'`
-     * @deny (update) - An authenticated user tries to update a category, changing its `id`: `request.auth.uid != null && request.resource.data.id != resource.data.id`
-     * @deny (delete) - An unauthenticated user attempts to delete a category: `request.auth == null`
-     * @principle Enforces document ID matching for `create` and immutability of `id` on `update`. Requires authentication for all operations.
+     * @allow (create) User with UID 'hCgWSzB6SFbIi4TUmTPbWor2MYC3' creates a category.
+     * @deny (create) Unauthenticated user attempts to create a category.
+     * @allow (update) User with UID 'hCgWSzB6SFbIi4TUmTPbWor2MYC3' updates a category.
+     * @deny (update) Unauthenticated user attempts to update a category.
+     * @allow (delete) User with UID 'hCgWSzB6SFbIi4TUmTPbWor2MYC3' deletes a category.
+     * @deny (delete) Unauthenticated user attempts to delete a category.
+     * @allow (get) Any user can retrieve a category.
+     * @allow (list) Any user can list categories.
+     * @principle Enforces authentication for category management.
      */
     match /categories/{categoryId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.id == categoryId;
-      allow update: if isSignedIn() && resource != null && request.resource.data.id == categoryId;
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource != null;
       allow delete: if isSignedIn() && resource != null;
     }
 
-    // Helper function to check if a user is signed in.
+    // --- Helper functions ---
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
