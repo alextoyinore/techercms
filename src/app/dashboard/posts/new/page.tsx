@@ -162,20 +162,6 @@ export default function NewPostPage() {
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Publish</CardTitle>
-            </CardHeader>
-            <CardContent className="border-t pt-6 flex justify-between gap-2">
-              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Draft'}
-              </Button>
-              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting}>
-                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Publish'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle className="font-headline">Categories</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-row flex-wrap gap-x-4 gap-y-2">
@@ -226,6 +212,20 @@ export default function NewPostPage() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Publish</CardTitle>
+            </CardHeader>
+            <CardContent className="border-t pt-6 flex justify-between gap-2">
+              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Draft'}
+              </Button>
+              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting}>
+                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Publish'}
+              </Button>
             </CardContent>
           </Card>
         </div>
