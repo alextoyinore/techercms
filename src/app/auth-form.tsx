@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Eye, EyeOff, Gem } from 'lucide-react';
+import { Eye, EyeOff, Gem, Loader2 } from 'lucide-react';
 import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,12 +40,18 @@ async function setSession(idToken: string) {
 
 function GoogleSignInButton({
   onSuccess,
+  onAuthStart,
 }: {
   onSuccess: () => void;
+  onAuthStart: () => void;
 }) {
   const auth = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
   const handleSignIn = async () => {
     if (!auth) return;
+    setIsSigningIn(true);
+    onAuthStart();
     try {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
@@ -55,11 +61,20 @@ function GoogleSignInButton({
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsSigningIn(false);
     }
   };
   return (
-    <Button variant="outline" onClick={handleSignIn} className="w-full">
-      Sign In with Google
+    <Button variant="outline" onClick={handleSignIn} disabled={isSigningIn} className="w-full">
+      {isSigningIn ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Redirecting...
+        </>
+      ) : (
+        'Sign In with Google'
+      )}
     </Button>
   );
 }
@@ -73,22 +88,16 @@ export function AuthForm() {
   const [isRegister, setIsRegister] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const onUserAuthenticated = useCallback(() => {
     router.push('/dashboard');
   }, [router]);
 
-  useEffect(() => {
-    if (user) {
-      // If user is already logged in via an existing session, redirect.
-      // This might happen if they land on the login page but have a valid cookie.
-      onUserAuthenticated();
-    }
-  }, [user, onUserAuthenticated]);
-
   const handleEmailAuth = async () => {
     if (!auth) return;
     setAuthError(null);
+    setIsAuthenticating(true);
     try {
       let userCredential;
       if (isRegister) {
@@ -106,11 +115,16 @@ export function AuthForm() {
     } catch (error: any) {
       setAuthError(error.message);
       console.error(error);
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  // This component should only be visible when there is no authenticated user.
+  // The middleware redirects authenticated users to /dashboard.
+  // The `loading` state from useAuthState handles the initial check.
   if (loading || user) {
     return <Loading />;
   }
@@ -141,6 +155,7 @@ export function AuthForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isAuthenticating}
               />
             </div>
             <div className="grid gap-2 relative">
@@ -152,11 +167,13 @@ export function AuthForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pr-10"
+                disabled={isAuthenticating}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute bottom-0 right-0 h-10 w-10 flex items-center justify-center text-muted-foreground"
+                disabled={isAuthenticating}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 <span className="sr-only">
@@ -166,8 +183,17 @@ export function AuthForm() {
             </div>
             {authError && <p className="text-sm text-destructive">{authError}</p>}
             {error && <p className="text-sm text-destructive">{error.message}</p>}
-            <Button onClick={handleEmailAuth} className="w-full">
-              {isRegister ? 'Sign Up' : 'Sign In'}
+            <Button onClick={handleEmailAuth} className="w-full" disabled={isAuthenticating}>
+              {isAuthenticating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : isRegister ? (
+                'Sign Up'
+              ) : (
+                'Sign In'
+              )}
             </Button>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -179,11 +205,14 @@ export function AuthForm() {
                 </span>
               </div>
             </div>
-            <GoogleSignInButton onSuccess={onUserAuthenticated} />
+            <GoogleSignInButton
+              onSuccess={onUserAuthenticated}
+              onAuthStart={() => setIsAuthenticating(true)}
+            />
           </div>
         </CardContent>
         <CardFooter className="justify-center">
-          <Button variant="link" onClick={() => setIsRegister(!isRegister)}>
+          <Button variant="link" onClick={() => setIsRegister(!isRegister)} disabled={isAuthenticating}>
             {isRegister
               ? 'Already have an account? Sign In'
               : "Don't have an account? Sign Up"}

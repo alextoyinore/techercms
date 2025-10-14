@@ -22,20 +22,28 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // If not loading and no user, redirect to login.
-    // This is a client-side check. Middleware handles the server-side check.
+    // If auth state is not loading and there's no user,
+    // it means the user is not authenticated.
+    // Redirect them to the login page.
     if (!loading && !user) {
       router.push('/');
     }
   }, [loading, user, router]);
 
+  // While the authentication state is loading, display the loading component.
+  // Also, if there's no user object yet (even if loading is false),
+  // it might be a brief moment before the redirect kicks in.
+  // Showing the loader prevents a flash of unstyled/broken content.
   if (loading || !user) {
     return <Loading />;
   }
+
+  // If there's an error fetching the auth state, display it.
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-
+  
+  // If we have a user and loading is complete, render the dashboard.
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
