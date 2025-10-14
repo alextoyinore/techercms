@@ -95,12 +95,6 @@ export function AuthForm() {
     router.push('/dashboard');
   }, [router]);
 
-  useEffect(() => {
-    if (!loading && user) {
-      onUserAuthenticated();
-    }
-  }, [loading, user, onUserAuthenticated]);
-
   const handleEmailAuth = async () => {
     if (!auth) return;
     setAuthError(null);
