@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for organizing content within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the category name."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the category."
+        },
+        "parentCategoryId": {
+          "type": "string",
+          "description": "Reference to the parent Category. (Relationship: Category 1:N Category)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores category data. `categoryId` is the unique identifier for each category.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier of the category."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The data structure is designed to be simple and secure, focusing on path-based ownership for categories. Categories are stored under a top-level `/categories` collection. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all categories are managed centrally (no user-specific categories). Since the category is a global concept for this CMS, this is acceptable. Future evolution might require the categories to be specific to a user, if the user wants to override the name of a category for example.\n\nThe structure supports QAPs because listing categories is straightforward against the `/categories` collection and security rules can be applied at the collection level to restrict creation, modification, or deletion based on user roles (if implemented). Since there are no roles, the app will only allow authenticated users to perform CRUD operations on the `/categories` collection. It also supports the integrity of fields such as `id`, `name`, `slug` and `parentCategoryId`. Note that while `parentCategoryId` can be used to infer some hierarchy, this is not secure to use in the security rules and should be avoided."
+  }
+}

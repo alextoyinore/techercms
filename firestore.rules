@@ -1,0 +1,45 @@
+/**
+ * @fileoverview Firestore Security Rules for the categories collection.
+ *
+ * Core Philosophy:
+ * This ruleset allows authenticated users to manage categories. There is no concept of ownership.
+ *
+ * Data Structure:
+ * Categories are stored in the top-level `/categories/{categoryId}` collection.
+ *
+ * Key Security Decisions:
+ * - All authenticated users can perform CRUD operations on categories.
+ * - The rules enforce that the 'id' field of a category matches the document ID (`categoryId`).
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures the `/categories/{categoryId}` collection. Allows authenticated users to perform CRUD operations.
+     * @path /categories/{categoryId}
+     * @allow (create) - An authenticated user creates a new category with a matching ID: `request.auth.uid != null && request.resource.data.id == 'newCategoryId'`
+     * @allow (get) - Any authenticated user can retrieve a category: `request.auth.uid != null`
+     * @allow (list) - Any authenticated user can list categories: `request.auth.uid != null`
+     * @allow (update) - Any authenticated user can update a category with a matching ID and the document exists: `request.auth.uid != null && resource != null && request.resource.data.id == resource.data.id`
+     * @allow (delete) - Any authenticated user can delete a category if it exists: `request.auth.uid != null && resource != null`
+     * @deny (create) - An unauthenticated user attempts to create a category: `request.auth == null`
+     * @deny (create) - An authenticated user tries to create a category with a non-matching ID: `request.auth.uid != null && request.resource.data.id != 'newCategoryId'`
+     * @deny (update) - An authenticated user tries to update a category, changing its `id`: `request.auth.uid != null && request.resource.data.id != resource.data.id`
+     * @deny (delete) - An unauthenticated user attempts to delete a category: `request.auth == null`
+     * @principle Enforces document ID matching for `create` and immutability of `id` on `update`. Requires authentication for all operations.
+     */
+    match /categories/{categoryId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.id == categoryId;
+      allow update: if isSignedIn() && resource != null && request.resource.data.id == categoryId;
+      allow delete: if isSignedIn() && resource != null;
+    }
+
+    // Helper function to check if a user is signed in.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+  }
+}
