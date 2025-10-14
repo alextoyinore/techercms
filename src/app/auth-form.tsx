@@ -141,9 +141,6 @@ export function AuthForm() {
             <Gem className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-headline font-bold">Techer CMS</h1>
           </div>
-          <CardTitle className="text-2xl font-headline">
-            {isRegister ? 'Create an account' : 'Login'}
-          </CardTitle>
           <CardDescription>
             Enter your credentials to {isRegister ? 'join' : 'access your account'}
           </CardDescription>
