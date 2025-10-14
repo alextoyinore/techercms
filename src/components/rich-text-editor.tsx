@@ -29,6 +29,14 @@ import {
   AlignRight,
   AlignJustify,
   Table as TableIcon,
+  Columns2,
+  Rows2,
+  Trash2,
+  Combine,
+  Split,
+  FlipHorizontal,
+  FlipVertical,
+  RectangleHorizontal
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
@@ -271,18 +279,18 @@ const RichTextEditor = ({
         >
             <TableIcon className="h-4 w-4" />
         </Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().addColumnBefore().run()} disabled={!editor.can().addColumnBefore() || disabled}><span className="text-xs">Add Col Before</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().addColumnAfter().run()} disabled={!editor.can().addColumnAfter() || disabled}><span className="text-xs">Add Col After</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().deleteColumn().run()} disabled={!editor.can().deleteColumn() || disabled}><span className="text-xs">Del Col</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().addRowBefore().run()} disabled={!editor.can().addRowBefore() || disabled}><span className="text-xs">Add Row Before</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().addRowAfter().run()} disabled={!editor.can().addRowAfter() || disabled}><span className="text-xs">Add Row After</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().deleteRow().run()} disabled={!editor.can().deleteRow() || disabled}><span className="text-xs">Del Row</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().deleteTable().run()} disabled={!editor.can().deleteTable() || disabled}><span className="text-xs">Del Table</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells() || disabled}><span className="text-xs">Merge Cells</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().splitCell().run()} disabled={!editor.can().splitCell() || disabled}><span className="text-xs">Split Cell</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderColumn().run()} disabled={!editor.can().toggleHeaderColumn() || disabled}><span className="text-xs">Toggle Header Col</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderRow().run()} disabled={!editor.can().toggleHeaderRow() || disabled}><span className="text-xs">Toggle Header Row</span></Toggle>
-        <Toggle size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderCell().run()} disabled={!editor.can().toggleHeaderCell() || disabled}><span className="text-xs">Toggle Header Cell</span></Toggle>
+        <Toggle title="Add Column Before" size="sm" onPressedChange={() => editor.chain().focus().addColumnBefore().run()} disabled={!editor.can().addColumnBefore() || disabled}><Columns2 className="h-4 w-4 rotate-180" /></Toggle>
+        <Toggle title="Add Column After" size="sm" onPressedChange={() => editor.chain().focus().addColumnAfter().run()} disabled={!editor.can().addColumnAfter() || disabled}><Columns2 className="h-4 w-4" /></Toggle>
+        <Toggle title="Delete Column" size="sm" onPressedChange={() => editor.chain().focus().deleteColumn().run()} disabled={!editor.can().deleteColumn() || disabled}><Trash2 className="h-4 w-4" /></Toggle>
+        <Toggle title="Add Row Before" size="sm" onPressedChange={() => editor.chain().focus().addRowBefore().run()} disabled={!editor.can().addRowBefore() || disabled}><Rows2 className="h-4 w-4 rotate-180" /></Toggle>
+        <Toggle title="Add Row After" size="sm" onPressedChange={() => editor.chain().focus().addRowAfter().run()} disabled={!editor.can().addRowAfter() || disabled}><Rows2 className="h-4 w-4" /></Toggle>
+        <Toggle title="Delete Row" size="sm" onPressedChange={() => editor.chain().focus().deleteRow().run()} disabled={!editor.can().deleteRow() || disabled}><Trash2 className="h-4 w-4" /></Toggle>
+        <Toggle title="Delete Table" size="sm" onPressedChange={() => editor.chain().focus().deleteTable().run()} disabled={!editor.can().deleteTable() || disabled}><Trash2 className="h-4 w-4 text-destructive" /></Toggle>
+        <Toggle title="Merge Cells" size="sm" onPressedChange={() => editor.chain().focus().mergeCells().run()} disabled={!editor.can().mergeCells() || disabled}><Combine className="h-4 w-4" /></Toggle>
+        <Toggle title="Split Cell" size="sm" onPressedChange={() => editor.chain().focus().splitCell().run()} disabled={!editor.can().splitCell() || disabled}><Split className="h-4 w-4" /></Toggle>
+        <Toggle title="Toggle Header Column" size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderColumn().run()} disabled={!editor.can().toggleHeaderColumn() || disabled}><FlipHorizontal className="h-4 w-4" /></Toggle>
+        <Toggle title="Toggle Header Row" size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderRow().run()} disabled={!editor.can().toggleHeaderRow() || disabled}><FlipVertical className="h-4 w-4" /></Toggle>
+        <Toggle title="Toggle Header Cell" size="sm" onPressedChange={() => editor.chain().focus().toggleHeaderCell().run()} disabled={!editor.can().toggleHeaderCell() || disabled}><RectangleHorizontal className="h-4 w-4" /></Toggle>
       </div>
 
       <EditorContent editor={editor} />
