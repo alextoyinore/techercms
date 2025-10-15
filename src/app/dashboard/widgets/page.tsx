@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -714,8 +715,10 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     const areasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         if (pageId) {
+            // For a specific page, fetch all its widget areas
             return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId));
         }
+        // For the main widget page, fetch only theme-wide (non-page-specific) areas
         return query(collection(firestore, 'widget_areas'), where('pageId', '==', null));
     }, [firestore, pageId]);
     
@@ -1068,3 +1071,5 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         </DndContext>
     );
 }
+
+    
