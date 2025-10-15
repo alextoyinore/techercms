@@ -8,8 +8,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -33,6 +33,26 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { fontList } from '@/lib/fonts';
+
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { DraggableWidget } from '@/components/widgets/DraggableWidget';
+import { WidgetDropArea } from '@/components/widgets/WidgetDropArea';
+import { availableWidgets, Widget } from '@/components/widgets/widget-list';
 
 const websiteThemes = [
     {
@@ -75,6 +95,20 @@ type SiteSettings = {
   baseFontSize?: number;
 };
 
+type WidgetInstance = {
+  id: string;
+  widgetAreaId: string;
+  type: string;
+  order: number;
+  config?: any;
+};
+
+type WidgetArea = {
+  id: string;
+  name: string;
+  pageId?: string | null;
+}
+
 export default function ThemesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
@@ -103,6 +137,39 @@ export default function ThemesPage() {
     const [bodyFont, setBodyFont] = useState('Inter');
     const [headlineFont, setHeadlineFont] = useState('Poppins');
     const [baseFontSize, setBaseFontSize] = useState(16);
+
+    // Widget state
+    const [activeWidget, setActiveWidget] = useState<Widget | null>(null);
+    const [widgetInstances, setWidgetInstances] = useState<Record<string, WidgetInstance[]>>({});
+
+    const themeWidgetAreasQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'widget_areas'), where('pageId', '==', null));
+    }, [firestore]);
+    
+    const { data: themeWidgetAreas, isLoading: isLoadingWidgetAreas } = useCollection<WidgetArea>(themeWidgetAreasQuery);
+
+    const areaIds = useMemo(() => themeWidgetAreas?.map(a => a.id) || [], [themeWidgetAreas]);
+
+    const widgetInstancesQuery = useMemoFirebase(() => {
+        if (!firestore || areaIds.length === 0) return null;
+        return query(collection(firestore, 'widget_instances'), where('widgetAreaId', 'in', areaIds));
+    }, [firestore, areaIds]);
+
+    const { data: instances, isLoading: isLoadingInstances } = useCollection<WidgetInstance>(widgetInstancesQuery);
+
+    useEffect(() => {
+        if (instances && themeWidgetAreas) {
+            const grouped: Record<string, WidgetInstance[]> = {};
+            themeWidgetAreas.forEach(area => {
+                const areaInstances = instances
+                    .filter(inst => inst.widgetAreaId === area.id)
+                    .sort((a, b) => a.order - b.order);
+                grouped[area.name] = areaInstances;
+            });
+            setWidgetInstances(grouped);
+        }
+    }, [instances, themeWidgetAreas]);
     
     useEffect(() => {
         if (settings) {
@@ -167,6 +234,96 @@ export default function ThemesPage() {
             setIsSavingTypography(false);
         }
     }
+    
+    // DND Handlers
+    const sensors = useSensors(useSensor(PointerSensor));
+
+    function handleDragStart(event: DragStartEvent) {
+        setActiveWidget(event.active.data.current?.widget || null);
+    }
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        setActiveWidget(null);
+
+        if (!over) return;
+
+        const isNewWidget = active.data.current?.isNewWidget;
+        const activeAreaName = active.data.current?.areaName;
+        const overAreaName = over.data.current?.containerId || over.id;
+        
+        const area = themeWidgetAreas?.find(a => a.name === overAreaName);
+        if (!area || !firestore) return;
+        
+        const areaInstances = widgetInstances[overAreaName] || [];
+
+        if (isNewWidget) {
+            const newInstance: Omit<WidgetInstance, 'id'> = {
+                widgetAreaId: area.id,
+                type: active.id as string,
+                order: areaInstances.length,
+                config: {},
+            };
+            addDocumentNonBlocking(collection(firestore, 'widget_instances'), newInstance);
+            toast({ title: 'Widget Added', description: `Added a new ${active.data.current?.widget.label} widget.` });
+
+        } else { // Moving existing widget
+            const activeId = active.id;
+            const overId = over.id;
+
+            if (activeId === overId) return;
+
+            const activeContainerName = active.data.current?.containerId;
+            const overContainerName = over.data.current?.containerId || over.id;
+
+            const oldAreaInstances = widgetInstances[activeContainerName] || [];
+            const newAreaInstances = widgetInstances[overContainerName] || [];
+            const oldIndex = oldAreaInstances.findIndex(w => w.id === activeId);
+            let newIndex = newAreaInstances.findIndex(w => w.id === overId);
+
+            if (newIndex === -1 && over.data.current?.containerId) {
+                newIndex = newAreaInstances.length;
+            }
+
+            if (activeContainerName === overContainerName) {
+                const movedInstances = arrayMove(oldAreaInstances, oldIndex, newIndex);
+                movedInstances.forEach((instance, index) => {
+                    if (instance.order !== index) {
+                        updateDocumentNonBlocking(doc(firestore, 'widget_instances', instance.id), { order: index });
+                    }
+                });
+            } else {
+                const activeInstance = oldAreaInstances[oldIndex];
+                if (!activeInstance) return;
+
+                const overArea = themeWidgetAreas?.find(a => a.name === overContainerName);
+                if (!overArea) return;
+
+                updateDocumentNonBlocking(doc(firestore, 'widget_instances', activeInstance.id), { widgetAreaId: overArea.id, order: newIndex });
+
+                oldAreaInstances.splice(oldIndex, 1);
+                oldAreaInstances.forEach((instance, index) => {
+                    if (instance.order !== index) {
+                        updateDocumentNonBlocking(doc(firestore, 'widget_instances', instance.id), { order: index });
+                    }
+                });
+
+                newAreaInstances.splice(newIndex, 0, activeInstance);
+                newAreaInstances.forEach((instance, index) => {
+                    if (instance.order !== index) {
+                         updateDocumentNonBlocking(doc(firestore, 'widget_instances', instance.id), { order: index });
+                    }
+                })
+            }
+            toast({ title: 'Widget Moved' });
+        }
+    }
+
+    const handleDeleteWidget = (id: string, name: string) => {
+        if (!firestore) return;
+        deleteDocumentNonBlocking(doc(firestore, 'widget_instances', id));
+        toast({ title: 'Widget Deleted', description: `Removed the ${name} widget.` });
+    }
 
     const themeImages = PlaceHolderImages.filter(img => img.id.startsWith('theme-'));
 
@@ -179,6 +336,7 @@ export default function ThemesPage() {
       <Tabs defaultValue="themes" className="w-full">
         <TabsList>
             <TabsTrigger value="themes">Appearance</TabsTrigger>
+            <TabsTrigger value="widgets">Widgets</TabsTrigger>
             <TabsTrigger value="typography">Typography</TabsTrigger>
         </TabsList>
         <TabsContent value="themes">
@@ -315,6 +473,53 @@ export default function ThemesPage() {
                     </CardContent>
                 </Card>
             </div>
+        </TabsContent>
+        <TabsContent value="widgets">
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+            >
+                <div className="grid md:grid-cols-4 gap-6 mt-4">
+                    <div className="md:col-span-1">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="font-headline">Available Widgets</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-2">
+                                {availableWidgets.map((widget) => (
+                                    <DraggableWidget key={widget.type} widget={widget} isNewWidget />
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {(isLoadingWidgetAreas || isLoadingInstances) ? (
+                            <>
+                                <Skeleton className="h-96" />
+                                <Skeleton className="h-96" />
+                                <Skeleton className="h-96" />
+                            </>
+                        ) : themeWidgetAreas ? (
+                            themeWidgetAreas.map(area => (
+                                <WidgetDropArea
+                                    key={area.id}
+                                    areaName={area.name}
+                                    widgets={widgetInstances[area.name] || []}
+                                    onDeleteWidget={handleDeleteWidget}
+                                />
+                            ))
+                        ) : (
+                            <p>Could not load widget areas.</p>
+                        )}
+                    </div>
+                </div>
+                <DragOverlay>
+                    {activeWidget ? <DraggableWidget widget={activeWidget} isOverlay /> : null}
+                </DragOverlay>
+            </DndContext>
         </TabsContent>
         <TabsContent value="typography">
              <Card>
