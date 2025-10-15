@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,11 +29,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="font-body antialiased">
+        <ThemeProvider>
           <FirebaseClientProvider>
             {children}
           </FirebaseClientProvider>
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>
