@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -15,15 +16,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical, X } from "lucide-react";
+import { GripVertical, X, Cog } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -53,6 +59,10 @@ type WidgetInstance = {
     widgetAreaId: string;
     type: string;
     order: number;
+    config?: {
+        title?: string;
+        html?: string;
+    }
 }
 
 type AvailableWidget = typeof availableWidgets[0];
@@ -79,7 +89,7 @@ function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
     )
 }
 
-function SortableWidgetInstance({ instance, onDelete }: { instance: WidgetInstance; onDelete: (id: string) => void }) {
+function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance: WidgetInstance; onDelete: (id: string) => void; onSaveConfig: (id: string, config: any) => void; }) {
     const widgetInfo = availableWidgets.find(w => w.type === instance.type);
     const name = widgetInfo?.name || instance.type;
 
@@ -94,14 +104,77 @@ function SortableWidgetInstance({ instance, onDelete }: { instance: WidgetInstan
         zIndex: isDragging ? 100 : 'auto',
     };
 
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [config, setConfig] = useState(instance.config || {});
+
+    const handleSave = () => {
+        onSaveConfig(instance.id, config);
+        setIsSheetOpen(false);
+    }
+    
+    const renderConfigFields = () => {
+        switch (instance.type) {
+            case 'custom-html':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-html">HTML Content</Label>
+                            <Textarea
+                                id="widget-html"
+                                className="min-h-40 font-mono"
+                                value={config.html || ''}
+                                onChange={(e) => setConfig({ ...config, html: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                );
+            default:
+                return <p className="text-sm text-muted-foreground">This widget has no configurable options.</p>;
+        }
+    }
+
+
     return (
-        <div ref={setNodeRef} style={style}  className={cn(`relative flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
+        <div ref={setNodeRef} style={style}  className={cn(`relative group/item flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
              <div {...attributes} {...listeners} className="flex-grow flex items-start gap-2">
                 <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="grid gap-0.5">
                     <p className="font-medium">{name}</p>
                 </div>
             </div>
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetTrigger asChild>
+                     <button
+                        className="absolute top-1 right-8 z-10 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
+                        aria-label="Configure widget"
+                    >
+                        <Cog className="h-3 w-3" />
+                    </button>
+                </SheetTrigger>
+                <SheetContent>
+                    <SheetHeader>
+                        <SheetTitle>Configure: {name}</SheetTitle>
+                        <SheetDescription>
+                            Modify the settings for this widget instance.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                       {renderConfigFields()}
+                    </div>
+                    <SheetFooter>
+                        <Button variant="outline" onClick={() => setIsSheetOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSave}>Save Changes</Button>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
             <button
                 onClick={() => onDelete(instance.id)}
                 className="absolute top-1 right-1 z-10 p-1 text-muted-foreground hover:text-destructive rounded-full hover:bg-destructive/10"
@@ -189,7 +262,8 @@ export default function WidgetsPage() {
     const handleDeleteWidget = (instanceId: string) => {
         if (!firestore) return;
 
-        const widgetName = localInstances?.find(i => i.id === instanceId)?.type || 'Widget';
+        const instanceToDelete = localInstances?.find(i => i.id === instanceId);
+        const widgetName = instanceToDelete ? (availableWidgets.find(w => w.type === instanceToDelete.type)?.name || 'Widget') : 'Widget';
         
         try {
             deleteDocumentNonBlocking(doc(firestore, 'widget_instances', instanceId));
@@ -205,6 +279,28 @@ export default function WidgetsPage() {
                 variant: "destructive",
                 title: "Error Removing Widget",
                 description: error.message || "Could not remove the widget.",
+            });
+        }
+    };
+
+    const handleSaveConfig = async (instanceId: string, config: any) => {
+        if (!firestore) return;
+
+        try {
+            const instanceRef = doc(firestore, 'widget_instances', instanceId);
+            await setDoc(instanceRef, { config }, { merge: true });
+
+            setLocalInstances(prev => (prev || []).map(inst => inst.id === instanceId ? { ...inst, config } : inst));
+
+            toast({
+                title: 'Widget Updated',
+                description: 'Your widget settings have been saved.',
+            });
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Saving Settings',
+                description: error.message || 'Could not save widget settings.',
             });
         }
     };
@@ -235,11 +331,19 @@ export default function WidgetsPage() {
             if (!targetArea || !firestore) return;
 
             const areaWidgets = widgetsByArea[targetAreaId] || [];
+            
+            let newOrder = 0;
+            const overInstance = localInstances?.find(i => i.id === overId);
+            if (overInstance) {
+                newOrder = overInstance.order;
+            } else if (areaWidgets.length > 0) {
+                 newOrder = areaWidgets.length;
+            }
 
             const newWidgetData = {
                 widgetAreaId: targetAreaId,
                 type: widgetType,
-                order: areaWidgets.length,
+                order: newOrder,
                 config: {},
             };
             
@@ -247,7 +351,21 @@ export default function WidgetsPage() {
                 const instancesRef = collection(firestore, 'widget_instances');
                 const newDocRef = await addDocumentNonBlocking(instancesRef, newWidgetData);
                  if (newDocRef) {
-                    setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
+                    setLocalInstances(prev => {
+                        const newInstances = [...(prev || []), { ...newWidgetData, id: newDocRef.id }];
+                         // Recalculate order for the target area
+                        const itemsInArea = newInstances
+                            .filter(i => i.widgetAreaId === targetAreaId)
+                            .sort((a,b) => a.order - b.order);
+                        
+                        itemsInArea.splice(newOrder, 0, { ...newWidgetData, id: newDocRef.id });
+
+                        const otherItems = newInstances.filter(i => i.widgetAreaId !== targetAreaId);
+
+                        const finalInstances = [...otherItems, ...itemsInArea.map((item, index) => ({ ...item, order: index }))];
+
+                        return finalInstances;
+                    });
                  }
                 
                 toast({
@@ -268,63 +386,50 @@ export default function WidgetsPage() {
         // Scenario 2: Reordering widgets
         if (!fromAvailable && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
-            const targetInstance = localInstances.find(i => i.id === overId);
-            
-            const targetAreaId = over.data.current?.isWidgetArea ? overId : targetInstance?.widgetAreaId;
-    
+            const overInstance = localInstances.find(i => i.id === overId);
+            const targetAreaId = over.data.current?.isWidgetArea ? overId : overInstance?.widgetAreaId;
+
             if (!activeInstance || !targetAreaId) return;
 
-            let updatedInstances = [...localInstances];
+            let newInstances = [...localInstances];
+            const sourceAreaId = activeInstance.widgetAreaId;
 
-            if (activeInstance.widgetAreaId === targetAreaId) {
-                // Reordering within the same area
-                const areaWidgets = widgetsByArea[targetAreaId];
-                const oldIndex = areaWidgets.findIndex(i => i.id === activeId);
-                const newIndex = areaWidgets.findIndex(i => i.id === overId);
-                
-                if (oldIndex === newIndex) return;
+            // Remove from old position
+            newInstances = newInstances.filter(i => i.id !== activeId);
 
-                const reorderedInArea = arrayMove(areaWidgets, oldIndex, newIndex);
-                
-                const reorderedIds = new Set(reorderedInArea.map(w => w.id));
-                const otherInstances = updatedInstances.filter(i => !reorderedIds.has(i.id));
-
-                updatedInstances = [...otherInstances, ...reorderedInArea.map((inst, index) => ({ ...inst, order: index }))];
-
+            // Find new position
+            let targetIndex;
+            if (overId && overInstance) {
+                targetIndex = newInstances.findIndex(i => i.id === overId);
             } else {
-                // Moving to a different area
-                const sourceAreaId = activeInstance.widgetAreaId;
-                const newAreaWidgets = (widgetsByArea[targetAreaId] || []);
-                const overIndex = targetInstance ? newAreaWidgets.findIndex(i => i.id === overId) : newAreaWidgets.length;
-
-                // Create a new array for local state update
-                updatedInstances = localInstances.filter(i => i.id !== activeId);
-                updatedInstances.splice(updatedInstances.findIndex(i => i.id === targetInstance?.id) + (overIndex > 0 ? 1 : 0), 0, {
-                    ...activeInstance,
-                    widgetAreaId: targetAreaId
-                });
-
-                // Recalculate order for both affected areas
-                const finalInstances = widgetAreas?.reduce((acc, area) => {
-                    const areaId = area.id;
-                    const itemsInArea = updatedInstances
-                        .filter(i => i.widgetAreaId === areaId)
-                        .sort((a,b) => a.order - b.order) // Maintain original relative order before re-indexing
-                        .map((item, index) => ({ ...item, order: index }));
-                    return [...acc, ...itemsInArea];
-                }, [] as WidgetInstance[]);
-                
-                updatedInstances = finalInstances || updatedInstances;
+                // Dropped on an empty area
+                targetIndex = newInstances.length;
             }
             
-            setLocalInstances(updatedInstances);
+            // Insert at new position
+            newInstances.splice(targetIndex, 0, {
+                ...activeInstance,
+                widgetAreaId: targetAreaId,
+            });
+
+            // Re-calculate order for all affected areas
+            const finalInstances = widgetAreas?.reduce((acc, area) => {
+                const areaId = area.id;
+                // Get items for the current area from the latest state
+                const itemsInArea = newInstances
+                    .filter(i => i.widgetAreaId === areaId)
+                    // Keep relative order, then re-index
+                    .map((item, index) => ({ ...item, order: index }));
+                return [...acc, ...itemsInArea];
+            }, [] as WidgetInstance[]) || [];
             
-            // Persist changes to Firestore
+            setLocalInstances(finalInstances);
+
             if (!firestore) return;
             const batch = writeBatch(firestore);
-            updatedInstances.forEach(instance => {
+            finalInstances.forEach(instance => {
                 const docRef = doc(firestore, 'widget_instances', instance.id);
-                batch.set(docRef, instance); 
+                batch.set(docRef, instance);
             });
 
             try {
@@ -349,7 +454,7 @@ export default function WidgetsPage() {
                     <div className="grid gap-2">
                         {areaWidgets.length > 0 ? (
                             areaWidgets.map(instance => (
-                                <SortableWidgetInstance key={instance.id} instance={instance} onDelete={handleDeleteWidget} />
+                                <SortableWidgetInstance key={instance.id} instance={instance} onDelete={handleDeleteWidget} onSaveConfig={handleSaveConfig} />
                             ))
                         ) : (
                             <WidgetPlaceholder />
@@ -442,3 +547,4 @@ export default function WidgetsPage() {
         </DndContext>
     );
 }
+

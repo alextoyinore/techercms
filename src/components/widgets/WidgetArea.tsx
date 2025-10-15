@@ -6,6 +6,7 @@ import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
 import { CategoriesListWidget } from '@/components/widgets/CategoriesListWidget';
 import { SearchWidget } from '@/components/widgets/SearchWidget';
 import { TagCloudWidget } from '@/components/widgets/TagCloudWidget';
+import { CustomHtmlWidget } from '@/components/widgets/CustomHtmlWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -26,6 +27,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'categories-list': CategoriesListWidget,
     'search': SearchWidget,
     'tag-cloud': TagCloudWidget,
+    'custom-html': CustomHtmlWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
