@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -30,6 +31,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { ThemeCustomizer } from '@/components/theme-customizer';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -40,7 +43,7 @@ export default function SettingsPage() {
   const themeImages = PlaceHolderImages.filter(img =>
     img.id.startsWith('theme-')
   );
-  const { theme: activeAdminTheme, setTheme: setAdminTheme } = useTheme();
+  const { theme: activeAdminTheme, setTheme: setAdminTheme, fontSize, setFontSize } = useTheme();
   const { toast } = useToast();
   const firestore = useFirestore();
   const [isActivating, setIsActivating] = useState<string | null>(null);
@@ -272,49 +275,67 @@ export default function SettingsPage() {
               Customize the look and feel of the admin dashboard.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {themes.map((theme, index) => {
-              const image = themeImages[index % themeImages.length];
-              const isActive = activeAdminTheme.name === theme.name;
-              return (
-                <div key={theme.name} className="flex flex-col gap-2">
-                   <Image
-                      alt={theme.name}
-                      className={`aspect-video w-full object-cover border rounded-lg ${isActive ? 'ring-2 ring-primary ring-offset-2' : ''}`}
-                      data-ai-hint={image.imageHint}
-                      height={400}
-                      src={image.imageUrl}
-                      width={600}
+          <CardContent className="space-y-6">
+            <div className="grid gap-2 max-w-sm">
+                <Label htmlFor="fontSize">Font Size</Label>
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-muted-foreground">Small</span>
+                    <Slider
+                        id="fontSize"
+                        min={12}
+                        max={16}
+                        step={1}
+                        value={[fontSize]}
+                        onValueChange={(value) => setFontSize(value[0])}
                     />
-                  <div className="grid gap-0.5">
-                    <h3 className="font-semibold">{theme.name}</h3>
-                     {isActive && (
-                        <p className="text-xs text-primary font-semibold flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Active
-                        </p>
-                      )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                        onClick={() => setAdminTheme(theme)}
-                        disabled={isActive}
-                        size="sm"
-                        variant={isActive ? "secondary" : "outline"}
-                        className='w-full'
-                      >
-                        {isActive ? 'Activated' : 'Activate'}
-                      </Button>
-                      <ThemeCustomizer theme={theme}>
-                        <Button size="sm" variant="outline">
-                            <Palette className="h-4 w-4" />
-                            <span className="sr-only">Customize</span>
-                        </Button>
-                      </ThemeCustomizer>
-                  </div>
+                    <span className="text-sm text-muted-foreground">Large</span>
                 </div>
-              );
-            })}
+            </div>
+            <Separator />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {themes.map((theme, index) => {
+                const image = themeImages[index % themeImages.length];
+                const isActive = activeAdminTheme.name === theme.name;
+                return (
+                    <div key={theme.name} className="flex flex-col gap-2">
+                    <Image
+                        alt={theme.name}
+                        className={`aspect-video w-full object-cover border rounded-lg ${isActive ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                        data-ai-hint={image.imageHint}
+                        height={400}
+                        src={image.imageUrl}
+                        width={600}
+                        />
+                    <div className="grid gap-0.5">
+                        <h3 className="font-semibold">{theme.name}</h3>
+                        {isActive && (
+                            <p className="text-xs text-primary font-semibold flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Active
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => setAdminTheme(theme)}
+                            disabled={isActive}
+                            size="sm"
+                            variant={isActive ? "secondary" : "outline"}
+                            className='w-full'
+                        >
+                            {isActive ? 'Activated' : 'Activate'}
+                        </Button>
+                        <ThemeCustomizer theme={theme}>
+                            <Button size="sm" variant="outline">
+                                <Palette className="h-4 w-4" />
+                                <span className="sr-only">Customize</span>
+                            </Button>
+                        </ThemeCustomizer>
+                    </div>
+                    </div>
+                );
+                })}
+            </div>
           </CardContent>
         </Card>
       </div>

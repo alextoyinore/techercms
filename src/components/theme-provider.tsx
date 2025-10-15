@@ -9,6 +9,8 @@ interface ThemeProviderState {
   themes: Theme[];
   setTheme: (theme: Theme) => void;
   addTheme: (theme: Theme) => void;
+  fontSize: number;
+  setFontSize: (size: number) => void;
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>({
@@ -16,11 +18,14 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
   themes: defaultThemes,
   setTheme: () => null,
   addTheme: () => null,
+  fontSize: 14,
+  setFontSize: () => null,
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themes, setThemes] = useState<Theme[]>(defaultThemes);
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const [fontSize, setFontSizeState] = useState<number>(14);
 
   useEffect(() => {
     try {
@@ -45,6 +50,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [themes]);
 
+  useEffect(() => {
+    try {
+        const storedFontSize = localStorage.getItem('fontSize');
+        if (storedFontSize) {
+            setFontSizeState(Number(storedFontSize));
+        }
+    } catch(e) {
+        console.error("Failed to parse font size from localStorage", e);
+        setFontSizeState(14);
+    }
+  }, []);
+
   const applyTheme = useCallback((themeToApply: Theme) => {
     const root = window.document.documentElement;
     Object.entries(themeToApply.colors).forEach(([key, value]) => {
@@ -61,8 +78,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyTheme(theme);
-    localStorage.setItem('theme', theme.name);
+    if (theme.name !== 'temporary-preview') {
+      localStorage.setItem('theme', theme.name);
+    }
   }, [theme, applyTheme]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.style.fontSize = `${fontSize}px`;
+    localStorage.setItem('fontSize', String(fontSize));
+  }, [fontSize]);
 
   const addTheme = (newTheme: Theme) => {
     setThemes(currentThemes => {
@@ -76,11 +101,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeState(newTheme);
   };
 
+  const setFontSize = (size: number) => {
+    setFontSizeState(size);
+  }
+
   const value = {
     theme,
     themes,
     setTheme,
     addTheme,
+    fontSize,
+    setFontSize,
   };
 
   return (
