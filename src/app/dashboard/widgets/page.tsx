@@ -717,27 +717,25 @@ export default function WidgetsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                    <div className="lg:col-span-1">
-                        <Card className="sticky top-20">
+                    <div className="lg:col-span-1 sticky top-20">
+                        <Card className="flex flex-col max-h-[calc(100vh-6rem)]">
                             <CardHeader>
                                 <CardTitle className="font-headline">Available Widgets</CardTitle>
                                  <CardDescription>
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <ScrollArea className="h-full max-h-[calc(100vh-16rem)]">
-                                    <div className="grid gap-4 pr-4">
-                                        {Object.entries(availableWidgets).map(([groupName, widgets]) => (
-                                            <div key={groupName} className="grid gap-2">
-                                                <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
-                                                {widgets.map((widget) => (
-                                                    <AvailableWidgetCard key={widget.type} widget={widget} />
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </ScrollArea>
+                            <CardContent className="flex-1 overflow-y-auto">
+                                <div className="grid gap-4 pr-1">
+                                    {Object.entries(availableWidgets).map(([groupName, widgets]) => (
+                                        <div key={groupName} className="grid gap-2">
+                                            <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
+                                            {widgets.map((widget) => (
+                                                <AvailableWidgetCard key={widget.type} widget={widget} />
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
