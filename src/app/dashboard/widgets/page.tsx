@@ -245,7 +245,6 @@ export default function WidgetsPage() {
             
             try {
                 const instancesRef = collection(firestore, 'widget_instances');
-                // Use addDocumentNonBlocking and handle promise
                 const newDocRef = await addDocumentNonBlocking(instancesRef, newWidgetData);
                  if (newDocRef) {
                     setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
@@ -269,47 +268,53 @@ export default function WidgetsPage() {
         // Scenario 2: Reordering widgets
         if (!fromAvailable && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
+            const targetInstance = localInstances.find(i => i.id === overId);
             
-            // Determine if dropping over an area or another instance
-            const targetAreaId = over.data.current?.isWidgetArea ? overId : over.data.current?.instance?.widgetAreaId;
-            const targetInstanceId = over.data.current?.isWidgetArea ? null : overId;
-
+            const targetAreaId = over.data.current?.isWidgetArea ? overId : targetInstance?.widgetAreaId;
+    
             if (!activeInstance || !targetAreaId) return;
 
-            const sourceAreaWidgets = widgetsByArea[activeInstance.widgetAreaId] || [];
-            const targetAreaWidgets = widgetsByArea[targetAreaId] || [];
-
-            let updatedInstances: WidgetInstance[];
+            let updatedInstances = [...localInstances];
 
             if (activeInstance.widgetAreaId === targetAreaId) {
                 // Reordering within the same area
-                const oldIndex = sourceAreaWidgets.findIndex(i => i.id === activeId);
-                const newIndex = targetInstanceId ? targetAreaWidgets.findIndex(i => i.id === targetInstanceId) : targetAreaWidgets.length;
+                const areaWidgets = widgetsByArea[targetAreaId];
+                const oldIndex = areaWidgets.findIndex(i => i.id === activeId);
+                const newIndex = areaWidgets.findIndex(i => i.id === overId);
                 
                 if (oldIndex === newIndex) return;
 
-                const reorderedInArea = arrayMove(sourceAreaWidgets, oldIndex, newIndex);
+                const reorderedInArea = arrayMove(areaWidgets, oldIndex, newIndex);
                 
-                updatedInstances = localInstances.map(inst => {
-                    if (inst.widgetAreaId !== targetAreaId) return inst;
-                    const newOrder = reorderedInArea.findIndex(i => i.id === inst.id);
-                    return { ...inst, order: newOrder };
-                });
+                const reorderedIds = new Set(reorderedInArea.map(w => w.id));
+                const otherInstances = updatedInstances.filter(i => !reorderedIds.has(i.id));
+
+                updatedInstances = [...otherInstances, ...reorderedInArea.map((inst, index) => ({ ...inst, order: index }))];
 
             } else {
                 // Moving to a different area
-                const oldIndex = sourceAreaWidgets.findIndex(i => i.id === activeId);
-                const newIndex = targetInstanceId ? targetAreaWidgets.findIndex(i => i.id === targetInstanceId) : targetAreaWidgets.length;
+                const sourceAreaId = activeInstance.widgetAreaId;
+                const newAreaWidgets = (widgetsByArea[targetAreaId] || []);
+                const overIndex = targetInstance ? newAreaWidgets.findIndex(i => i.id === overId) : newAreaWidgets.length;
 
-                const [movedItem] = sourceAreaWidgets.splice(oldIndex, 1);
-                targetAreaWidgets.splice(newIndex, 0, { ...movedItem, widgetAreaId: targetAreaId });
+                // Create a new array for local state update
+                updatedInstances = localInstances.filter(i => i.id !== activeId);
+                updatedInstances.splice(updatedInstances.findIndex(i => i.id === targetInstance?.id) + (overIndex > 0 ? 1 : 0), 0, {
+                    ...activeInstance,
+                    widgetAreaId: targetAreaId
+                });
+
+                // Recalculate order for both affected areas
+                const finalInstances = widgetAreas?.reduce((acc, area) => {
+                    const areaId = area.id;
+                    const itemsInArea = updatedInstances
+                        .filter(i => i.widgetAreaId === areaId)
+                        .sort((a,b) => a.order - b.order) // Maintain original relative order before re-indexing
+                        .map((item, index) => ({ ...item, order: index }));
+                    return [...acc, ...itemsInArea];
+                }, [] as WidgetInstance[]);
                 
-                const reorderedSource = sourceAreaWidgets.map((item, index) => ({...item, order: index}));
-                const reorderedTarget = targetAreaWidgets.map((item, index) => ({...item, widgetAreaId: targetAreaId, order: index}));
-
-                updatedInstances = localInstances
-                    .filter(inst => inst.widgetAreaId !== activeInstance.widgetAreaId && inst.widgetAreaId !== targetAreaId)
-                    .concat(reorderedSource, reorderedTarget);
+                updatedInstances = finalInstances || updatedInstances;
             }
             
             setLocalInstances(updatedInstances);
@@ -319,7 +324,7 @@ export default function WidgetsPage() {
             const batch = writeBatch(firestore);
             updatedInstances.forEach(instance => {
                 const docRef = doc(firestore, 'widget_instances', instance.id);
-                batch.set(docRef, instance); // Use set to handle moves and reorders
+                batch.set(docRef, instance); 
             });
 
             try {
