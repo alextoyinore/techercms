@@ -285,7 +285,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {

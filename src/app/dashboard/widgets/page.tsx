@@ -62,6 +62,7 @@ const availableWidgets = {
     ],
     'Utility': [
         { type: 'search', name: 'Search', description: 'Display a search form.' },
+        { type: 'weather', name: 'Weather', description: 'Display current weather for a location.' },
     ],
     'Social': [
         { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
@@ -140,6 +141,7 @@ type WidgetInstance = {
         tags?: string;
         layout?: 'list' | 'grid';
         gridColumns?: number;
+        location?: string;
     }
 }
 
@@ -469,6 +471,30 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                             onChange={(e) => setConfig({ ...config, title: e.target.value })}
                         />
                         <p className="text-sm text-muted-foreground">This widget uses placeholder data. A developer will need to connect it to a live data source.</p>
+                    </div>
+                );
+            case 'weather':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="e.g., Local Weather"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-location">Location</Label>
+                            <Input
+                                id="widget-location"
+                                placeholder="e.g., New York, NY"
+                                value={config.location || ''}
+                                onChange={(e) => setConfig({ ...config, location: e.target.value })}
+                            />
+                        </div>
+                         <p className="text-sm text-muted-foreground">This widget uses placeholder data. A developer will need to connect it to a live data source.</p>
                     </div>
                 );
             case 'social-follow':
