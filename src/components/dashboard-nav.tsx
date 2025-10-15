@@ -31,7 +31,6 @@ const navItems = [
     { href: "/dashboard/media", icon: ImageIcon, label: "Media" },
     { href: "/dashboard/categories", icon: Folder, label: "Categories" },
     { href: "/dashboard/tags", icon: Tag, label: "Tags" },
-    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes" },
     { href: "/dashboard/widgets", icon: Blocks, label: "Widgets" },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
     { href: "/dashboard/profile", icon: User, label: "Profile" },

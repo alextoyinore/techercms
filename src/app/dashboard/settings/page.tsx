@@ -12,10 +12,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { CheckCircle, Loader2, Palette, Radio } from 'lucide-react';
+import { CheckCircle, Loader2, Palette } from 'lucide-react';
+import { themes } from '@/lib/themes';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
-import { themes } from '@/lib/themes';
 import {
   Select,
   SelectContent,
@@ -49,7 +49,10 @@ type Page = {
 export default function SettingsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { theme: activeTheme, setTheme: setActiveTheme, fontSize, setFontSize, themes: availableThemes } = useTheme();
+  
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isActivating, setIsActivating] = useState<string | null>(null);
   
   const [siteName, setSiteName] = useState('');
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
@@ -86,6 +89,7 @@ export default function SettingsPage() {
         siteName,
         homepageType,
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
+        activeTheme: activeTheme.name,
     };
     try {
         await setDoc(doc(firestore, 'site_settings', 'config'), settingsToSave, { merge: true });
@@ -96,6 +100,19 @@ export default function SettingsPage() {
         setIsSavingSettings(false);
     }
   }
+
+  const handleActivateTheme = (themeName: string) => {
+    const newTheme = availableThemes.find(t => t.name === themeName);
+    if (newTheme) {
+        setIsActivating(themeName);
+        setActiveTheme(newTheme);
+        // Persist this change when the user saves all settings
+        toast({ title: 'Theme Selected', description: `"${themeName}" is now active. Save settings to persist.` });
+        setTimeout(() => setIsActivating(null), 1000);
+    }
+  }
+  
+  const themeImages = PlaceHolderImages.filter(img => img.id.startsWith('theme-'));
 
   return (
     <div className="flex flex-col gap-6">
@@ -152,14 +169,79 @@ export default function SettingsPage() {
                     </RadioGroup>
                 </div>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
-                    {isSavingSettings ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Saving...</> : 'Save Settings'}
-                </Button>
-            </CardFooter>
         </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Appearance</CardTitle>
+                <CardDescription>
+                    Customize your dashboard's look and feel.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <div className='grid gap-2'>
+                    <Label>Dashboard Theme</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {availableThemes.map((theme, index) => {
+                             const image = themeImages[index % themeImages.length];
+                             const isActive = theme.name === activeTheme.name;
+                             const isProcessing = isActivating === theme.name;
+                             return (
+                                <div key={theme.name} className="relative group">
+                                     <Image
+                                        src={image.imageUrl}
+                                        alt={theme.name}
+                                        width={300}
+                                        height={150}
+                                        className={cn("rounded-md aspect-[2/1] object-cover border-2", isActive ? "border-primary" : "border-muted")}
+                                    />
+                                    {isActive && (
+                                        <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                            <CheckCircle className="h-8 w-8 text-white" />
+                                        </div>
+                                    )}
+                                    <div className={cn("absolute inset-0 bg-black/50 flex flex-col items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-opacity", isActive && "hidden")}>
+                                        <Button size="sm" onClick={() => handleActivateTheme(theme.name)} disabled={!!isActivating}>
+                                            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : 'Activate'}
+                                        </Button>
+                                    </div>
+                                    <p className='text-sm font-medium mt-2'>{theme.name}</p>
+                                </div>
+                             )
+                        })}
+                    </div>
+                </div>
+                 <ThemeCustomizer theme={activeTheme}>
+                    <Button variant="outline" className="w-fit">
+                        <Palette className="mr-2 h-4 w-4" />
+                        Customize & Create New Theme
+                    </Button>
+                </ThemeCustomizer>
+                <Separator />
+                <div className='grid gap-2 max-w-sm'>
+                    <Label>Font Scaling</Label>
+                    <div className='flex items-center gap-4'>
+                        <Slider
+                            value={[fontSize]}
+                            onValueChange={(value) => setFontSize(value[0])}
+                            min={12}
+                            max={18}
+                            step={1}
+                        />
+                        <span className='text-sm text-muted-foreground w-12 text-center'>{fontSize}px</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Adjust the base font size for the dashboard interface.</p>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
+      <div className="sticky bottom-0 bg-background/95 py-4 border-t mt-4">
+        <div className='flex justify-end'>
+            <Button onClick={handleSaveSettings} disabled={isSavingSettings}>
+                {isSavingSettings ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Saving...</> : 'Save All Settings'}
+            </Button>
+        </div>
       </div>
     </div>
   );
 }
-
