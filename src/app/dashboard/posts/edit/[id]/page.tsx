@@ -64,6 +64,7 @@ export default function EditPostPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -179,6 +180,7 @@ export default function EditPostPage() {
     }
 
     setIsSubmitting(true);
+    setSubmissionStatus(status);
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     const updatedPost = {
@@ -209,6 +211,7 @@ export default function EditPostPage() {
         });
     } finally {
         setIsSubmitting(false);
+        setSubmissionStatus(null);
     }
   };
   
@@ -274,10 +277,24 @@ export default function EditPostPage() {
             </CardHeader>
             <CardContent className="border-t pt-6 flex justify-between gap-2">
               <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Draft'}
+                {isSubmitting && submissionStatus === 'draft' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Draft'
+                )}
               </Button>
               <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
-                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Update & Publish'}
+                 {isSubmitting && submissionStatus === 'published' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update & Publish'
+                )}
               </Button>
             </CardContent>
           </Card>
