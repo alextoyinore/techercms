@@ -99,6 +99,10 @@ export default function HomePage() {
                 <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and stories.</p>
             </div>
 
+            <div className="mb-12 space-y-8">
+                <WidgetArea areaName="Homepage Content" />
+            </div>
+
             {isLoading && <Loading />}
 
             {!isLoading && (!sortedPosts || sortedPosts.length === 0) && (

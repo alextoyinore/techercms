@@ -87,6 +87,10 @@ export default function HomePage() {
     <div className="bg-background min-h-screen">
         <PublicHeader siteName={settings?.siteName} />
         <main className="container mx-auto py-8 px-6 max-w-3xl">
+            <div className="mb-12 space-y-8">
+                <WidgetArea areaName="Homepage Content" />
+            </div>
+
             {isLoading && <Loading />}
 
             {!isLoading && (!sortedPosts || sortedPosts.length === 0) && (

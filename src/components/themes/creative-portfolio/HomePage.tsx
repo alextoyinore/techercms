@@ -98,6 +98,10 @@ export default function HomePage() {
                 <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">Exploring the intersection of art, design, and technology.</p>
             </div>
 
+            <div className="mb-16 space-y-8">
+                <WidgetArea areaName="Homepage Content" />
+            </div>
+
             {isLoading && <Loading />}
 
             {!isLoading && (!sortedPosts || sortedPosts.length === 0) && (
