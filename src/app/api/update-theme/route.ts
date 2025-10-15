@@ -30,10 +30,14 @@ export async function POST(request: NextRequest) {
     
     // Update each color variable
     for (const key in colors) {
+        if (key === 'sidebar') continue;
         const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
         const regex = new RegExp(`(${cssVar}:\\s*)[^;]+;`);
         if (regex.test(rootContent)) {
             rootContent = rootContent.replace(regex, `$1${colors[key]};`);
+        } else {
+            // If the variable doesn't exist, add it.
+            rootContent += `\n  ${cssVar}: ${colors[key]};`;
         }
     }
     

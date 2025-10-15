@@ -128,8 +128,8 @@ export default function ThemesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Themes"
-        description="Manage your website's appearance."
+        title="Appearance"
+        description="Manage your website's themes and visual customization."
       />
       <div className="grid gap-6">
         <Card>

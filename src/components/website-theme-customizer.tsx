@@ -18,6 +18,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { fontList } from '@/lib/fonts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+
 
 const globalColorKeys = [
     'background', 'foreground', 'card', 'cardForeground',
@@ -28,6 +34,12 @@ const globalColorKeys = [
 ] as const;
 
 type GlobalColors = Pick<Record<typeof globalColorKeys[number], string>, typeof globalColorKeys[number]>;
+
+type SiteSettings = {
+  bodyFont?: string;
+  headlineFont?: string;
+  baseFontSize?: number;
+};
 
 
 function ColorInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
@@ -42,13 +54,13 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
   };
 
   return (
-    <div className="flex items-center gap-2">
-        <Label className="flex-1 capitalize">{label.replace(/([A-Z])/g, ' $1')}</Label>
+    <div className="grid grid-cols-2 items-center gap-4">
+        <Label className="capitalize">{label.replace(/([A-Z])/g, ' $1')}</Label>
         <Input
             type="color"
             value={hex}
             onChange={(e) => handleHexChange(e.target.value)}
-            className="w-10 h-10 p-1"
+            className="w-16 h-10 p-1"
         />
     </div>
   );
@@ -57,10 +69,24 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
 
 export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [open, setOpen] = useState(false);
+  
   const [colors, setColors] = useState<GlobalColors | null>(null);
+  
+  const [headlineFont, setHeadlineFont] = useState('Poppins');
+  const [bodyFont, setBodyFont] = useState('Inter');
+  const [baseFontSize, setBaseFontSize] = useState(16);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   useEffect(() => {
     if (open) {
@@ -76,9 +102,16 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
       }
 
       setColors(initialColors as GlobalColors);
+      
+      if (settings) {
+        setHeadlineFont(settings.headlineFont || 'Poppins');
+        setBodyFont(settings.bodyFont || 'Inter');
+        setBaseFontSize(settings.baseFontSize || 16);
+      }
+
       setIsLoading(false);
     }
-  }, [open]);
+  }, [open, settings]);
 
   const handleColorChange = (key: keyof GlobalColors, value: string) => {
     if (!colors) return;
@@ -91,28 +124,37 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
   };
 
   const handleSave = async () => {
-    if (!colors) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load colors.' });
+    if (!colors || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not save changes.' });
         return;
     }
     
     setIsSaving(true);
     
     try {
-        const response = await fetch('/api/update-theme', {
+        const colorPromise = fetch('/api/update-theme', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ colors }),
         });
+
+        const settingsToSave: Partial<SiteSettings> = {
+            headlineFont,
+            bodyFont,
+            baseFontSize,
+        };
+        const typographyPromise = setDoc(settingsRef, settingsToSave, { merge: true });
+
+        const [colorResponse] = await Promise.all([colorPromise, typographyPromise]);
         
-        if (!response.ok) {
-            const errorData = await response.json();
+        if (!colorResponse.ok) {
+            const errorData = await colorResponse.json();
             throw new Error(errorData.error || 'Failed to update theme file.');
         }
 
         toast({
             title: 'Website Theme Updated!',
-            description: 'Your changes have been saved to globals.css.',
+            description: 'Your changes have been saved.',
         });
         setOpen(false);
 
@@ -130,23 +172,24 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent className="flex flex-col">
+      <SheetContent className="flex flex-col w-full md:max-w-md">
         <SheetHeader>
           <SheetTitle>Customize Website Theme</SheetTitle>
           <SheetDescription>
-            Adjust the global colors for your public-facing website. These changes will be saved to `globals.css`.
+            Adjust the global colors and typography for your public-facing website.
           </SheetDescription>
         </SheetHeader>
         <Separator />
         <ScrollArea className="flex-1 -mx-6 px-6">
-            {isLoading || !colors ? (
+            {isLoading || isLoadingSettings ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
             ) : (
-                <div className="grid gap-6 py-4">
+                <div className="grid gap-8 py-4">
                     <div className='grid gap-4'>
-                        {Object.entries(colors).map(([key, value]) => (
+                        <h3 className="font-medium text-sm">Colors</h3>
+                        {colors && Object.entries(colors).map(([key, value]) => (
                             <ColorInput
                                 key={key}
                                 label={key}
@@ -154,6 +197,49 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
                                 onChange={(newValue) => handleColorChange(key as any, newValue)}
                             />
                         ))}
+                    </div>
+                    <Separator />
+                     <div className="space-y-4">
+                        <h3 className="font-medium text-sm">Typography</h3>
+                        <div className="space-y-2">
+                            <Label>Headline Font</Label>
+                             <Select value={headlineFont} onValueChange={setHeadlineFont}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a font" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fontList.map(font => (
+                                        <SelectItem key={font.name} value={font.name}>{font.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Body Font</Label>
+                             <Select value={bodyFont} onValueChange={setBodyFont}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a font" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fontList.map(font => (
+                                        <SelectItem key={font.name} value={font.name}>{font.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Base Font Size</Label>
+                            <div className='flex items-center gap-4'>
+                                <Slider
+                                    value={[baseFontSize]}
+                                    onValueChange={(value) => setBaseFontSize(value[0])}
+                                    min={12}
+                                    max={20}
+                                    step={1}
+                                />
+                                <span className='text-sm text-muted-foreground w-12 text-center'>{baseFontSize}px</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
