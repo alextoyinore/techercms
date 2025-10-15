@@ -95,6 +95,24 @@
       "description": "Rose gold theme preview",
       "imageUrl": "https://picsum.photos/seed/theme8/600/400",
       "imageHint": "rose gold"
+    },
+    {
+      "id": "theme-9",
+      "description": "Newspaper theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme9/600/400",
+      "imageHint": "newspaper layout"
+    },
+    {
+      "id": "theme-10",
+      "description": "Tech blog theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme10/600/400",
+      "imageHint": "tech blog"
+    },
+    {
+      "id": "theme-11",
+      "description": "Earthy tones theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme11/600/400",
+      "imageHint": "earthy tones"
     }
   ]
 }

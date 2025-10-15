@@ -19,6 +19,18 @@ const themes = {
     HomePage: dynamic(() => import('@/components/themes/creative-portfolio/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/creative-portfolio/SlugPage')),
   },
+  'Newspaper': {
+    HomePage: dynamic(() => import('@/components/themes/newspaper/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/newspaper/SlugPage')),
+  },
+  'Tech Today': {
+    HomePage: dynamic(() => import('@/components/themes/tech-today/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/tech-today/SlugPage')),
+  },
+  'Earthy Elegance': {
+    HomePage: dynamic(() => import('@/components/themes/earthy-elegance/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/earthy-elegance/SlugPage')),
+  },
 };
 
 type SiteSettings = {

@@ -34,6 +34,21 @@ const websiteThemes = [
       description: 'A visually-driven theme to showcase your creative work and projects.',
       imageHintId: 'theme-3'
     },
+    {
+      name: 'Newspaper',
+      description: 'A traditional, information-dense theme for news organizations.',
+      imageHintId: 'theme-9'
+    },
+    {
+      name: 'Tech Today',
+      description: 'A modern, sleek theme for tech blogs and review sites.',
+      imageHintId: 'theme-10'
+    },
+    {
+      name: 'Earthy Elegance',
+      description: 'An organic, natural theme for lifestyle or wellness brands.',
+      imageHintId: 'theme-11'
+    },
 ];
 
 type SiteSettings = {
