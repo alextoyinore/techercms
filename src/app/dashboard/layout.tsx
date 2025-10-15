@@ -51,10 +51,12 @@ export default function DashboardLayout({
       <div className="min-h-screen w-full bg-background text-foreground flex">
         <Sidebar collapsible="icon" className="flex flex-col border-r">
           <DashboardNav user={user} />
-          <div className="mt-auto p-4 hidden lg:block">
-            <UserNav user={user} />
+          <div className="mt-auto hidden md:block">
+            <div className="p-4">
+              <UserNav user={user} />
+            </div>
+            <SidebarFooter />
           </div>
-          <SidebarFooter />
         </Sidebar>
         <div className="flex flex-col flex-1">
           <main className="flex-1 p-4 sm:p-6">{children}</main>
