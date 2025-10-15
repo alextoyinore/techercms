@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Image from 'next/image';
@@ -63,7 +64,7 @@ export default function SettingsPage() {
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
   const [homepagePageId, setHomepagePageId] = useState<string | undefined>(undefined);
   const [language, setLanguage] = useState<string>('en');
-  const [timezone, setTimezone] = useState<string>('UTC');
+  const [timezone, setTimezone] = useState<string>('');
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -84,9 +85,22 @@ export default function SettingsPage() {
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
-      setTimezone(settings.timezone || 'UTC');
+      // If a timezone is saved in the DB, use it.
+      if (settings.timezone) {
+        setTimezone(settings.timezone);
+      }
+    } else if (!isLoadingSettings) {
+      // If loading is finished and there are no settings, auto-detect timezone.
+      const offsetInMinutes = new Date().getTimezoneOffset();
+      const offsetInHours = Math.round(-offsetInMinutes / 60);
+      const utcString = `(UTC${offsetInHours >= 0 ? '+' : ''}${offsetInHours})`;
+      
+      const matchedTimezone = timezones.find(tz => tz.startsWith(utcString)) || timezones.find(tz => tz.startsWith('(UTC+0)'));
+      if (matchedTimezone) {
+        setTimezone(matchedTimezone);
+      }
     }
-  }, [settings]);
+  }, [settings, isLoadingSettings]);
 
   const handleSaveSettings = async () => {
     if (!firestore) {
