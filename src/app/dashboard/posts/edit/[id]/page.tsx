@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, PlusCircle, Loader2, X, Upload } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { Loading } from '@/components/loading';
+import { MediaLibrary } from '@/components/media-library';
 
 type Category = {
   id: string;
@@ -356,23 +357,32 @@ export default function EditPostPage() {
                       className="hidden" 
                       accept="image/*"
                     />
-                    <Button 
-                      variant="outline" 
-                      onClick={() => fileInputRef.current?.click()} 
-                      disabled={isSubmitting || isUploading}
-                    >
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => fileInputRef.current?.click()} 
+                        disabled={isSubmitting || isUploading}
+                        >
+                        {isUploading ? (
+                            <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Uploading...
+                            </>
+                        ) : (
+                            <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload New
+                            </>
+                        )}
+                        </Button>
+                        <MediaLibrary onSelect={(url) => setFeaturedImageUrl(url)}>
+                            <Button variant="outline" className="w-full" disabled={isSubmitting || isUploading}>
+                                <Library className="mr-2 h-4 w-4" />
+                                Browse Library
+                            </Button>
+                        </MediaLibrary>
+                    </div>
                 </CardContent>
             </Card>
           <Card>
@@ -435,5 +445,3 @@ export default function EditPostPage() {
     </div>
   );
 }
-
-    
