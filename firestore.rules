@@ -11,11 +11,14 @@
  * - `/posts/{postId}`: Stores blog post data. Each post is associated with an author.
  * - `/media/{mediaId}`: Stores media file metadata. Each media item is associated with an author.
  * - `/site_settings/config`: Stores global site configuration (e.g., active theme).
+ * - `/widget_areas/{widgetAreaId}`: Stores widget area definitions.
+ * - `/widget_instances/{widgetInstanceId}`: Stores widget instance configurations.
  *
  * Key Security Decisions:
  * - Users can only create, update, and delete Pages, Posts, and Media that they own (i.e., where `authorId` matches their UID).
  * - Site settings can be read by anyone but can only be updated or deleted by an authenticated user.
  * - Listing of Pages, Posts, and Media is public.
+ * - Categories, Tags, WidgetAreas, and WidgetInstances are managed by any authenticated user.
  *
  * Denormalization for Authorization:
  *  - Each Page, Post, and Media document includes an `authorId` field. This allows for efficient, top-level ownership checks without needing to perform additional reads.
@@ -121,6 +124,38 @@ service cloud.firestore {
     match /site_settings/config {
       allow get: if true;
       allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Secure access to Widget Areas.
+     * @path /widget_areas/{widgetAreaId}
+     * @allow (create) Any signed-in user can create a widget area.
+     * @allow (update) Any signed-in user can update a widget area.
+     * @allow (delete) Any signed-in user can delete a widget area.
+     * @deny (create) Unauthenticated user cannot create a widget area.
+     * @principle Allows any authenticated user to manage widget areas.
+     */
+    match /widget_areas/{widgetAreaId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    /**
+     * @description Secure access to Widget Instances.
+     * @path /widget_instances/{widgetInstanceId}
+     * @allow (create) Any signed-in user can create a widget instance.
+     * @allow (update) Any signed-in user can update a widget instance.
+     * @allow (delete) Any signed-in user can delete a widget instance.
+     * @deny (create) Unauthenticated user cannot create a widget instance.
+     * @principle Allows any authenticated user to manage widget instances.
+     */
+    match /widget_instances/{widgetInstanceId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
