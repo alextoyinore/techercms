@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
 import { CategoriesListWidget } from '@/components/widgets/CategoriesListWidget';
 import { SearchWidget } from '@/components/widgets/SearchWidget';
+import { TagCloudWidget } from '@/components/widgets/TagCloudWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -24,6 +25,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'recent-posts': RecentPostsWidget,
     'categories-list': CategoriesListWidget,
     'search': SearchWidget,
+    'tag-cloud': TagCloudWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
