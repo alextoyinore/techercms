@@ -33,6 +33,7 @@ import { useState, useEffect } from 'react';
 import { ThemeCustomizer } from '@/components/theme-customizer';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 type SiteSettings = {
   activeTheme?: string;
