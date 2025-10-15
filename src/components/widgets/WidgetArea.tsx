@@ -9,6 +9,10 @@ import { TagCloudWidget } from '@/components/widgets/TagCloudWidget';
 import { CustomHtmlWidget } from '@/components/widgets/CustomHtmlWidget';
 import { ImageWidget } from '@/components/widgets/ImageWidget';
 import { SocialFollowWidget } from '@/components/widgets/SocialFollowWidget';
+import { TradingTickerWidget } from '@/components/widgets/TradingTickerWidget';
+import { BreakingNewsWidget } from '@/components/widgets/BreakingNewsWidget';
+import { LiveScoreWidget } from '@/components/widgets/LiveScoreWidget';
+import { SportingTablesWidget } from '@/components/widgets/SportingTablesWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -32,6 +36,10 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'custom-html': CustomHtmlWidget,
     'image': ImageWidget,
     'social-follow': SocialFollowWidget,
+    'trading-ticker': TradingTickerWidget,
+    'breaking-news': BreakingNewsWidget,
+    'live-score': LiveScoreWidget,
+    'sporting-tables': SportingTablesWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
