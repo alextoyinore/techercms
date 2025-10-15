@@ -873,8 +873,8 @@ export default function WidgetsPage() {
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-1 -mx-6 px-6 overflow-y-auto">
-                                <ScrollArea className="h-full pr-6">
+                            <CardContent className="flex-1 overflow-y-auto px-6">
+                                <ScrollArea className="h-full pr-2">
                                     <div className="grid gap-4">
                                         {Object.entries(availableWidgets).map(([groupName, widgets]) => (
                                             <div key={groupName} className="grid gap-2">
@@ -904,4 +904,3 @@ export default function WidgetsPage() {
         </DndContext>
     );
 }
-
