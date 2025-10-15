@@ -352,7 +352,7 @@ export default function EditPagePage() {
                       className="hidden" 
                       accept="image/*"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                         <Button 
                         variant="outline"
                         className="w-full"
@@ -410,5 +410,3 @@ export default function EditPagePage() {
     </div>
   );
 }
-
-    

@@ -280,9 +280,9 @@ export default function NewPagePage() {
                   className="hidden" 
                   accept="image/*"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                     <Button 
-                    variant="outline"
+                    variant="outline" 
                     className="w-full"
                     onClick={() => fileInputRef.current?.click()} 
                     disabled={isSubmitting || isUploading}
