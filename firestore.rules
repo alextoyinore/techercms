@@ -6,24 +6,39 @@
  * while relaxing data validation to enable rapid prototyping.
  *
  * Data Structure:
+ * - `/pages/{pageId}`: Stores static page data.
  * - `/categories/{categoryId}`: Stores category data.
  * - `/tags/{tagId}`: Stores tag data.
  * - `/posts/{postId}`: Stores post data.
  *
  * Key Security Decisions:
  * - No user listing is allowed.
- * - Unauthenticated access is disallowed, based on the provided reasoning.
- * - Owner-only access is enforced where applicable.
- * - All write operations are secured by authorization checks.
- * - Categories and tags are readable by any signed-in user, but only writable by authorized users (currently, all signed-in users).  Update and Delete operations are denied by default.
- * - Posts are readable by any signed-in user, but only the author can modify them.
+ * - Unauthenticated access is disallowed.
+ * - Owner-only access is enforced for Pages and Posts.
+ * - Categories and Tags are readable by any signed-in user and writable by any signed-in user, but only authorized users can update or delete.  Update and Delete operations are denied by default.
  *
  * Denormalization for Authorization:
- * - The `Post` entity includes an `authorId` field. This allows for simple ownership checks on posts without needing to perform additional reads.
+ * - The `Page` and `Post` entities include an `authorId` field. This allows for simple ownership checks on pages and posts without needing to perform additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /**
+     * @description Secure page documents.
+     * @path /pages/{pageId}
+     * @allow (create) Authenticated user can create a page if they are the author.
+     * @deny (create) Unauthenticated user cannot create a page.
+     * @allow (get, list) Any authenticated user can read any page.
+     * @allow (update, delete) Only the author can modify/delete their own pages.
+     * @deny (update, delete) Other users cannot modify/delete pages.
+     * @principle Enforces document ownership for writes, ensures only the author can modify pages.
+     */
+    match /pages/{pageId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+    }
 
     /**
      * @description Secure category documents.
@@ -32,7 +47,7 @@ service cloud.firestore {
      * @deny (create) Unauthenticated user cannot create a category.
      * @allow (get, list) Any authenticated user can read any category.
      * @deny (update, delete) No one can update or delete a category for now.
-     * @principle Enforces document ownership for writes.
+     * @principle No one can update or delete a category for now.
      */
     match /categories/{categoryId} {
       allow get, list: if isSignedIn();
@@ -47,7 +62,7 @@ service cloud.firestore {
      * @deny (create) Unauthenticated user cannot create a tag.
      * @allow (get, list) Any authenticated user can read any tag.
      * @deny (update, delete) No one can update or delete a tag for now.
-     * @principle Enforces document ownership for writes.
+     * @principle No one can update or delete a tag for now.
      */
     match /tags/{tagId} {
       allow get, list: if isSignedIn();
@@ -93,10 +108,11 @@ service cloud.firestore {
     /**
      * @description Checks if the user is the owner of the existing document.
      * @param {string} userId - The user ID to check against.
+     * @param {string} authorId - The authorId to check against
      * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isExistingOwner(authorId) {
+      return isOwner(authorId) && resource != null;
     }
   }
 }
