@@ -222,27 +222,29 @@ export default function NewPagePage() {
             <CardHeader>
               <CardTitle className="font-headline">Publish</CardTitle>
             </CardHeader>
-            <CardContent className="border-t pt-6 flex justify-between gap-2">
-              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
-                {isSubmitting && submissionStatus === 'draft' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Draft'
-                )}
-              </Button>
-              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
-                {isSubmitting && submissionStatus === 'published' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Publishing...
-                  </>
-                ) : (
-                  'Publish'
-                )}
-              </Button>
+            <CardContent className="border-t pt-6">
+              <div className="flex justify-between gap-2">
+                <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
+                  {isSubmitting && submissionStatus === 'draft' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Draft'
+                  )}
+                </Button>
+                <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
+                  {isSubmitting && submissionStatus === 'published' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    'Publish'
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
           <Card>
