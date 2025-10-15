@@ -71,6 +71,30 @@
       "description": "Corporate business theme preview",
       "imageUrl": "https://picsum.photos/seed/theme4/600/400",
       "imageHint": "corporate business"
+    },
+    {
+      "id": "theme-5",
+      "description": "Forest green theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme5/600/400",
+      "imageHint": "forest green"
+    },
+    {
+      "id": "theme-6",
+      "description": "Sunset orange theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme6/600/400",
+      "imageHint": "sunset orange"
+    },
+    {
+      "id": "theme-7",
+      "description": "Oceanic teal theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme7/600/400",
+      "imageHint": "oceanic teal"
+    },
+    {
+      "id": "theme-8",
+      "description": "Rose gold theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme8/600/400",
+      "imageHint": "rose gold"
     }
   ]
 }
