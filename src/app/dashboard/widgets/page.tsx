@@ -57,7 +57,7 @@ const availableWidgets = {
         { type: 'post-showcase', name: 'Post Showcase', description: 'Display posts from a specific category or tag.' },
     ],
     'Navigation': [
-        { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a list of links.' },
+        { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a reusable navigation menu.' },
     ],
     'Utility': [
         { type: 'search', name: 'Search', description: 'Display a search form.' },
@@ -119,6 +119,10 @@ type Tag = {
     name: string;
 }
 
+type NavigationMenu = {
+    id: string;
+    name: string;
+}
 
 type WidgetInstance = {
     id: string;
@@ -135,7 +139,7 @@ type WidgetInstance = {
         linkUrl?: string;
         socialLinks?: SocialLink[];
         galleryImages?: GalleryImage[];
-        navLinks?: NavLink[];
+        menuId?: string;
         sourceType?: 'category' | 'tag';
         sourceIds?: string[];
         tags?: string;
@@ -215,23 +219,6 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
         newLinks.splice(index, 1);
         setConfig({ ...config, socialLinks: newLinks });
     }
-    
-    const handleNavLinkChange = (index: number, field: 'label' | 'url', value: string) => {
-        const newLinks = [...(config.navLinks || [])];
-        newLinks[index] = { ...newLinks[index], [field]: value };
-        setConfig({ ...config, navLinks: newLinks });
-    }
-    
-    const addNavLink = () => {
-        const newLink: NavLink = { id: `nav-link-${Date.now()}`, label: 'New Link', url: '#' };
-        setConfig({ ...config, navLinks: [...(config.navLinks || []), newLink] });
-    }
-
-    const removeNavLink = (index: number) => {
-        const newLinks = [...(config.navLinks || [])];
-        newLinks.splice(index, 1);
-        setConfig({ ...config, navLinks: newLinks });
-    }
 
     const addGalleryImage = (url: string) => {
         const newImage: GalleryImage = { id: `gallery-img-${Date.now()}`, url };
@@ -248,6 +235,9 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     const categoriesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
     const { data: categories } = useCollection<Category>(categoriesCollection);
     
+    const navMenusCollection = useMemoFirebase(() => firestore ? collection(firestore, 'navigation_menus') : null, [firestore]);
+    const { data: navMenus } = useCollection<NavigationMenu>(navMenusCollection);
+
     const handleCategoryChange = (categoryId: string, checked: boolean) => {
         const currentIds = config.sourceIds || [];
         const newIds = checked
@@ -425,36 +415,19 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 onChange={(e) => setConfig({ ...config, title: e.target.value })}
                             />
                         </div>
-                        <div className="grid gap-4">
-                            <Label>Menu Links</Label>
-                            {(config.navLinks || []).map((link: NavLink, index: number) => (
-                                <div key={link.id} className="grid gap-2 rounded-md border p-3">
-                                    <div className='grid gap-2'>
-                                        <Label htmlFor={`label-${index}`} className='text-xs'>Link Label</Label>
-                                        <Input
-                                            id={`label-${index}`}
-                                            placeholder="Home"
-                                            value={link.label}
-                                            onChange={(e) => handleNavLinkChange(index, 'label', e.target.value)}
-                                        />
-                                    </div>
-                                    <div className='grid gap-2'>
-                                        <Label htmlFor={`url-${index}`} className='text-xs'>URL</Label>
-                                        <Input
-                                            id={`url-${index}`}
-                                            placeholder="/"
-                                            value={link.url}
-                                            onChange={(e) => handleNavLinkChange(index, 'url', e.target.value)}
-                                        />
-                                    </div>
-                                    <Button variant="ghost" size="sm" onClick={() => removeNavLink(index)} className='text-destructive hover:text-destructive w-fit'>
-                                        <Trash2 className="mr-2 h-3 w-3" /> Remove
-                                    </Button>
-                                </div>
-                            ))}
-                            <Button variant="outline" onClick={addNavLink}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Link
-                            </Button>
+                        <div className="grid gap-2">
+                            <Label>Menu</Label>
+                            <Select
+                                value={config.menuId || ''}
+                                onValueChange={(value) => setConfig({ ...config, menuId: value })}
+                            >
+                                <SelectTrigger><SelectValue placeholder="Select a menu" /></SelectTrigger>
+                                <SelectContent>
+                                    {navMenus?.map(menu => (
+                                        <SelectItem key={menu.id} value={menu.id}>{menu.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 );

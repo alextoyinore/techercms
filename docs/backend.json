@@ -315,6 +315,29 @@
         }
       },
       "required": ["id", "widgetAreaId", "type", "order"]
+    },
+    "NavigationMenu": {
+      "title": "Navigation Menu",
+      "description": "A reusable collection of navigation links.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the menu." },
+        "name": { "type": "string", "description": "The name of the menu (e.g., 'Main Header')." }
+      },
+      "required": ["id", "name"]
+    },
+    "NavigationMenuItem": {
+      "title": "Navigation Menu Item",
+      "description": "An individual link within a Navigation Menu.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the menu item." },
+        "menuId": { "type": "string", "description": "The ID of the NavigationMenu this item belongs to." },
+        "label": { "type": "string", "description": "The text to display for the link." },
+        "url": { "type": "string", "description": "The URL the link points to." },
+        "order": { "type": "number", "description": "The display order of the link within its menu." }
+      },
+      "required": ["id", "menuId", "label", "url", "order"]
     }
   },
   "auth": {
@@ -430,10 +453,24 @@
           "schema": { "$ref": "#/backend/entities/WidgetInstance" },
           "description": "Stores configured instances of widgets within specific areas."
         }
+      },
+      {
+        "path": "/navigation_menus/{menuId}",
+        "definition": {
+          "entityName": "NavigationMenu",
+          "schema": { "$ref": "#/backend/entities/NavigationMenu" },
+          "description": "Stores reusable navigation menus."
+        }
+      },
+      {
+        "path": "/navigation_menu_items/{itemId}",
+        "definition": {
+          "entityName": "NavigationMenuItem",
+          "schema": { "$ref": "#/backend/entities/NavigationMenuItem" },
+          "description": "Stores individual links within a navigation menu."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern."
   }
 }
-
-    
