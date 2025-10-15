@@ -321,9 +321,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
                 {isLoadingPosts || isLoadingCategories ? (
-                    <Skeleton className='w-full h-[250px]'/>
+                    <Skeleton className='w-full aspect-video'/>
                 ) : postsPerCategoryChartData.length > 0 ? (
-                    <ChartContainer config={chartConfig} className='w-full h-[250px]'>
+                    <ChartContainer config={chartConfig} className='w-full'>
                         <BarChart data={postsPerCategoryChartData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
@@ -333,7 +333,7 @@ export default function Dashboard() {
                         </BarChart>
                     </ChartContainer>
                 ) : (
-                    <div className='flex items-center justify-center h-[250px] text-center text-muted-foreground'>
+                    <div className='flex items-center justify-center min-h-[250px] text-center text-muted-foreground'>
                         <p>No posts with categories yet. <br/> Assign posts to categories to see this chart.</p>
                     </div>
                 )}
@@ -346,9 +346,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
                 {isLoadingPosts || isLoadingPages ? (
-                    <Skeleton className='w-full h-[250px]'/>
+                    <Skeleton className='w-full aspect-video'/>
                 ) : contentOverTimeChartData.length > 0 ? (
-                    <ChartContainer config={chartConfig} className='w-full h-[250px]'>
+                    <ChartContainer config={chartConfig} className='w-full'>
                         <LineChart data={contentOverTimeChartData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
@@ -369,7 +369,7 @@ export default function Dashboard() {
                         </LineChart>
                     </ChartContainer>
                 ) : (
-                    <div className='flex items-center justify-center h-[250px] text-center text-muted-foreground'>
+                    <div className='flex items-center justify-center min-h-[250px] text-center text-muted-foreground'>
                         <p>Not enough data to display chart. <br/> Create some posts or pages to get started.</p>
                     </div>
                 )}
