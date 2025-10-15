@@ -19,6 +19,7 @@ import { NavigationWidget } from '@/components/widgets/NavigationWidget';
 import { PostShowcaseWidget } from '@/components/widgets/PostShowcaseWidget';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useParams } from 'next/navigation';
 
 type WidgetInstance = {
     id: string;
@@ -31,6 +32,7 @@ type WidgetInstance = {
 type WidgetArea = {
     id: string;
     name: string;
+    pageId?: string;
 }
 
 const widgetComponents: Record<string, React.FC<any>> = {
@@ -52,13 +54,19 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'weather': WeatherWidget,
 };
 
-export function WidgetArea({ areaName }: { areaName: string }) {
+export function WidgetArea({ areaName, isPageSpecific = false }: { areaName: string, isPageSpecific?: boolean }) {
     const firestore = useFirestore();
+    const params = useParams();
+    const pageId = isPageSpecific ? params.slug : undefined; // Or however you get the current page ID/slug
 
     const widgetAreasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'widget_areas'), where('name', '==', areaName));
-    }, [firestore, areaName]);
+        const q = query(collection(firestore, 'widget_areas'), where('name', '==', areaName));
+        if (pageId) {
+            return query(q, where('pageId', '==', pageId));
+        }
+        return query(q, where('pageId', '==', null));
+    }, [firestore, areaName, pageId]);
     
     const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(widgetAreasQuery);
 

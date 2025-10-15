@@ -114,6 +114,7 @@ export default function SlugPage() {
 
   return (
     <div className="bg-background">
+      <WidgetArea areaName="Page Header" isPageSpecific={true} />
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6 max-w-3xl">
         <article>
@@ -130,7 +131,11 @@ export default function SlugPage() {
           />
 
         </article>
+         <aside className="mt-12 space-y-8">
+            <WidgetArea areaName="Page Sidebar" isPageSpecific={true} />
+        </aside>
       </main>
+      <WidgetArea areaName="Page Footer" isPageSpecific={true} />
       <PublicFooter />
     </div>
   );

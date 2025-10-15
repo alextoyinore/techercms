@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -19,14 +17,14 @@ import {
 } from "@/components/ui/accordion"
 import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc, query, where } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,6 +88,7 @@ type WidgetArea = {
     name: string;
     description: string;
     theme: string;
+    pageId?: string;
 }
 
 type SocialLink = {
@@ -707,15 +706,22 @@ function WidgetPlaceholder() {
 }
 
 
-export default function WidgetsPage() {
+export default function WidgetsPage({ pageId }: { pageId?: string }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [activeItem, setActiveItem] = useState<any>(null);
 
-    const areasCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_areas') : null, [firestore]);
+    const areasQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        if (pageId) {
+            return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId));
+        }
+        return query(collection(firestore, 'widget_areas'), where('pageId', '==', null));
+    }, [firestore, pageId]);
+    
     const instancesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_instances') : null, [firestore]);
 
-    const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(areasCollection);
+    const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(areasQuery);
     const { data: widgetInstances, isLoading: isLoadingInstances } = useCollection<WidgetInstance>(instancesCollection);
 
     const [localInstances, setLocalInstances] = useState<WidgetInstance[] | null>(null);
@@ -727,11 +733,12 @@ export default function WidgetsPage() {
     }, [widgetInstances]);
     
      useEffect(() => {
-        if (!isLoadingAreas && widgetAreas && widgetAreas.length === 0 && firestore) {
+        // Initialize default theme-wide widget areas if they don't exist
+        if (!pageId && !isLoadingAreas && widgetAreas && widgetAreas.length === 0 && firestore) {
             const batch = writeBatch(firestore);
             defaultWidgetAreas.forEach(areaData => {
                 const newAreaRef = doc(collection(firestore, 'widget_areas'));
-                batch.set(newAreaRef, areaData);
+                batch.set(newAreaRef, { ...areaData, pageId: null });
             });
             batch.commit().then(() => {
                 toast({
@@ -746,7 +753,7 @@ export default function WidgetsPage() {
                 });
             });
         }
-    }, [isLoadingAreas, widgetAreas, firestore, toast]);
+    }, [isLoadingAreas, widgetAreas, firestore, toast, pageId]);
 
 
     const widgetsByArea = useMemo(() => {
@@ -962,6 +969,11 @@ export default function WidgetsPage() {
     }
 
     const allWidgets = Object.values(availableWidgets).flat();
+    
+    const pageTitle = pageId ? "Page Widgets" : "Theme Widgets";
+    const pageDescription = pageId 
+        ? "Manage widgets specifically for this page. These will override theme-wide widgets in the same areas."
+        : "Manage widgets for your entire site. These appear in areas defined by your active theme.";
 
     return (
         <DndContext 
@@ -971,10 +983,12 @@ export default function WidgetsPage() {
             onDragEnd={handleDragEnd}
         >
             <div className="flex flex-col gap-6">
-                <PageHeader
-                    title="Widgets"
-                    description="Manage your site's widgets and widget areas."
+               {!pageId && (
+                 <PageHeader
+                    title={pageTitle}
+                    description={pageDescription}
                 />
+               )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     <div className="lg:col-span-2">
@@ -1008,7 +1022,7 @@ export default function WidgetsPage() {
                                     })}
                                     {!isLoadingAreas && widgetAreas?.length === 0 && (
                                          <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                                            <p>No widget areas found. They will be created automatically.</p>
+                                            <p>No widget areas found for this context.</p>
                                         </div>
                                     )}
                                 </Accordion>

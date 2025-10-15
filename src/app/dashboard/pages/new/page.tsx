@@ -17,11 +17,17 @@ import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, Loader2, Upload, Library } from 'lucide-react';
 import { useFirestore, useAuth } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { MediaLibrary } from '@/components/media-library';
+
+const pageWidgetAreas = [
+    { name: 'Page Header', description: 'Displays at the top of the page, above the main content.' },
+    { name: 'Page Sidebar', description: 'A sidebar specific to this page.' },
+    { name: 'Page Footer', description: 'Displays at the bottom of the page, above the site footer.' },
+];
 
 export default function NewPagePage() {
   const router = useRouter();
@@ -118,6 +124,7 @@ export default function NewPagePage() {
 
     setIsSubmitting(true);
     setSubmissionStatus(status);
+    
     const pageRef = doc(collection(firestore, "pages"));
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
@@ -133,10 +140,23 @@ export default function NewPagePage() {
     };
 
     try {
-        await setDocumentNonBlocking(pageRef, newPage, { merge: false });
+        const batch = writeBatch(firestore);
+
+        // 1. Create the page
+        batch.set(pageRef, newPage);
+
+        // 2. Create the widget areas for the page
+        pageWidgetAreas.forEach(area => {
+            const areaRef = doc(collection(firestore, "widget_areas"));
+            batch.set(areaRef, { ...area, pageId: pageRef.id });
+        });
+
+        await batch.commit();
+
         toast({
             title: `Page ${status === 'published' ? 'Published' : 'Saved'}`,
-            description: `Your page "${title}" has been successfully saved.`,
+            description: `Your page "${title}" has been successfully saved. You can now add widgets.`,
+            action: <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/pages/edit/${pageRef.id}?tab=widgets`)}>Add Widgets</Button>
         });
         router.push('/dashboard/pages');
     } catch (error: any) {

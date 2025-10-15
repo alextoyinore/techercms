@@ -265,15 +265,16 @@
     },
      "WidgetArea": {
       "title": "Widget Area",
-      "description": "Represents a designated area in a theme where widgets can be placed, like a sidebar or footer.",
+      "description": "A designated area for widgets. Can be theme-wide (no pageId) or page-specific (has a pageId).",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Unique identifier for the widget area (e.g., 'sidebar-primary')." },
-        "name": { "type": "string", "description": "A human-readable name for the area (e.g., 'Main Sidebar')." },
-        "description": { "type": "string", "description": "A short description of where this area appears in the theme." },
-        "theme": { "type": "string", "description": "The theme this widget area belongs to." }
+        "id": { "type": "string", "description": "Unique identifier for the widget area." },
+        "name": { "type": "string", "description": "A human-readable name for the area (e.g., 'Main Sidebar', 'Page Header')." },
+        "description": { "type": "string", "description": "A short description of the area's purpose." },
+        "pageId": { "type": "string", "description": "Optional. The ID of the Page this area belongs to. If null, it's a theme-wide area." },
+        "theme": { "type": "string", "description": "The theme this widget area belongs to (primarily for theme-wide areas)." }
       },
-      "required": ["id", "name", "theme"]
+      "required": ["id", "name"]
     },
     "WidgetInstance": {
       "title": "Widget Instance",

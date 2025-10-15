@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, Loader2, Upload, Library } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate } from 'lucide-react';
 import { useFirestore, useAuth, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, serverTimestamp, Timestamp, collection } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -23,6 +23,9 @@ import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Loading } from '@/components/loading';
 import { MediaLibrary } from '@/components/media-library';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WidgetsPage from '@/app/dashboard/widgets/page';
+
 
 type Page = {
     id: string;
@@ -199,7 +202,7 @@ export default function EditPagePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Edit Page" description="Refine your content.">
+      <PageHeader title="Edit Page" description="Refine your content and layout.">
         <Button variant="outline" asChild>
           <Link href="/dashboard/pages">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -207,124 +210,133 @@ export default function EditPagePage() {
           </Link>
         </Button>
       </PageHeader>
-
-      <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
-        <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-          <Card>
-            <CardContent className="p-4 grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Title</Label>
-                <Input 
-                    id="title" 
-                    placeholder="Your amazing page title" 
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    disabled={isSubmitting}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="content">Content</Label>
-                <RichTextEditor
-                  content={content}
-                  onChange={setContent}
-                  disabled={isSubmitting}
-                />
-              </div>
-            </CardContent>
-          </Card>
+      
+      <Tabs defaultValue="content">
+        <div className='flex justify-between items-end'>
+          <TabsList>
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="widgets"><LayoutTemplate className="mr-2 h-4 w-4" /> Page Widgets</TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
+              {isSubmitting && submissionStatus === 'draft' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Draft'
+              )}
+            </Button>
+            <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
+              {isSubmitting && submissionStatus === 'published' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update & Publish'
+              )}
+            </Button>
+          </div>
         </div>
 
-        <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-20">
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Publish</CardTitle>
-            </CardHeader>
-            <CardContent className="border-t pt-6 flex justify-between gap-2">
-              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
-                {isSubmitting && submissionStatus === 'draft' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Draft'
-                )}
-              </Button>
-              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
-                 {isSubmitting && submissionStatus === 'published' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update & Publish'
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Featured Image</CardTitle>
-                <CardDescription>Set a main image for this page.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-                {featuredImageUrl && (
-                  <div className="relative aspect-video w-full">
-                    <Image
-                      src={featuredImageUrl}
-                      alt="Featured image preview"
-                      fill
-                      className="rounded-md object-cover"
+        <TabsContent value="content">
+          <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
+            <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
+              <Card>
+                <CardContent className="p-4 grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input 
+                        id="title" 
+                        placeholder="Your amazing page title" 
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        disabled={isSubmitting}
                     />
                   </div>
-                )}
-                <div className="grid gap-2">
-                    <Label htmlFor="featured-image">Image URL</Label>
-                    <Input 
-                        id="featured-image"
-                        placeholder="https://example.com/image.jpg"
-                        value={featuredImageUrl}
-                        onChange={(e) => setFeaturedImageUrl(e.target.value)}
-                        disabled={isSubmitting || isUploading}
+                  <div className="grid gap-2">
+                    <Label htmlFor="content">Content</Label>
+                    <RichTextEditor
+                      content={content}
+                      onChange={setContent}
+                      disabled={isSubmitting}
                     />
-                </div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleImageUpload} 
-                  className="hidden" 
-                  accept="image/*"
-                />
-                <div className="flex gap-2">
-                    <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => fileInputRef.current?.click()} 
-                    disabled={isSubmitting || isUploading}
-                    >
-                    {isUploading ? (
-                        <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
-                        </>
-                    ) : (
-                        <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload New
-                        </>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-36">
+              <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Featured Image</CardTitle>
+                    <CardDescription>Set a main image for this page.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    {featuredImageUrl && (
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={featuredImageUrl}
+                          alt="Featured image preview"
+                          fill
+                          className="rounded-md object-cover"
+                        />
+                      </div>
                     )}
-                    </Button>
-                    <MediaLibrary onSelect={(url) => setFeaturedImageUrl(url)}>
-                        <Button variant="outline" className="w-full" disabled={isSubmitting || isUploading}>
-                            <Library className="mr-2 h-4 w-4" />
-                            Browse Library
+                    <div className="grid gap-2">
+                        <Label htmlFor="featured-image">Image URL</Label>
+                        <Input 
+                            id="featured-image"
+                            placeholder="https://example.com/image.jpg"
+                            value={featuredImageUrl}
+                            onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                            disabled={isSubmitting || isUploading}
+                        />
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleImageUpload} 
+                      className="hidden" 
+                      accept="image/*"
+                    />
+                    <div className="flex gap-2">
+                        <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => fileInputRef.current?.click()} 
+                        disabled={isSubmitting || isUploading}
+                        >
+                        {isUploading ? (
+                            <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Uploading...
+                            </>
+                        ) : (
+                            <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload New
+                            </>
+                        )}
                         </Button>
-                    </MediaLibrary>
-                </div>
-            </CardContent>
-        </Card>
-        </div>
-      </div>
+                        <MediaLibrary onSelect={(url) => setFeaturedImageUrl(url)}>
+                            <Button variant="outline" className="w-full" disabled={isSubmitting || isUploading}>
+                                <Library className="mr-2 h-4 w-4" />
+                                Browse Library
+                            </Button>
+                        </MediaLibrary>
+                    </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="widgets">
+            <WidgetsPage pageId={pageId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
