@@ -1,5 +1,83 @@
 {
   "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Page": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Page",
+      "type": "object",
+      "description": "Represents a static page within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Page entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the page."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the page title."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main body content of the page."
+        },
+        "status": {
+          "type": "string",
+          "description": "The publication status of the page.",
+          "enum": [
+            "draft",
+            "published"
+          ]
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who authored the page."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the page was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the page was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "slug",
+        "status",
+        "authorId"
+      ]
+    },
     "Category": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Category",
@@ -136,6 +214,22 @@
   "firestore": {
     "structure": [
       {
+        "path": "/pages/{pageId}",
+        "definition": {
+          "entityName": "Page",
+          "schema": {
+            "$ref": "#/backend/entities/Page"
+          },
+          "description": "Stores static page data. `pageId` is the unique identifier for each page.",
+          "params": [
+            {
+              "name": "pageId",
+              "description": "The unique identifier of the page."
+            }
+          ]
+        }
+      },
+      {
         "path": "/categories/{categoryId}",
         "definition": {
           "entityName": "Category",
@@ -184,6 +278,6 @@
         }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Categories, Tags, and Posts are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, and Posts are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
   }
 }

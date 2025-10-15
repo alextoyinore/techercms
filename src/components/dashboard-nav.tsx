@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     FileText,
-    Image as ImageIcon,
+    ImageIcon,
     Folder,
     Tag,
     Paintbrush,
     Sparkles,
     Settings,
     Gem,
-    User
+    User,
+    File
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -20,9 +21,11 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import type { User as FirebaseUser } from "firebase/auth";
+import { UserNav } from "./user-nav";
 
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/dashboard/pages", icon: File, label: "Pages" },
     { href: "/dashboard/posts", icon: FileText, label: "Posts" },
     { href: "/dashboard/media", icon: ImageIcon, label: "Media" },
     { href: "/dashboard/categories", icon: Folder, label: "Categories" },
