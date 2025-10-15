@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {LogOut, Settings, User} from 'lucide-react';
+import {LogOut, Settings, User, ExternalLink} from 'lucide-react';
 import Link from 'next/link';
 import {User as FirebaseUser} from 'firebase/auth';
 import {useRouter} from 'next/navigation';
@@ -103,6 +103,12 @@ export function UserNav({user}: {user: FirebaseUser | null}) {
             <Link href="/dashboard/settings">
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+           <DropdownMenuItem asChild>
+            <Link href="/" target="_blank">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              <span>View Site</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
