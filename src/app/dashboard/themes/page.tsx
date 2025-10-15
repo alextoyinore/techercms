@@ -167,7 +167,7 @@ export default function ThemesPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-grow">
-                                <CardTitle className="font-headline">{theme.name}</CardTitle>
+                                <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
                                 <CardDescription className="mt-2">{theme.description}</CardDescription>
                             </CardContent>
                             <div className="p-4 pt-0 flex gap-2">
@@ -205,39 +205,45 @@ export default function ThemesPage() {
             <CardContent className="grid gap-6">
                 <div className='grid gap-2'>
                     <Label>Dashboard Theme</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {availableDashboardThemes.map((theme, index) => {
                             const image = themeImages[index % themeImages.length];
                             const isActive = theme.name === activeDashboardTheme.name;
                             const isProcessing = isActivatingDashboard === theme.name;
                             return (
-                                <div key={theme.name} className="group">
-                                    <div className='relative'>
-                                        <Image
-                                            src={image.imageUrl}
-                                            alt={theme.name}
-                                            width={300}
-                                            height={150}
-                                            className={cn("rounded-md aspect-[2/1] object-cover border-2", isActive ? "border-primary" : "border-muted")}
-                                        />
-                                        {isActive && (
-                                            <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
-                                                <CheckCircle className="h-8 w-8 text-white" />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className='mt-2 space-y-2'>
-                                        <p className='text-sm font-medium'>{theme.name}</p>
-                                        <div className='flex items-center gap-2'>
-                                            <Button size="sm" onClick={() => handleActivateDashboardTheme(theme.name)} disabled={!!isActivatingDashboard || isActive} className='flex-1'>
-                                                {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : isActive ? 'Active' : 'Activate'}
-                                            </Button>
-                                            <ThemeCustomizer theme={theme}>
-                                                <Button size="sm" variant="outline"><Palette className='h-4 w-4' /></Button>
-                                            </ThemeCustomizer>
+                                <Card key={theme.name} className="flex flex-col">
+                                    <CardHeader>
+                                        <div className="relative aspect-video w-full">
+                                            <Image
+                                                src={image.imageUrl}
+                                                alt={theme.name}
+                                                fill
+                                                className="rounded-md object-cover"
+                                            />
+                                            {isActive && (
+                                                <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                                    <CheckCircle className="h-10 w-10 text-white" />
+                                                </div>
+                                            )}
                                         </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow">
+                                        <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
+                                    </CardContent>
+                                    <div className="p-4 pt-0 flex gap-2">
+                                        <Button 
+                                            className="w-full"
+                                            size="sm" 
+                                            onClick={() => handleActivateDashboardTheme(theme.name)} 
+                                            disabled={!!isActivatingDashboard || isActive}
+                                        >
+                                            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : isActive ? 'Active' : 'Activate'}
+                                        </Button>
+                                        <ThemeCustomizer theme={theme}>
+                                            <Button size="sm" variant="outline"><Palette className='h-4 w-4' /></Button>
+                                        </ThemeCustomizer>
                                     </div>
-                                </div>
+                                </Card>
                             )
                         })}
                     </div>
