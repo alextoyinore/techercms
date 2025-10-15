@@ -18,10 +18,11 @@ import {
 import { GripVertical } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, addDoc, writeBatch } from 'firebase/firestore';
-import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -55,7 +56,7 @@ function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
     return (
         <div 
             ref={setNodeRef}
-            className={`flex items-start gap-2 rounded-md border p-3 bg-muted/50 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+            className={cn(`flex items-start gap-2 rounded-md border p-3 bg-muted/50 cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50')}
             {...listeners} 
             {...attributes}
         >
@@ -84,7 +85,7 @@ function SortableWidgetInstance({ instance }: { instance: WidgetInstance }) {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 shadow-lg' : ''}`}>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(`flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
              <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="grid gap-0.5">
                 <p className="font-medium">{name}</p>
@@ -154,19 +155,12 @@ export default function WidgetsPage() {
         const overId = over.id.toString();
 
         const fromAvailable = active.data.current?.from === 'available';
-        const targetIsArea = widgetAreas?.some(a => a.id === overId) ?? false;
-        const targetIsInstance = localInstances?.some(i => i.id === overId) ?? false;
-
+        
         // Scenario 1: Dragging a new widget into an area
-        if (fromAvailable && (targetIsArea || targetIsInstance)) {
+        if (fromAvailable && over.data.current?.isWidgetArea) {
             const widgetType = active.data.current?.widget.type;
             const widgetName = active.data.current?.widget.name;
-
-            let targetAreaId = overId;
-            // If we dropped on an instance, get its areaId
-            if (targetIsInstance) {
-                targetAreaId = localInstances?.find(i => i.id === overId)?.widgetAreaId ?? '';
-            }
+            const targetAreaId = overId;
 
             const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
             if (!targetArea || !firestore) return;
@@ -194,27 +188,30 @@ export default function WidgetsPage() {
                     description: error.message || "Could not save the new widget.",
                 });
             }
+            return;
         }
 
+        const isOverInstance = over.data.current?.isWidgetInstance;
         // Scenario 2: Reordering widgets within the same area
-        if (!fromAvailable && targetIsInstance && localInstances) {
+        if (!fromAvailable && isOverInstance && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
             const overInstance = localInstances.find(i => i.id === overId);
             
             if (activeInstance && overInstance && activeInstance.widgetAreaId === overInstance.widgetAreaId) {
                 const areaId = activeInstance.widgetAreaId;
-                const oldIndex = widgetsByArea[areaId].findIndex(i => i.id === activeId);
-                const newIndex = widgetsByArea[areaId].findIndex(i => i.id === overId);
+                const areaWidgets = widgetsByArea[areaId];
+                const oldIndex = areaWidgets.findIndex(i => i.id === activeId);
+                const newIndex = areaWidgets.findIndex(i => i.id === overId);
 
                 if (oldIndex !== newIndex) {
-                    const movedInstances = arrayMove(widgetsByArea[areaId], oldIndex, newIndex);
+                    const reorderedInstances = arrayMove(areaWidgets, oldIndex, newIndex);
                     
-                    const updatedLocalInstances = localInstances.filter(i => i.widgetAreaId !== areaId).concat(movedInstances);
+                    const updatedLocalInstances = [...localInstances.filter(i => i.widgetAreaId !== areaId), ...reorderedInstances];
                     setLocalInstances(updatedLocalInstances);
 
                     if (!firestore) return;
                     const batch = writeBatch(firestore);
-                    movedInstances.forEach((instance, index) => {
+                    reorderedInstances.forEach((instance, index) => {
                         const docRef = doc(firestore, 'widget_instances', instance.id);
                         batch.update(docRef, { order: index });
                     });
@@ -226,6 +223,29 @@ export default function WidgetsPage() {
             }
         }
     };
+    
+    function DroppableWidgetArea({ area, areaWidgets }: { area: WidgetArea, areaWidgets: WidgetInstance[] }) {
+        const { setNodeRef, isOver } = useDroppable({
+            id: area.id,
+            data: { isWidgetArea: true },
+        });
+
+        return (
+            <div ref={setNodeRef} className={cn('p-4 rounded-lg', isOver ? 'bg-primary/10 ring-2 ring-primary' : '')}>
+                <SortableContext items={areaWidgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+                    <div className="grid gap-2 min-h-[80px]">
+                        {areaWidgets.length > 0 ? (
+                            areaWidgets.map(instance => (
+                                <SortableWidgetInstance key={instance.id} instance={instance} />
+                            ))
+                        ) : (
+                            <WidgetPlaceholder />
+                        )}
+                    </div>
+                </SortableContext>
+            </div>
+        );
+    }
 
     return (
         <DndContext 
@@ -263,18 +283,8 @@ export default function WidgetsPage() {
                                                             <p className="text-sm text-muted-foreground">{area.description}</p>
                                                         </div>
                                                     </AccordionTrigger>
-                                                    <AccordionContent className="p-4 pt-0">
-                                                        <SortableContext items={areaWidgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
-                                                            <div className="grid gap-2 min-h-[80px]">
-                                                                {areaWidgets.length > 0 ? (
-                                                                    areaWidgets.map(instance => (
-                                                                        <SortableWidgetInstance key={instance.id} instance={instance} />
-                                                                    ))
-                                                                ) : (
-                                                                    <WidgetPlaceholder />
-                                                                )}
-                                                            </div>
-                                                        </SortableContext>
+                                                    <AccordionContent className="px-4 pb-4 pt-0">
+                                                        <DroppableWidgetArea area={area} areaWidgets={areaWidgets} />
                                                     </AccordionContent>
                                                 </AccordionItem>
                                             </Card>
@@ -303,21 +313,12 @@ export default function WidgetsPage() {
             </div>
              <DragOverlay>
                 {activeItem ? (
-                    activeItem.from === 'available' ? (
-                         <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
-                            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div className="grid gap-0.5">
-                                <p className="font-medium">{activeItem.name}</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
-                            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div className="grid gap-0.5">
-                                <p className="font-medium">{availableWidgets.find(w => w.type === activeItem.type)?.name || activeItem.type}</p>
-                            </div>
-                        </div>
-                    )
+                    <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
+                       <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+                       <div className="grid gap-0.5">
+                           <p className="font-medium">{activeItem.name || availableWidgets.find(w => w.type === activeItem.type)?.name}</p>
+                       </div>
+                   </div>
                 ) : null}
             </DragOverlay>
         </DndContext>
