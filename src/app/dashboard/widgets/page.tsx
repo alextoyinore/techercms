@@ -35,6 +35,7 @@ import { MediaLibrary } from '@/components/media-library';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -135,8 +136,10 @@ type WidgetInstance = {
         galleryImages?: GalleryImage[];
         navLinks?: NavLink[];
         sourceType?: 'category' | 'tag';
-        sourceId?: string;
-        layout?: 'list' | 'grid-2' | 'grid-3';
+        sourceIds?: string[];
+        tags?: string;
+        layout?: 'list' | 'grid';
+        gridColumns?: number;
     }
 }
 
@@ -241,9 +244,15 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     
     const firestore = useFirestore();
     const categoriesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
-    const tagsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'tags') : null, [firestore]);
     const { data: categories } = useCollection<Category>(categoriesCollection);
-    const { data: tags } = useCollection<Tag>(tagsCollection);
+    
+    const handleCategoryChange = (categoryId: string, checked: boolean) => {
+        const currentIds = config.sourceIds || [];
+        const newIds = checked
+            ? [...currentIds, categoryId]
+            : currentIds.filter((id: string) => id !== categoryId);
+        setConfig({ ...config, sourceIds: newIds });
+    };
 
     const renderConfigFields = () => {
         switch (instance.type) {
@@ -263,7 +272,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                             <Label>Source Type</Label>
                             <Select
                                 value={config.sourceType || 'category'}
-                                onValueChange={(value) => setConfig({ ...config, sourceType: value, sourceId: '' })}
+                                onValueChange={(value) => setConfig({ ...config, sourceType: value, sourceIds: [], tags: '' })}
                             >
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -272,38 +281,38 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 </SelectContent>
                             </Select>
                         </div>
+
                         {config.sourceType === 'category' && (
                              <div className="grid gap-2">
-                                <Label>Category</Label>
-                                <Select
-                                    value={config.sourceId || ''}
-                                    onValueChange={(value) => setConfig({ ...config, sourceId: value })}
-                                >
-                                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
-                                    <SelectContent>
-                                        {categories?.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label>Categories</Label>
+                                <ScrollArea className="h-40 rounded-md border p-2">
+                                    <div className='grid gap-2'>
+                                    {categories?.map(cat => (
+                                        <div key={cat.id} className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`cat-${cat.id}`}
+                                                checked={(config.sourceIds || []).includes(cat.id)}
+                                                onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean)}
+                                            />
+                                            <Label htmlFor={`cat-${cat.id}`} className="font-normal">{cat.name}</Label>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </ScrollArea>
                             </div>
                         )}
                          {config.sourceType === 'tag' && (
                              <div className="grid gap-2">
-                                <Label>Tag</Label>
-                                <Select
-                                    value={config.sourceId || ''}
-                                    onValueChange={(value) => setConfig({ ...config, sourceId: value })}
-                                >
-                                    <SelectTrigger><SelectValue placeholder="Select a tag" /></SelectTrigger>
-                                    <SelectContent>
-                                        {tags?.map(tag => (
-                                            <SelectItem key={tag.id} value={tag.name}>{tag.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="widget-tags">Tags (comma-separated)</Label>
+                                <Input
+                                    id="widget-tags"
+                                    placeholder="e.g., tech, news, featured"
+                                    value={config.tags || ''}
+                                    onChange={(e) => setConfig({ ...config, tags: e.target.value })}
+                                />
                             </div>
                         )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="widget-count">Number of posts</Label>
                             <Input
@@ -322,11 +331,23 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="list">List</SelectItem>
-                                    <SelectItem value="grid-2">2-Column Grid</SelectItem>
-                                    <SelectItem value="grid-3">3-Column Grid</SelectItem>
+                                    <SelectItem value="grid">Grid</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
+                        {config.layout === 'grid' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="widget-grid-cols">Grid Columns</Label>
+                                <Input
+                                    id="widget-grid-cols"
+                                    type="number"
+                                    min="1"
+                                    max="6"
+                                    value={config.gridColumns || 2}
+                                    onChange={(e) => setConfig({ ...config, gridColumns: parseInt(e.target.value, 10) || 2 })}
+                                />
+                            </div>
+                        )}
                     </div>
                 );
             case 'text':
@@ -969,7 +990,7 @@ export default function WidgetsPage() {
                         </Card>
                     </div>
                     <div className="lg:col-span-1 sticky top-20">
-                         <Card className="flex flex-col max-h-[calc(100vh-16rem)]">
+                         <Card className="flex flex-col max-h-[calc(100vh-10rem)]">
                             <CardHeader>
                                 <CardTitle className="font-headline">Available Widgets</CardTitle>
                                  <CardDescription>

@@ -1,6 +1,6 @@
 'use client';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, Timestamp, WhereFilterOp } from 'firebase/firestore';
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -20,40 +20,60 @@ type Post = {
 type PostShowcaseWidgetProps = {
     title?: string;
     sourceType?: 'category' | 'tag';
-    sourceId?: string;
+    sourceIds?: string[];
+    tags?: string;
     count?: number;
-    layout?: 'list' | 'grid-2' | 'grid-3';
+    layout?: 'list' | 'grid';
+    gridColumns?: number;
 }
 
 export function PostShowcaseWidget({ 
     title = 'Post Showcase',
     sourceType,
-    sourceId,
+    sourceIds,
+    tags,
     count = 3,
-    layout = 'list'
+    layout = 'list',
+    gridColumns = 2,
 }: PostShowcaseWidgetProps) {
     const firestore = useFirestore();
 
     const postsQuery = useMemoFirebase(() => {
-        if (!firestore || !sourceType || !sourceId) return null;
+        if (!firestore) return null;
+
+        const hasCategories = sourceType === 'category' && sourceIds && sourceIds.length > 0;
+        const hasTags = sourceType === 'tag' && tags && tags.trim() !== '';
+
+        if (!hasCategories && !hasTags) return null;
         
         let q = query(
             collection(firestore, 'posts'),
             where('status', '==', 'published')
         );
 
-        if (sourceType === 'category') {
-            q = query(q, where('categoryIds', 'array-contains', sourceId));
-        } else if (sourceType === 'tag') {
-            q = query(q, where('tagIds', 'array-contains', sourceId));
+        if (hasCategories) {
+            q = query(q, where('categoryIds', 'array-contains-any', sourceIds));
+        } else if (hasTags) {
+            const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+            if (tagArray.length > 0) {
+                 q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            } else {
+                return null;
+            }
         }
 
         return query(q, orderBy('createdAt', 'desc'), limit(count));
-    }, [firestore, sourceType, sourceId, count]);
+    }, [firestore, sourceType, sourceIds, tags, count]);
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
+    
+    const sourceNotConfigured = useMemo(() => {
+        if (sourceType === 'category') return !sourceIds || sourceIds.length === 0;
+        if (sourceType === 'tag') return !tags || tags.trim() === '';
+        return true;
+    }, [sourceType, sourceIds, tags]);
 
-    if (!sourceType || !sourceId) {
+    if (sourceNotConfigured) {
         return (
             <Card>
                 <CardHeader>
@@ -66,11 +86,7 @@ export function PostShowcaseWidget({
         );
     }
     
-    const gridClasses = {
-        'list': 'grid-cols-1 gap-4',
-        'grid-2': 'grid-cols-1 md:grid-cols-2 gap-4',
-        'grid-3': 'grid-cols-1 md:grid-cols-3 gap-4',
-    };
+    const gridTemplateColumns = layout === 'grid' ? `repeat(${gridColumns}, minmax(0, 1fr))` : undefined;
 
     return (
         <Card>
@@ -81,7 +97,10 @@ export function PostShowcaseWidget({
                 {isLoading && <p className="text-sm text-muted-foreground">Loading posts...</p>}
                 
                 {!isLoading && posts && posts.length > 0 && (
-                     <div className={cn('grid', gridClasses[layout])}>
+                     <div 
+                        className={cn('grid gap-4', layout === 'list' && 'grid-cols-1')}
+                        style={{ gridTemplateColumns }}
+                    >
                         {posts.map(post => (
                              <div key={post.id} className="grid gap-2">
                                 {post.featuredImageUrl && (
