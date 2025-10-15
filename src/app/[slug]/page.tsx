@@ -8,6 +8,7 @@ import { collection, query, where, Timestamp, DocumentData } from 'firebase/fire
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 type Post = {
