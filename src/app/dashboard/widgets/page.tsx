@@ -54,6 +54,7 @@ const availableWidgets = {
         { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
         { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
         { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
+        { type: 'post-showcase', name: 'Post Showcase', description: 'Display posts from a specific category or tag.' },
     ],
     'Navigation': [
         { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a list of links.' },
@@ -106,6 +107,17 @@ type GalleryImage = {
     url: string;
 }
 
+type Category = {
+    id: string;
+    name: string;
+}
+
+type Tag = {
+    id: string;
+    name: string;
+}
+
+
 type WidgetInstance = {
     id: string;
     widgetAreaId: string;
@@ -122,6 +134,9 @@ type WidgetInstance = {
         socialLinks?: SocialLink[];
         galleryImages?: GalleryImage[];
         navLinks?: NavLink[];
+        sourceType?: 'category' | 'tag';
+        sourceId?: string;
+        layout?: 'list' | 'grid-2' | 'grid-3';
     }
 }
 
@@ -223,9 +238,97 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
         newImages.splice(index, 1);
         setConfig({ ...config, galleryImages: newImages });
     };
+    
+    const firestore = useFirestore();
+    const categoriesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+    const tagsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'tags') : null, [firestore]);
+    const { data: categories } = useCollection<Category>(categoriesCollection);
+    const { data: tags } = useCollection<Tag>(tagsCollection);
 
     const renderConfigFields = () => {
         switch (instance.type) {
+             case 'post-showcase':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="e.g., Featured Posts"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Source Type</Label>
+                            <Select
+                                value={config.sourceType || 'category'}
+                                onValueChange={(value) => setConfig({ ...config, sourceType: value, sourceId: '' })}
+                            >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="category">Category</SelectItem>
+                                    <SelectItem value="tag">Tag</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {config.sourceType === 'category' && (
+                             <div className="grid gap-2">
+                                <Label>Category</Label>
+                                <Select
+                                    value={config.sourceId || ''}
+                                    onValueChange={(value) => setConfig({ ...config, sourceId: value })}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                                    <SelectContent>
+                                        {categories?.map(cat => (
+                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                         {config.sourceType === 'tag' && (
+                             <div className="grid gap-2">
+                                <Label>Tag</Label>
+                                <Select
+                                    value={config.sourceId || ''}
+                                    onValueChange={(value) => setConfig({ ...config, sourceId: value })}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="Select a tag" /></SelectTrigger>
+                                    <SelectContent>
+                                        {tags?.map(tag => (
+                                            <SelectItem key={tag.id} value={tag.name}>{tag.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-count">Number of posts</Label>
+                            <Input
+                                id="widget-count"
+                                type="number"
+                                value={config.count || 3}
+                                onChange={(e) => setConfig({ ...config, count: parseInt(e.target.value, 10) || 3 })}
+                            />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label>Layout</Label>
+                            <Select
+                                value={config.layout || 'list'}
+                                onValueChange={(value) => setConfig({ ...config, layout: value })}
+                            >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="list">List</SelectItem>
+                                    <SelectItem value="grid-2">2-Column Grid</SelectItem>
+                                    <SelectItem value="grid-3">3-Column Grid</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                );
             case 'text':
                 return (
                     <div className="grid gap-4">
@@ -420,7 +523,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 </Button>
                             </MediaLibrary>
                             {config.imageUrl && (
-                                <img src={config.imageUrl} alt="Selected image" className="rounded-md aspect-video object-cover mt-2" />
+                                <Image src={config.imageUrl} alt="Selected image" width={200} height={112} className="rounded-md aspect-video object-cover mt-2" />
                             )}
                         </div>
                         <div className="grid gap-2">

@@ -16,6 +16,7 @@ import { SportingTablesWidget } from '@/components/widgets/SportingTablesWidget'
 import { TextWidget } from '@/components/widgets/TextWidget';
 import { GalleryWidget } from '@/components/widgets/GalleryWidget';
 import { NavigationWidget } from '@/components/widgets/NavigationWidget';
+import { PostShowcaseWidget } from '@/components/widgets/PostShowcaseWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -46,6 +47,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'text': TextWidget,
     'gallery': GalleryWidget,
     'navigation-menu': NavigationWidget,
+    'post-showcase': PostShowcaseWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
