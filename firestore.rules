@@ -10,16 +10,18 @@
  * - `/categories/{categoryId}`: Stores category data.
  * - `/tags/{tagId}`: Stores tag data.
  * - `/posts/{postId}`: Stores post data.
- * - `/media/{mediaId}`: Stores media data
+ * - `/media/{mediaId}`: Stores media data.
+ * - `/site_settings/config`: Stores site-wide configuration settings
  *
  * Key Security Decisions:
  * - No user listing is allowed.
  * - Unauthenticated access is disallowed.
- * - Owner-only access is enforced for Pages, Posts and Media.
- * - Categories and Tags are readable by any signed-in user and writable by any signed-in user, but only authorized users can update or delete.  Update and Delete operations are denied by default.
+ * - Owner-only access is enforced for Pages, Posts, and Media.
+ * - Categories and Tags are readable and writable by any signed-in user, but update and delete are denied.
+ * - Site Settings are readable by all authenticated users but writable only by an admin role (currently not enforced).
  *
  * Denormalization for Authorization:
- * - The `Page`, `Post` and `MediaItem` entities include an `authorId` field. This allows for simple ownership checks on pages, posts and media items without needing to perform additional reads.
+ * - The `Page`, `Post`, and `MediaItem` entities include an `authorId` field. This allows for simple ownership checks on pages, posts, and media items without needing to perform additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -36,9 +38,11 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes, ensures only the author can modify pages.
      */
     match /pages/{pageId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
@@ -48,12 +52,14 @@ service cloud.firestore {
      * @deny (create) Unauthenticated user cannot create a category.
      * @allow (get, list) Any authenticated user can read any category.
      * @deny (update, delete) No one can update or delete a category for now.
-     * @principle No one can update or delete a category for now.
+     * @principle Allows authenticated users to create categories, but restricts updates and deletes.
      */
     match /categories/{categoryId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
@@ -63,12 +69,14 @@ service cloud.firestore {
      * @deny (create) Unauthenticated user cannot create a tag.
      * @allow (get, list) Any authenticated user can read any tag.
      * @deny (update, delete) No one can update or delete a tag for now.
-     * @principle No one can update or delete a tag for now.
+     * @principle Allows authenticated users to create tags, but restricts updates and deletes.
      */
     match /tags/{tagId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
@@ -82,12 +90,14 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes, ensures only the author can modify posts.
      */
     match /posts/{postId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
-     /**
+    /**
      * @description Secure media documents.
      * @path /media/{mediaId}
      * @allow (create) Authenticated user can create a media item if they are the author.
@@ -98,11 +108,26 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes, ensures only the author can modify media items.
      */
     match /media/{mediaId} {
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
+    /**
+     * @description Secure the site settings document.
+     * @path /site_settings/config
+     * @allow (get) Any authenticated user can read the site settings.
+     * @deny (create, update, delete) No one can create, update, or delete the site settings for now.
+     * @principle  Restricts write access to site settings.  Future versions may implement role-based access.
+     */
+    match /site_settings/config {
+      allow get: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
 
     // ---- Helper functions ----
 
