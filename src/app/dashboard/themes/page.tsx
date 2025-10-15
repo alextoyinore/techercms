@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, Palette } from 'lucide-react';
+import { CheckCircle, Loader2, Palette, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
@@ -130,7 +130,12 @@ export default function ThemesPage() {
       <PageHeader
         title="Appearance"
         description="Manage your website's themes and visual customization."
-      />
+      >
+        <Button variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Upload Theme
+        </Button>
+      </PageHeader>
       <div className="grid gap-6">
         <Card>
             <CardHeader>
