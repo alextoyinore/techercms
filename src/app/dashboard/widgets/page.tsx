@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { PageHeader } from "@/components/page-header";
 import {
     Card,
@@ -15,8 +16,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { GripVertical } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, DocumentData } from 'firebase/firestore';
 
-// Mock data for now, we will fetch this from Firestore later
+// Represents the definition of a widget type
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
     { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
@@ -25,10 +28,32 @@ const availableWidgets = [
     { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
 ];
 
-const widgetAreas = [
-    { id: 'sidebar-primary', name: 'Main Sidebar', description: 'Appears on the side of posts and pages.' },
-    { id: 'footer-1', name: 'Footer Section 1', description: 'First section in the site footer.' },
-];
+type WidgetArea = {
+    id: string;
+    name: string;
+    description: string;
+}
+
+type WidgetInstance = {
+    id: string;
+    widgetAreaId: string;
+    type: string;
+    order: number;
+}
+
+function WidgetInstanceCard({ instance }: { instance: WidgetInstance }) {
+    const widgetInfo = availableWidgets.find(w => w.type === instance.type);
+    const name = widgetInfo?.name || instance.type;
+
+    return (
+        <div className="flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing">
+            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="grid gap-0.5">
+                <p className="font-medium">{name}</p>
+            </div>
+        </div>
+    );
+}
 
 function WidgetPlaceholder() {
     return (
@@ -39,6 +64,28 @@ function WidgetPlaceholder() {
 }
 
 export default function WidgetsPage() {
+    const firestore = useFirestore();
+
+    const areasCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_areas') : null, [firestore]);
+    const instancesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_instances') : null, [firestore]);
+
+    const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(areasCollection);
+    const { data: widgetInstances, isLoading: isLoadingInstances } = useCollection<WidgetInstance>(instancesCollection);
+
+    const widgetsByArea = useMemo(() => {
+        if (!widgetInstances) return {};
+        return widgetInstances.reduce((acc, instance) => {
+            if (!acc[instance.widgetAreaId]) {
+                acc[instance.widgetAreaId] = [];
+            }
+            acc[instance.widgetAreaId].push(instance);
+            // Sort by order
+            acc[instance.widgetAreaId].sort((a, b) => a.order - b.order);
+            return acc;
+        }, {} as Record<string, WidgetInstance[]>);
+    }, [widgetInstances]);
+
+
     return (
         <div className="flex flex-col gap-6">
             <PageHeader
@@ -56,8 +103,9 @@ export default function WidgetsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                           <Accordion type="multiple" defaultValue={['sidebar-primary']} className="space-y-4">
-                                {widgetAreas.map((area) => (
+                           <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="space-y-4">
+                                {isLoadingAreas && <p>Loading widget areas...</p>}
+                                {widgetAreas?.map((area) => (
                                     <Card key={area.id}>
                                         <AccordionItem value={area.id} className="border-b-0">
                                             <AccordionTrigger className="p-4 hover:no-underline">
@@ -67,7 +115,16 @@ export default function WidgetsPage() {
                                                 </div>
                                             </AccordionTrigger>
                                             <AccordionContent className="p-4 pt-0">
-                                               <WidgetPlaceholder />
+                                               <div className="grid gap-2">
+                                                    {isLoadingInstances && <p>Loading widgets...</p>}
+                                                    {widgetsByArea[area.id] && widgetsByArea[area.id].length > 0 ? (
+                                                        widgetsByArea[area.id].map(instance => (
+                                                            <WidgetInstanceCard key={instance.id} instance={instance} />
+                                                        ))
+                                                    ) : (
+                                                        <WidgetPlaceholder />
+                                                    )}
+                                               </div>
                                             </AccordionContent>
                                         </AccordionItem>
                                     </Card>
