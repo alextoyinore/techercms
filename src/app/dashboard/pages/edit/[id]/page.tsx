@@ -15,9 +15,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate } from 'lucide-react';
-import { useFirestore, useAuth, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, serverTimestamp, Timestamp, collection } from 'firebase/firestore';
+import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2 } from 'lucide-react';
+import { useFirestore, useAuth, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, serverTimestamp, Timestamp, collection, writeBatch, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
@@ -39,6 +39,13 @@ type Page = {
     updatedAt: Timestamp;
 };
 
+const pageWidgetAreas = [
+    { name: 'Page Header', description: 'Displays at the top of the page, above the main content.', theme: 'all' },
+    { name: 'Page Content', description: 'Displays as the main content of the page. If empty, the content from the rich text editor will be shown instead.', theme: 'all' },
+    { name: 'Page Sidebar', description: 'A sidebar specific to this page.', theme: 'all' },
+    { name: 'Page Footer', description: 'Displays at the bottom of the page, above the site footer.', theme: 'all' },
+];
+
 export default function EditPagePage() {
   const router = useRouter();
   const params = useParams();
@@ -54,6 +61,7 @@ export default function EditPagePage() {
   const [content, setContent] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitializingWidgets, setIsInitializingWidgets] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +72,14 @@ export default function EditPagePage() {
   }, [firestore, pageId]);
 
   const { data: page, isLoading: isLoadingPage } = useDoc<Page>(pageRef);
+
+  const pageAreasQuery = useMemoFirebase(() => {
+    if (!firestore || !pageId) return null;
+    return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId));
+  }, [firestore, pageId]);
+
+  const { data: currentPageAreas, isLoading: isLoadingAreas } = useCollection(pageAreasQuery);
+  const hasInitializedWidgets = currentPageAreas && currentPageAreas.length > 0;
 
   useEffect(() => {
     if (page) {
@@ -186,7 +202,33 @@ export default function EditPagePage() {
     }
   };
   
-  if (isLoadingPage) {
+  const handleInitializeWidgets = async () => {
+    if (!firestore || !pageId) return;
+
+    setIsInitializingWidgets(true);
+    try {
+      const batch = writeBatch(firestore);
+      pageWidgetAreas.forEach(area => {
+        const areaRef = doc(collection(firestore, "widget_areas"));
+        batch.set(areaRef, { ...area, pageId: pageId });
+      });
+      await batch.commit();
+      toast({
+        title: "Widget Areas Initialized",
+        description: "This page can now have its own widget layouts.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Initialization Failed",
+        description: error.message || "Could not create widget areas for this page.",
+      });
+    } finally {
+      setIsInitializingWidgets(false);
+    }
+  };
+  
+  if (isLoadingPage || isLoadingAreas) {
     return <Loading />
   }
   
@@ -342,9 +384,31 @@ export default function EditPagePage() {
           </div>
         </TabsContent>
         <TabsContent value="widgets">
-            <WidgetsPage pageId={pageId} />
+            {hasInitializedWidgets ? (
+              <WidgetsPage pageId={pageId} />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Initialize Page Widgets</CardTitle>
+                  <CardDescription>
+                    This page doesn't have its own widget areas yet. Initialize them to create a unique layout for this page.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={handleInitializeWidgets} disabled={isInitializingWidgets}>
+                    {isInitializingWidgets ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Initializing...</>
+                    ) : (
+                      <><Wand2 className="mr-2 h-4 w-4" /> Initialize Widget Areas</>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+    
