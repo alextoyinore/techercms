@@ -34,6 +34,8 @@ import { WidgetConfigSheet } from '@/components/widgets/WidgetConfigSheet';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const themeWidgetAreas = [
     { name: 'Header', description: 'Displays at the very top of your site.', theme: 'all' },
@@ -262,41 +264,52 @@ export default function WidgetsPage() {
           title="Widgets"
           description="Drag and drop to build and customize your theme's layout."
         />
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-headline">Available Widgets</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-2">
-                {availableWidgets.map((widget) => (
-                  <DraggableWidget key={widget.type} widget={widget} isNewWidget />
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(isLoadingAreas || isLoadingInstances) ? (
-                <>
-                    <Skeleton className="h-96" />
-                    <Skeleton className="h-96" />
-                    <Skeleton className="h-96" />
-                </>
-            ) : currentThemeAreas ? (
-                currentThemeAreas.map(area => (
-                    <WidgetDropArea
-                        key={area.id}
-                        areaName={area.name}
-                        widgets={widgetInstances[area.name] || []}
-                        onDeleteWidget={handleDeleteWidget}
-                        onWidgetClick={handleWidgetClick}
-                    />
-                ))
-            ) : (
+        <div className="grid md:grid-cols-4 gap-8">
+            <div className="md:col-span-3">
+              {(isLoadingAreas || isLoadingInstances) ? (
+                <Skeleton className="h-96 w-full" />
+              ) : currentThemeAreas ? (
+                <Accordion type="multiple" defaultValue={currentThemeAreas.map(a => a.name)} className="w-full space-y-4">
+                  {currentThemeAreas.map(area => (
+                    <AccordionItem value={area.name} key={area.id} className="border-none">
+                      <Card>
+                        <AccordionTrigger className="p-4 hover:no-underline">
+                          <CardTitle className="font-headline text-lg">{area.name}</CardTitle>
+                        </AccordionTrigger>
+                        <AccordionContent className="border-t">
+                          <WidgetDropArea
+                              key={area.id}
+                              areaName={area.name}
+                              widgets={widgetInstances[area.name] || []}
+                              onDeleteWidget={handleDeleteWidget}
+                              onWidgetClick={handleWidgetClick}
+                          />
+                        </AccordionContent>
+                      </Card>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
                 <p>Could not load widget areas.</p>
-            )}
-          </div>
+              )}
+            </div>
+
+            <div className="md:col-span-1">
+                <Card className="sticky top-20">
+                    <CardHeader>
+                        <CardTitle className="font-headline">Available Widgets</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-[calc(100vh-14rem)]">
+                            <div className="grid gap-2 pr-4">
+                                {availableWidgets.map((widget) => (
+                                    <DraggableWidget key={widget.type} widget={widget} isNewWidget />
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
       </div>
       <DragOverlay>
