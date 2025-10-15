@@ -16,11 +16,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { GripVertical } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, DocumentData, doc } from 'firebase/firestore';
-import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, Active } from '@dnd-kit/core';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, addDoc } from 'firebase/firestore';
+import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, Active, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useToast } from '@/hooks/use-toast';
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -46,17 +47,24 @@ type WidgetInstance = {
 type AvailableWidget = typeof availableWidgets[0];
 
 function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
-    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: `available-${widget.type}`,
         data: { widget },
     });
 
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 100,
     } : undefined;
 
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex items-start gap-2 rounded-md border p-3 bg-muted/50 cursor-grab active:cursor-grabbing">
+        <div 
+            ref={setNodeRef} 
+            style={style} 
+            className={`flex items-start gap-2 rounded-md border p-3 bg-muted/50 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
+            {...listeners} 
+            {...attributes}
+        >
             <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="grid gap-0.5">
                 <p className="font-medium">{widget.name}</p>
@@ -95,7 +103,7 @@ function DroppableWidgetArea({ area, widgets }: { area: WidgetArea, widgets: Wid
     });
     
     return (
-         <Card ref={setNodeRef}>
+         <Card>
             <AccordionItem value={area.id} className="border-b-0">
                 <AccordionTrigger className="p-4 hover:no-underline">
                     <div className="flex-1 text-left">
@@ -104,7 +112,7 @@ function DroppableWidgetArea({ area, widgets }: { area: WidgetArea, widgets: Wid
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0">
-                    <div className="grid gap-2">
+                    <div ref={setNodeRef} className="grid gap-2 min-h-[80px]">
                         {widgets && widgets.length > 0 ? (
                             widgets.map(instance => (
                                 <WidgetInstanceCard key={instance.id} instance={instance} />
@@ -121,6 +129,7 @@ function DroppableWidgetArea({ area, widgets }: { area: WidgetArea, widgets: Wid
 
 export default function WidgetsPage() {
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [activeDragItem, setActiveDragItem] = useState<Active | null>(null);
 
     const areasCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_areas') : null, [firestore]);
@@ -142,7 +151,11 @@ export default function WidgetsPage() {
     }, [widgetInstances]);
 
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveDragItem(event.active);
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
         setActiveDragItem(null);
         const { active, over } = event;
 
@@ -157,6 +170,11 @@ export default function WidgetsPage() {
             if (!firestore) return;
             const widgetType = active.data.current?.widget.type;
             const targetAreaId = overId;
+
+            // Ensure the drop target is a valid widget area
+            const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
+            if (!targetArea) return;
+
             const areaWidgets = widgetsByArea[targetAreaId] || [];
 
             const newWidgetInstance = {
@@ -166,14 +184,35 @@ export default function WidgetsPage() {
                 config: {}, // Default empty config
             };
             
-            const instancesRef = collection(firestore, 'widget_instances');
-            addDocumentNonBlocking(instancesRef, newWidgetInstance);
+            try {
+                const instancesRef = collection(firestore, 'widget_instances');
+                await addDoc(instancesRef, newWidgetInstance);
+                toast({
+                    title: "Widget Added",
+                    description: `The "${active.data.current?.widget.name}" widget was added to the "${targetArea.name}" area.`
+                })
+            } catch (error: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Error Adding Widget",
+                    description: error.message || "Could not save the new widget.",
+                });
+            }
         }
     };
+    
+    const activeDraggableWidget = useMemo(() => {
+        if (!activeDragItem) return null;
+        const activeId = activeDragItem.id.toString();
+        if (activeId.startsWith('available-')) {
+            return activeDragItem.data.current?.widget as AvailableWidget;
+        }
+        return null;
+    }, [activeDragItem]);
 
     return (
         <DndContext 
-            onDragStart={({ active }) => setActiveDragItem(active)}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
             <div className="flex flex-col gap-6">
@@ -182,7 +221,7 @@ export default function WidgetsPage() {
                     description="Manage your site's widgets and widget areas."
                 />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     <div className="lg:col-span-2">
                         <Card>
                             <CardHeader>
@@ -207,7 +246,7 @@ export default function WidgetsPage() {
                                 <CardTitle className="font-headline">Available Widgets</CardTitle>
                                  <CardDescription>
                                     Drag these to a widget area on the left.
-                                </CardDescription>
+                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid gap-2">
                                 {availableWidgets.map((widget) => (
@@ -219,8 +258,16 @@ export default function WidgetsPage() {
                 </div>
             </div>
              <DragOverlay>
-                {activeDragItem && activeDragItem.id.toString().startsWith('available-') ? (
-                    <AvailableWidgetCard widget={activeDragItem.data.current?.widget} />
+                {activeDraggableWidget ? (
+                    <AvailableWidgetCard widget={activeDraggableWidget} />
+                ) : activeDragItem ? (
+                    // Placeholder for when we drag existing widgets
+                    <div className="flex items-start gap-2 rounded-md border p-3 bg-card cursor-grabbing shadow-lg">
+                        <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+                        <div className="grid gap-0.5">
+                            <p className="font-medium">Moving Widget...</p>
+                        </div>
+                    </div>
                 ) : null}
             </DragOverlay>
         </DndContext>
