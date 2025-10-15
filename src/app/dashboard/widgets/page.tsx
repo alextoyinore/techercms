@@ -42,15 +42,21 @@ const socialPlatforms = [
     { value: 'github', label: 'GitHub', icon: Github },
 ];
 
-const availableWidgets = [
-    { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
-    { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
-    { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
-    { type: 'search', name: 'Search', description: 'Display a search form.' },
-    { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
-    { type: 'image', name: 'Image', description: 'Display an image from your media library.' },
-    { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
-];
+const availableWidgets = {
+    'Content': [
+        { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
+        { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
+        { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
+        { type: 'image', name: 'Image', description: 'Display an image from your media library.' },
+    ],
+    'Utility': [
+        { type: 'search', name: 'Search', description: 'Display a search form.' },
+        { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
+    ],
+    'Social': [
+        { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
+    ]
+};
 
 const defaultWidgetAreas: Omit<WidgetArea, 'id'>[] = [
     { name: 'Sidebar', description: 'Main sidebar for posts and pages.', theme: 'all' },
@@ -89,7 +95,7 @@ type WidgetInstance = {
     }
 }
 
-type AvailableWidget = typeof availableWidgets[0];
+type AvailableWidget = (typeof availableWidgets)[keyof typeof availableWidgets][0];
 
 function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -114,7 +120,8 @@ function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
 }
 
 function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance: WidgetInstance; onDelete: (id: string) => void; onSaveConfig: (id: string, config: any) => void; }) {
-    const widgetInfo = availableWidgets.find(w => w.type === instance.type);
+    const allWidgets = Object.values(availableWidgets).flat();
+    const widgetInfo = allWidgets.find(w => w.type === instance.type);
     const name = widgetInfo?.name || instance.type;
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -436,10 +443,11 @@ export default function WidgetsPage() {
     const sensors = useSensors(useSensor(PointerSensor));
 
     const handleDragStart = (event: DragStartEvent) => {
-        if(event.active.data.current?.from === 'available') {
-            setActiveItem(event.active.data.current?.widget);
-        } else {
-            setActiveItem(event.active.data.current?.instance);
+        const { widget, instance } = event.active.data.current || {};
+        if (widget) {
+            setActiveItem(widget);
+        } else if (instance) {
+            setActiveItem(instance);
         }
     };
     
@@ -447,7 +455,8 @@ export default function WidgetsPage() {
         if (!firestore) return;
 
         const instanceToDelete = localInstances?.find(i => i.id === instanceId);
-        const widgetName = instanceToDelete ? (availableWidgets.find(w => w.type === instanceToDelete.type)?.name || 'Widget') : 'Widget';
+        const allWidgets = Object.values(availableWidgets).flat();
+        const widgetName = instanceToDelete ? (allWidgets.find(w => w.type === instanceToDelete.type)?.name || 'Widget') : 'Widget';
         
         try {
             deleteDocumentNonBlocking(doc(firestore, 'widget_instances', instanceId));
@@ -537,59 +546,70 @@ export default function WidgetsPage() {
             const overId = String(over.id);
             const activeInstance = localInstances.find(i => i.id === activeId);
             if (!activeInstance) return;
-
-            setLocalInstances(prev => {
-                if (!prev) return null;
-                const activeIndex = prev.findIndex(i => i.id === activeId);
-                const overIndex = prev.findIndex(i => i.id === overId);
-
+        
+            setLocalInstances(prevInstances => {
+                if (!prevInstances) return null;
+                const oldInstances = [...prevInstances];
                 let newInstances: WidgetInstance[];
-
-                // If moving within the same area
-                if (activeInstance.widgetAreaId === targetAreaId) {
-                    newInstances = arrayMove(prev.filter(i => i.widgetAreaId === targetAreaId), activeIndex, overIndex);
+        
+                const activeIndex = oldInstances.findIndex(i => i.id === activeId);
+                const overElement = oldInstances.find(i => i.id === overId);
+                
+                // Determine if dropping on an area or another widget
+                const isDroppingOnArea = over.data.current?.isWidgetArea;
+                
+                const sourceAreaId = activeInstance.widgetAreaId;
+                const destinationAreaId = isDroppingOnArea ? String(over.id) : overElement?.widgetAreaId;
+        
+                if (!destinationAreaId) return oldInstances; // Should not happen
+        
+                // Create a mutable copy of the instance being moved
+                const movedInstance = { ...oldInstances[activeIndex], widgetAreaId: destinationAreaId };
+                
+                // Remove the instance from its original position
+                oldInstances.splice(activeIndex, 1);
+        
+                if (isDroppingOnArea) {
+                    // Dropped on an empty area
+                    newInstances = [...oldInstances, movedInstance];
                 } else {
-                // If moving to a different area
-                    const sourceAreaInstances = prev.filter(i => i.widgetAreaId === activeInstance.widgetAreaId && i.id !== activeId);
-                    const targetAreaInstances = prev.filter(i => i.widgetAreaId === targetAreaId);
-                    
-                    const movedInstance = { ...activeInstance, widgetAreaId: targetAreaId };
-                    const overWidget = prev[overIndex];
-                    
-                    const overTargetIndex = targetAreaInstances.findIndex(i => i.id === overId);
-
-                    targetAreaInstances.splice(overTargetIndex >= 0 ? overTargetIndex : targetAreaInstances.length, 0, movedInstance);
-
-                    const otherInstances = prev.filter(i => i.widgetAreaId !== activeInstance.widgetAreaId && i.widgetAreaId !== targetAreaId);
-                    newInstances = [...otherInstances, ...sourceAreaInstances, ...targetAreaInstances];
+                    // Dropped on another widget, insert it there
+                    const overIndex = oldInstances.findIndex(i => i.id === overId);
+                    oldInstances.splice(overIndex, 0, movedInstance);
+                    newInstances = oldInstances;
                 }
-                
-                // Re-calculate order for all instances and commit to Firestore
+        
+                // Re-calculate order for all affected instances and prepare batch write
                 const batch = writeBatch(firestore);
-                const finalInstances: WidgetInstance[] = [];
-                const areasToUpdate = new Set(newInstances.map(i => i.widgetAreaId));
+                const finalInstancesState: WidgetInstance[] = [];
+                const areasToUpdate = new Set([sourceAreaId, destinationAreaId]);
                 
+                const allOtherInstances = newInstances.filter(i => !areasToUpdate.has(i.widgetAreaId));
+                finalInstancesState.push(...allOtherInstances);
+        
                 areasToUpdate.forEach(areaId => {
-                    const itemsInArea = newInstances.filter(i => i.widgetAreaId === areaId);
-                    itemsInArea.sort((a,b) => {
-                        const aIdx = newInstances.findIndex(item => item.id === a.id);
-                        const bIdx = newInstances.findIndex(item => item.id === b.id);
-                        return aIdx - bIdx;
-                    });
+                    const itemsInArea = newInstances
+                        .filter(i => i.widgetAreaId === areaId)
+                        .sort((a, b) => {
+                            // A simple sort won't work if items are from different areas originally
+                            // We need a stable reference point. Let's just use their current index in the `newInstances` array
+                            return newInstances.indexOf(a) - newInstances.indexOf(b);
+                        });
+        
                     itemsInArea.forEach((item, index) => {
                         const updatedItem = { ...item, order: index };
-                        finalInstances.push(updatedItem);
+                        finalInstancesState.push(updatedItem);
                         const docRef = doc(firestore, 'widget_instances', item.id);
                         batch.set(docRef, updatedItem, { merge: true });
                     });
                 });
-                
+        
                 batch.commit().catch(error => {
                     toast({ variant: 'destructive', title: 'Error updating widgets', description: error.message });
                     setLocalInstances(widgetInstances); // Revert on error
                 });
                 
-                return finalInstances;
+                return finalInstancesState;
             });
         }
     };
@@ -616,6 +636,8 @@ export default function WidgetsPage() {
             </div>
         );
     }
+
+    const allWidgets = Object.values(availableWidgets).flat();
 
     return (
         <DndContext 
@@ -677,9 +699,14 @@ export default function WidgetsPage() {
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent className="grid gap-2">
-                                {availableWidgets.map((widget) => (
-                                    <AvailableWidgetCard key={widget.type} widget={widget} />
+                            <CardContent className="grid gap-4">
+                                {Object.entries(availableWidgets).map(([groupName, widgets]) => (
+                                    <div key={groupName} className="grid gap-2">
+                                        <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
+                                        {widgets.map((widget) => (
+                                            <AvailableWidgetCard key={widget.type} widget={widget} />
+                                        ))}
+                                    </div>
                                 ))}
                             </CardContent>
                         </Card>
@@ -691,7 +718,7 @@ export default function WidgetsPage() {
                     <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
                        <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
                        <div className="grid gap-0.5">
-                           <p className="font-medium">{activeItem.config?.title || activeItem.name || availableWidgets.find(w => w.type === activeItem.type)?.name}</p>
+                           <p className="font-medium">{activeItem.config?.title || activeItem.name || allWidgets.find(w => w.type === activeItem.type)?.name}</p>
                        </div>
                    </div>
                 ) : null}
