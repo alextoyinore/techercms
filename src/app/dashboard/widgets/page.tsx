@@ -714,11 +714,9 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
 
     const areasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        // If a pageId is provided, get only the widget areas for that page.
         if (pageId) {
             return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId));
         }
-        // Otherwise (on the main /dashboard/widgets page), get only theme-wide widgets.
         return query(collection(firestore, 'widget_areas'), where('pageId', '==', null));
     }, [firestore, pageId]);
     
@@ -736,19 +734,13 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     }, [widgetInstances]);
     
      useEffect(() => {
-        // Initialize default theme-wide widget areas if they don't exist
         if (!pageId && !isLoadingAreas && widgetAreas && widgetAreas.length === 0 && firestore) {
             const batch = writeBatch(firestore);
             defaultWidgetAreas.forEach(areaData => {
                 const newAreaRef = doc(collection(firestore, 'widget_areas'));
                 batch.set(newAreaRef, { ...areaData, pageId: null });
             });
-            batch.commit().then(() => {
-                toast({
-                    title: "Widget Areas Initialized",
-                    description: "Default widget areas have been created.",
-                });
-            }).catch(error => {
+            batch.commit().catch(error => {
                 toast({
                     variant: "destructive",
                     title: "Error Initializing Areas",

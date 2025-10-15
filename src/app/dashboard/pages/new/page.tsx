@@ -24,10 +24,10 @@ import RichTextEditor from '@/components/rich-text-editor';
 import { MediaLibrary } from '@/components/media-library';
 
 const pageWidgetAreas = [
-    { name: 'Page Header', description: 'Displays at the top of the page, above the main content.' },
-    { name: 'Page Content', description: 'Displays as the main content of the page. If empty, the content from the rich text editor will be shown instead.' },
-    { name: 'Page Sidebar', description: 'A sidebar specific to this page.' },
-    { name: 'Page Footer', description: 'Displays at the bottom of the page, above the site footer.' },
+    { name: 'Page Header', description: 'Displays at the top of the page, above the main content.', theme: 'all' },
+    { name: 'Page Content', description: 'Displays as the main content of the page. If empty, the content from the rich text editor will be shown instead.', theme: 'all' },
+    { name: 'Page Sidebar', description: 'A sidebar specific to this page.', theme: 'all' },
+    { name: 'Page Footer', description: 'Displays at the bottom of the page, above the site footer.', theme: 'all' },
 ];
 
 export default function NewPagePage() {
