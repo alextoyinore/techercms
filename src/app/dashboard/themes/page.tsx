@@ -14,9 +14,10 @@ import { Upload, CheckCircle, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 type SiteSettings = {
   activeTheme: string;
@@ -46,19 +47,23 @@ export default function ThemesPage() {
   const activeThemeName = settings?.activeTheme || 'Magazine Pro';
 
   const handleActivateTheme = async (themeName: string) => {
-    if (!firestore) {
+    if (!firestore || !settingsRef) {
         toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.' });
         return;
     }
     setIsActivating(themeName);
-    try {
-        await setDoc(doc(firestore, 'site_settings', 'config'), { activeTheme: themeName }, { merge: true });
-        toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not activate theme.' });
-    } finally {
-        setIsActivating(null);
-    }
+    
+    const newSettings = { activeTheme: themeName };
+
+    // Use non-blocking update and catch permission errors
+    setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
+
+    // Optimistically show toast, the error will be caught by the global listener
+    toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
+    
+    // We can't await the result here, so we'll just reset the loading state
+    // after a short delay to provide visual feedback.
+    setTimeout(() => setIsActivating(null), 1000);
   }
 
   return (

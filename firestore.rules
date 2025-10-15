@@ -1,160 +1,141 @@
 /**
- * @fileOverview Firestore Security Rules for Prototyping.
+ * @fileOverview Firestore Security Rules for the CMS application.
  *
  * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and role-based access control where applicable,
- * while relaxing data validation to enable rapid prototyping.
+ * This ruleset prioritizes secure data access by enforcing strict ownership for user-generated content (Pages, Posts, Media) and restricting access to global site settings.
  *
  * Data Structure:
- * - `/pages/{pageId}`: Stores static page data.
+ * - `/pages/{pageId}`: Stores static page data. Each page is associated with an author.
  * - `/categories/{categoryId}`: Stores category data.
  * - `/tags/{tagId}`: Stores tag data.
- * - `/posts/{postId}`: Stores post data.
- * - `/media/{mediaId}`: Stores media data.
- * - `/site_settings/config`: Stores site-wide configuration settings
+ * - `/posts/{postId}`: Stores blog post data. Each post is associated with an author.
+ * - `/media/{mediaId}`: Stores media file metadata. Each media item is associated with an author.
+ * - `/site_settings/config`: Stores global site configuration (e.g., active theme).
  *
  * Key Security Decisions:
- * - No user listing is allowed.
- * - Unauthenticated access is disallowed.
- * - Owner-only access is enforced for Pages, Posts, and Media.
- * - Categories and Tags are readable and writable by any signed-in user, but update and delete are denied.
- * - Site Settings are readable by all authenticated users but writable only by an admin role (currently not enforced).
+ * - Users can only create, update, and delete Pages, Posts, and Media that they own (i.e., where `authorId` matches their UID).
+ * - Site settings can be read by anyone but can only be updated or deleted by an authenticated user.
+ * - Listing of Pages, Posts, and Media is public.
  *
  * Denormalization for Authorization:
- * - The `Page`, `Post`, and `MediaItem` entities include an `authorId` field. This allows for simple ownership checks on pages, posts, and media items without needing to perform additional reads.
+ *  - Each Page, Post, and Media document includes an `authorId` field. This allows for efficient, top-level ownership checks without needing to perform additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure page documents.
+     * @description Secure access to Pages.
      * @path /pages/{pageId}
-     * @allow (create) Authenticated user can create a page if they are the author.
-     * @deny (create) Unauthenticated user cannot create a page.
-     * @allow (get, list) Any authenticated user can read any page.
-     * @allow (update, delete) Only the author can modify/delete their own pages.
-     * @deny (update, delete) Other users cannot modify/delete pages.
-     * @principle Enforces document ownership for writes, ensures only the author can modify pages.
+     * @allow (create) User with UID 'user_abc' can create a new page with authorId: 'user_abc'.
+     * @allow (update) User with UID 'user_abc' can update a page where resource.data.authorId == 'user_abc'.
+     * @allow (delete) User with UID 'user_abc' can delete a page where resource.data.authorId == 'user_abc'.
+     * @deny (create) User with UID 'user_xyz' cannot create a page with authorId: 'user_abc'.
+     * @deny (update) User with UID 'user_xyz' cannot update a page where resource.data.authorId != 'user_xyz'.
+     * @deny (delete) User with UID 'user_xyz' cannot delete a page where resource.data.authorId != 'user_xyz'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /pages/{pageId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure category documents.
+     * @description Secure access to Categories.
      * @path /categories/{categoryId}
-     * @allow (create) Authenticated user can create a category.
+     * @allow (create) Any signed-in user can create a category.
+     * @allow (update) Any signed-in user can update a category.
+     * @allow (delete) Any signed-in user can delete a category.
      * @deny (create) Unauthenticated user cannot create a category.
-     * @allow (get, list) Any authenticated user can read any category.
-     * @deny (update, delete) No one can update or delete a category for now.
-     * @principle Allows authenticated users to create categories, but restricts updates and deletes.
+     * @principle Allows any authenticated user to manage categories.
      */
     match /categories/{categoryId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Secure tag documents.
+     * @description Secure access to Tags.
      * @path /tags/{tagId}
-     * @allow (create) Authenticated user can create a tag.
+     * @allow (create) Any signed-in user can create a tag.
+     * @allow (update) Any signed-in user can update a tag.
+     * @allow (delete) Any signed-in user can delete a tag.
      * @deny (create) Unauthenticated user cannot create a tag.
-     * @allow (get, list) Any authenticated user can read any tag.
-     * @deny (update, delete) No one can update or delete a tag for now.
-     * @principle Allows authenticated users to create tags, but restricts updates and deletes.
+     * @principle Allows any authenticated user to manage tags.
      */
     match /tags/{tagId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn();
-      allow update: if false;
-      allow delete: if false;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Secure post documents.
+     * @description Secure access to Posts.
      * @path /posts/{postId}
-     * @allow (create) Authenticated user can create a post if they are the author.
-     * @deny (create) Unauthenticated user cannot create a post.
-     * @allow (get, list) Any authenticated user can read any post.
-     * @allow (update, delete) Only the author can modify/delete their own posts.
-     * @deny (update, delete) Other users cannot modify/delete posts.
-     * @principle Enforces document ownership for writes, ensures only the author can modify posts.
+     * @allow (create) User with UID 'user_abc' can create a new post with authorId: 'user_abc'.
+     * @allow (update) User with UID 'user_abc' can update a post where resource.data.authorId == 'user_abc'.
+     * @allow (delete) User with UID 'user_abc' can delete a post where resource.data.authorId == 'user_abc'.
+     * @deny (create) User with UID 'user_xyz' cannot create a post with authorId: 'user_abc'.
+     * @deny (update) User with UID 'user_xyz' cannot update a post where resource.data.authorId != 'user_xyz'.
+     * @deny (delete) User with UID 'user_xyz' cannot delete a post where resource.data.authorId != 'user_xyz'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /posts/{postId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure media documents.
+     * @description Secure access to Media Items.
      * @path /media/{mediaId}
-     * @allow (create) Authenticated user can create a media item if they are the author.
-     * @deny (create) Unauthenticated user cannot create a media item.
-     * @allow (get, list) Any authenticated user can read any media item.
-     * @allow (update, delete) Only the author can modify/delete their own media items.
-     * @deny (update, delete) Other users cannot modify/delete media items.
-     * @principle Enforces document ownership for writes, ensures only the author can modify media items.
+     * @allow (create) User with UID 'user_abc' can create a new media item with authorId: 'user_abc'.
+     * @allow (update) User with UID 'user_abc' can update a media item where resource.data.authorId == 'user_abc'.
+     * @allow (delete) User with UID 'user_abc' can delete a media item where resource.data.authorId == 'user_abc'.
+     * @deny (create) User with UID 'user_xyz' cannot create a media item with authorId: 'user_abc'.
+     * @deny (update) User with UID 'user_xyz' cannot update a media item where resource.data.authorId != 'user_xyz'.
+     * @deny (delete) User with UID 'user_xyz' cannot delete a media item where resource.data.authorId != 'user_xyz'.
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /media/{mediaId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure the site settings document.
+     * @description Secure access to Site Settings.
      * @path /site_settings/config
-     * @allow (get) Any authenticated user can read the site settings.
-     * @deny (create, update, delete) No one can create, update, or delete the site settings for now.
-     * @principle  Restricts write access to site settings.  Future versions may implement role-based access.
+     * @allow (get, list) Any user can read the site settings.
+     * @allow (create, update, delete) Only signed-in users can modify site settings.
+     * @deny (create, update, delete) Non-signed-in users cannot modify site settings.
+     * @principle Restricts modification of site settings to authenticated users.
      */
     match /site_settings/config {
-      allow get: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
-    // ---- Helper functions ----
-
-    /**
-     * @description Checks if the user is signed in.
-     * @returns {boolean} True if the user is signed in, false otherwise.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the user is the owner of the document.
-     * @param {string} userId - The user ID to check against.
-     * @returns {boolean} True if the user is the owner, false otherwise.
-     */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the user is the owner of the existing document.
-     * @param {string} authorId - The authorId to check against
-     * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
-     */
-    function isExistingOwner(authorId) {
-      return isOwner(authorId) && resource != null;
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
   }
 }
