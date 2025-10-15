@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { analyzeSeo, type FormState } from "./actions";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ export default function SeoAnalyzerPage() {
   const initialState: FormState = {
     message: "",
   };
-  const [state, formAction] = useFormState(analyzeSeo, initialState);
+  const [state, formAction] = useActionState(analyzeSeo, initialState);
 
   return (
     <div className="flex flex-col gap-6">
