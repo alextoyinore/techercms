@@ -155,10 +155,18 @@ export default function NewPagePage() {
 
         toast({
             title: `Page ${status === 'published' ? 'Published' : 'Saved'}`,
-            description: `Your page "${title}" has been successfully saved. You can now add widgets.`,
-            action: <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/pages/edit/${pageRef.id}?tab=widgets`)}>Add Widgets</Button>
+            description: `Your page "${title}" has been successfully created.`,
         });
-        router.push('/dashboard/pages');
+
+        // Redirect to the edit page after creation
+        if (status === 'draft') {
+            // If saving as a draft, go directly to the widgets tab
+            router.push(`/dashboard/pages/edit/${pageRef.id}?tab=widgets`);
+        } else {
+            // If publishing, go to the content tab of the new page
+            router.push(`/dashboard/pages/edit/${pageRef.id}`);
+        }
+
     } catch (error: any) {
         toast({
             variant: "destructive",
