@@ -44,7 +44,7 @@ import {
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 const RichTextEditor = ({
   content,
@@ -97,6 +97,12 @@ const RichTextEditor = ({
     },
     editable: !disabled,
   });
+
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   const addImage = useCallback(() => {
     const url = window.prompt('URL');
