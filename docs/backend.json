@@ -47,6 +47,10 @@
           "type": "string",
           "description": "The main body content of the page."
         },
+        "featuredImageUrl": {
+          "type": "string",
+          "description": "The URL for the page's main image."
+        },
         "status": {
           "type": "string",
           "description": "The publication status of the page.",
@@ -333,5 +337,3 @@
     "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
   }
 }
-
-    
