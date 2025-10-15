@@ -94,7 +94,7 @@ export function UserNav({user}: {user: FirebaseUser | null}) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings">
+            <Link href="/dashboard/profile">
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>

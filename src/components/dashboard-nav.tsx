@@ -11,14 +11,15 @@ import {
     Paintbrush,
     Sparkles,
     Settings,
-    Gem
+    Gem,
+    User
 } from "lucide-react";
 import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import type { User } from "firebase/auth";
+import type { User as FirebaseUser } from "firebase/auth";
 
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -28,10 +29,11 @@ const navItems = [
     { href: "/dashboard/tags", icon: Tag, label: "Tags" },
     { href: "/dashboard/themes", icon: Paintbrush, label: "Themes" },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
+    { href: "/dashboard/profile", icon: User, label: "Profile" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-export function DashboardNav({ user }: { user: User | null }) {
+export function DashboardNav({ user }: { user: FirebaseUser | null }) {
     const pathname = usePathname();
 
     return (
