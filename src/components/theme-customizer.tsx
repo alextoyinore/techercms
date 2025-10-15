@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -63,7 +64,7 @@ export function ThemeCustomizer({ children, theme }: { children: React.ReactNode
     setColors(newColors);
     // Apply changes live
     const temporaryTheme = { name: 'temporary-preview', colors: newColors };
-    setActiveTheme(temporaryTheme);
+    setActiveTheme(temporaryTheme, true);
   };
   
   const handleSidebarColorChange = (key: keyof ThemeColors['sidebar'], value: string) => {
@@ -71,7 +72,7 @@ export function ThemeCustomizer({ children, theme }: { children: React.ReactNode
     setColors(newColors);
      // Apply changes live
      const temporaryTheme = { name: 'temporary-preview', colors: newColors };
-     setActiveTheme(temporaryTheme);
+     setActiveTheme(temporaryTheme, true);
   };
 
   const handleSave = () => {

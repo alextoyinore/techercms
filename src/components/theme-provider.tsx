@@ -7,7 +7,7 @@ import { themes as defaultThemes, type Theme, defaultTheme } from '@/lib/themes'
 interface ThemeProviderState {
   theme: Theme;
   themes: Theme[];
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme, temporary?: boolean) => void;
   addTheme: (theme: Theme) => void;
   fontSize: number;
   setFontSize: (size: number) => void;
@@ -78,9 +78,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyTheme(theme);
-    if (theme.name !== 'temporary-preview') {
-      localStorage.setItem('theme', theme.name);
-    }
   }, [theme, applyTheme]);
 
   useEffect(() => {
@@ -97,8 +94,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   };
   
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = (newTheme: Theme, temporary = false) => {
       setThemeState(newTheme);
+      if (!temporary) {
+        localStorage.setItem('theme', newTheme.name);
+      }
   };
 
   const setFontSize = (size: number) => {
