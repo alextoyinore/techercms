@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/accordion"
 import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, setDoc, query, where } from 'firebase/firestore';
+import { collection, doc, writeBatch, setDoc, query, where, or, and } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -82,7 +82,6 @@ const defaultWidgetAreas: Omit<WidgetArea, 'id' | 'pageId'>[] = [
     { name: 'Footer Column 1', description: 'First column in the site footer.', theme: 'all' },
     { name: 'Footer Column 2', description: 'Second column in the site footer.', theme: 'all' },
     { name: 'Homepage Content', description: 'Special content area on the homepage.', theme: 'all' },
-    { name: 'Page Content', description: 'Displays as the main content of the page.', theme: 'all' },
 ];
 
 type WidgetArea = {
@@ -715,11 +714,11 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
 
     const areasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
+        // If a pageId is provided, get only the widget areas for that page.
         if (pageId) {
-            // For a specific page, fetch all its widget areas
             return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId));
         }
-        // For the main widget page, fetch only theme-wide (non-page-specific) areas
+        // Otherwise (on the main /dashboard/widgets page), get only theme-wide widgets.
         return query(collection(firestore, 'widget_areas'), where('pageId', '==', null));
     }, [firestore, pageId]);
     
