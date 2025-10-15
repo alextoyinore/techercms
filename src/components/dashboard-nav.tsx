@@ -18,7 +18,6 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
-    SidebarTrigger,
 } from "@/components/ui/sidebar";
 import type { User } from "firebase/auth";
 import { UserNav } from "./user-nav";
@@ -47,7 +46,7 @@ export function DashboardNav({ user }: { user: User | null }) {
                     </span>
                 </Link>
                 {/* Mobile-only header elements */}
-                <div className="lg:hidden flex items-center gap-2">
+                <div className="md:hidden flex items-center gap-2">
                     <UserNav user={user} />
                 </div>
             </div>
