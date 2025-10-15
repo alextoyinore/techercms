@@ -73,6 +73,44 @@ function PublicFooter() {
     )
 }
 
+function PageContent({ pageId, editorContent }: { pageId: string, editorContent: string }) {
+    const firestore = useFirestore();
+
+    const contentAreaQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId), where('name', '==', 'Page Content'));
+    }, [firestore, pageId]);
+
+    const { data: contentAreas, isLoading: isLoadingAreas } = useCollection(contentAreaQuery);
+    const contentAreaId = useMemo(() => contentAreas?.[0]?.id, [contentAreas]);
+
+    const contentWidgetsQuery = useMemoFirebase(() => {
+        if (!firestore || !contentAreaId) return null;
+        return query(collection(firestore, 'widget_instances'), where('widgetAreaId', '==', contentAreaId));
+    }, [firestore, contentAreaId]);
+
+    const { data: contentWidgets, isLoading: isLoadingWidgets } = useCollection(contentWidgetsQuery);
+    
+    if (isLoadingAreas || isLoadingWidgets) {
+        return <div className="prose dark:prose-invert lg:prose-lg max-w-none mx-auto"><p>Loading content...</p></div>
+    }
+
+    if (contentWidgets && contentWidgets.length > 0) {
+        return (
+            <div className="space-y-6">
+                <WidgetArea areaName="Page Content" isPageSpecific={true} pageId={pageId} />
+            </div>
+        );
+    }
+    
+    return (
+        <div
+            className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto"
+            dangerouslySetInnerHTML={{ __html: editorContent }}
+        />
+    );
+}
+
 export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Post }) {
   const params = useParams();
   const slug = preloadedItem ? (preloadedItem as any).slug : params.slug as string;
@@ -150,10 +188,14 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             </time>
           </header>
           
-          <div
-            className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto"
-            dangerouslySetInnerHTML={{ __html: item.content }}
-          />
+          {pageId ? (
+              <PageContent pageId={pageId} editorContent={item.content} />
+          ) : (
+                <div
+                    className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto"
+                    dangerouslySetInnerHTML={{ __html: item.content }}
+                />
+          )}
 
           {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
             <footer className="mt-12 text-center">
