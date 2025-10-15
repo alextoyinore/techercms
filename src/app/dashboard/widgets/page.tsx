@@ -33,10 +33,19 @@ const availableWidgets = [
     { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
 ];
 
+const defaultWidgetAreas: Omit<WidgetArea, 'id'>[] = [
+    { name: 'Sidebar', description: 'Main sidebar for posts and pages.', theme: 'all' },
+    { name: 'Header', description: 'Header area, useful for banners or announcements.', theme: 'all' },
+    { name: 'Footer Column 1', description: 'First column in the site footer.', theme: 'all' },
+    { name: 'Footer Column 2', description: 'Second column in the site footer.', theme: 'all' },
+    { name: 'Homepage Content', description: 'Special content area on the homepage.', theme: 'all' },
+];
+
 type WidgetArea = {
     id: string;
     name: string;
     description: string;
+    theme: string;
 }
 
 type WidgetInstance = {
@@ -162,7 +171,6 @@ export default function WidgetsPage() {
             const widgetType = active.data.current?.widget.type;
             const widgetName = active.data.current?.widget.name;
             
-            // Determine the target area ID. It could be the area itself or an instance within the area.
             const targetAreaId = over.data.current?.isWidgetArea 
                 ? overId 
                 : over.data.current?.instance?.widgetAreaId;
@@ -185,7 +193,6 @@ export default function WidgetsPage() {
                 const instancesRef = collection(firestore, 'widget_instances');
                 const newDocRef = await addDoc(instancesRef, newWidgetData);
                 
-                // Optimistically update local state
                 setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
                 
                 toast({
