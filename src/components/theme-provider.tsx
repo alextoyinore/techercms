@@ -3,6 +3,13 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
 import { themes as defaultThemes, type Theme, defaultTheme } from '@/lib/themes';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
+type SiteSettings = {
+  dashboardTheme?: string;
+  fontSize?: number;
+};
 
 interface ThemeProviderState {
   theme: Theme;
@@ -24,9 +31,20 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themes, setThemes] = useState<Theme[]>(defaultThemes);
-  const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const [activeTheme, setActiveTheme] = useState<Theme>(defaultTheme);
   const [fontSize, setFontSizeState] = useState<number>(14);
+  const [initialLoad, setInitialLoad] = useState(true);
+  
+  const firestore = useFirestore();
 
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
+  const { data: settings } = useDoc<SiteSettings>(settingsRef);
+
+  // Load themes from localStorage on initial mount
   useEffect(() => {
     try {
       const storedThemes = localStorage.getItem('themes');
@@ -35,32 +53,49 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     } catch (e) {
       console.error("Failed to parse themes from localStorage", e);
-      setThemes(defaultThemes);
     }
   }, []);
 
+  // Update themes in localStorage whenever they change
   useEffect(() => {
-    try {
-      const storedThemeName = localStorage.getItem('theme');
-      const activeTheme = themes.find(t => t.name === storedThemeName) || defaultTheme;
-      setThemeState(activeTheme);
-    } catch (e) {
-      console.error("Failed to parse theme name from localStorage", e);
-      setThemeState(defaultTheme);
+    if (!initialLoad) {
+      localStorage.setItem('themes', JSON.stringify(themes));
     }
-  }, [themes]);
+  }, [themes, initialLoad]);
 
+  // Determine active theme and font size from DB or localStorage
   useEffect(() => {
-    try {
+    let themeNameToApply = defaultTheme.name;
+    let sizeToApply = 14;
+
+    if (settings) {
+      themeNameToApply = settings.dashboardTheme || defaultTheme.name;
+      sizeToApply = settings.fontSize || 14;
+    } else {
+      try {
+        const storedThemeName = localStorage.getItem('theme');
+        if (storedThemeName) {
+          themeNameToApply = storedThemeName;
+        }
         const storedFontSize = localStorage.getItem('fontSize');
         if (storedFontSize) {
-            setFontSizeState(Number(storedFontSize));
+          sizeToApply = Number(storedFontSize);
         }
-    } catch(e) {
-        console.error("Failed to parse font size from localStorage", e);
-        setFontSizeState(14);
+      } catch (e) {
+        console.error("Failed to parse settings from localStorage", e);
+      }
     }
-  }, []);
+    
+    const themeToApply = themes.find(t => t.name === themeNameToApply) || themes.find(t => t.name === defaultTheme.name) || defaultTheme;
+    setActiveTheme(themeToApply);
+    setFontSizeState(sizeToApply);
+
+    if (initialLoad) {
+      setInitialLoad(false);
+    }
+
+  }, [settings, themes, initialLoad]);
+
 
   const applyTheme = useCallback((themeToApply: Theme) => {
     const root = window.document.documentElement;
@@ -77,39 +112,45 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme, applyTheme]);
+    applyTheme(activeTheme);
+  }, [activeTheme, applyTheme]);
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.style.fontSize = `${fontSize}px`;
-    localStorage.setItem('fontSize', String(fontSize));
-  }, [fontSize]);
+    if (!initialLoad) {
+      localStorage.setItem('fontSize', String(fontSize));
+    }
+  }, [fontSize, initialLoad]);
 
   const addTheme = (newTheme: Theme) => {
     setThemes(currentThemes => {
         const newThemes = [...currentThemes.filter(t => t.name !== newTheme.name), newTheme];
-        localStorage.setItem('themes', JSON.stringify(newThemes));
+        // localStorage is now handled by the useEffect for `themes`
         return newThemes;
     });
   };
   
   const setTheme = (newTheme: Theme, temporary = false) => {
-    // If we are applying a temporary theme, don't save it to local storage.
     if (temporary) {
       applyTheme(newTheme);
       return;
     }
-    setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme.name);
+    setActiveTheme(newTheme);
+    if (!initialLoad) {
+        localStorage.setItem('theme', newTheme.name);
+    }
   };
 
   const setFontSize = (size: number) => {
     setFontSizeState(size);
+    if(firestore && settingsRef) {
+        setDoc(settingsRef, { fontSize: size }, { merge: true });
+    }
   }
 
   const value = {
-    theme,
+    theme: activeTheme,
     themes,
     setTheme,
     addTheme,

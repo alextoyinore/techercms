@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
@@ -31,11 +32,11 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="font-body antialiased">
-        <ThemeProvider>
-          <FirebaseClientProvider>
+        <FirebaseClientProvider>
+          <ThemeProvider>
             {children}
-          </FirebaseClientProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

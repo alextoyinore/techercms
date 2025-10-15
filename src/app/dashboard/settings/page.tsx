@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
 import { CheckCircle, Loader2, Palette } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
 import {
   Select,
   SelectContent,
@@ -28,12 +27,6 @@ import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { ThemeCustomizer } from '@/components/theme-customizer';
-import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { themes as defaultThemes, type Theme, defaultTheme } from '@/lib/themes';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { timezones } from '@/lib/timezones';
 import { languages } from '@/lib/languages';
 
@@ -44,6 +37,7 @@ type SiteSettings = {
   homepagePageId?: string;
   language?: string;
   timezone?: string;
+  dashboardTheme?: string;
 };
 
 type Page = {
@@ -54,10 +48,8 @@ type Page = {
 export default function SettingsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { theme: activeTheme, setTheme: setActiveTheme, fontSize, setFontSize, themes: availableThemes } = useTheme();
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [isActivating, setIsActivating] = useState<string | null>(null);
   
   const [siteName, setSiteName] = useState('');
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
@@ -84,12 +76,10 @@ export default function SettingsPage() {
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
-      // If a timezone is saved in the DB, use it.
       if (settings.timezone) {
         setTimezone(settings.timezone);
       }
     } else if (!isLoadingSettings) {
-      // If loading is finished and there are no settings, auto-detect timezone.
       const offsetInMinutes = new Date().getTimezoneOffset();
       const offsetInHours = Math.round(-offsetInMinutes / 60);
       const utcString = `(UTC${offsetInHours >= 0 ? '+' : ''}${offsetInHours})`;
@@ -107,11 +97,10 @@ export default function SettingsPage() {
         return;
     }
     setIsSavingSettings(true);
-    const settingsToSave = {
+    const settingsToSave: Partial<SiteSettings> = {
         siteName,
         homepageType,
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
-        activeTheme: activeTheme.name,
         language,
         timezone,
     };
@@ -124,19 +113,7 @@ export default function SettingsPage() {
         setIsSavingSettings(false);
     }
   }
-
-  const handleActivateTheme = (themeName: string) => {
-    const newTheme = availableThemes.find(t => t.name === themeName);
-    if (newTheme) {
-        setIsActivating(themeName);
-        setActiveTheme(newTheme);
-        toast({ title: 'Theme Selected', description: `"${themeName}" is now active. Save settings to persist.` });
-        setTimeout(() => setIsActivating(null), 1000);
-    }
-  }
   
-  const themeImages = PlaceHolderImages.filter(img => img.id.startsWith('theme-'));
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -187,7 +164,7 @@ export default function SettingsPage() {
                         <p className="text-sm text-muted-foreground">Set the timezone for your site.</p>
                     </div>
                 </div>
-                <Separator />
+                
                 <div className="grid gap-4">
                     <Label>Homepage Settings</Label>
                     <RadioGroup value={homepageType} onValueChange={(value: 'latest' | 'static') => setHomepageType(value)}>
@@ -220,80 +197,6 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </RadioGroup>
-                </div>
-            </CardContent>
-        </Card>
-
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Appearance</CardTitle>
-                <CardDescription>
-                    Customize your dashboard's look and feel.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-                <div className='grid gap-2'>
-                    <Label>Dashboard Theme</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {availableThemes.map((theme, index) => {
-                             const image = themeImages[index % themeImages.length];
-                             const isActive = theme.name === activeTheme.name;
-                             const isProcessing = isActivating === theme.name;
-                             return (
-                                <div key={theme.name} className="group">
-                                     <div className='relative'>
-                                        <Image
-                                            src={image.imageUrl}
-                                            alt={theme.name}
-                                            width={300}
-                                            height={150}
-                                            className={cn("rounded-md aspect-[2/1] object-cover border-2", isActive ? "border-primary" : "border-muted")}
-                                        />
-                                        {isActive && (
-                                            <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
-                                                <CheckCircle className="h-8 w-8 text-white" />
-                                            </div>
-                                        )}
-                                     </div>
-                                    <div className='mt-2 space-y-2'>
-                                        <p className='text-sm font-medium'>{theme.name}</p>
-                                        <div className='flex items-center gap-2'>
-                                            <Button size="sm" onClick={() => handleActivateTheme(theme.name)} disabled={!!isActivating || isActive} className='flex-1'>
-                                                {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : isActive ? 'Active' : 'Activate'}
-                                            </Button>
-                                            <ThemeCustomizer theme={theme}>
-                                                <Button size="sm" variant="outline"><Palette className='h-4 w-4' /></Button>
-                                            </ThemeCustomizer>
-                                        </div>
-                                    </div>
-                                </div>
-                             )
-                        })}
-                    </div>
-                </div>
-                <Separator />
-                <div className='flex flex-col gap-4'>
-                    <ThemeCustomizer theme={defaultTheme}>
-                        <Button variant="outline" className="w-fit">
-                            <Palette className="mr-2 h-4 w-4" />
-                            Create New Theme
-                        </Button>
-                    </ThemeCustomizer>
-
-                    <div className='grid gap-2 max-w-sm'>
-                        <Label>Font Scaling</Label>
-                        <div className='flex items-center gap-4'>
-                            <Slider
-                                value={[fontSize]}
-                                onValueChange={(value) => setFontSize(value[0])}
-                                min={12}
-                                max={18}
-                                step={1}
-                            />
-                            <span className='text-sm text-muted-foreground w-12 text-center'>{fontSize}px</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Adjust the base font size for the dashboard interface.</p>
-                    </div>
                 </div>
             </CardContent>
         </Card>
