@@ -95,10 +95,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
   
   const setTheme = (newTheme: Theme, temporary = false) => {
-      setThemeState(newTheme);
-      if (!temporary) {
-        localStorage.setItem('theme', newTheme.name);
-      }
+    // If we are applying a temporary theme, don't save it to local storage.
+    if (temporary) {
+      applyTheme(newTheme);
+      return;
+    }
+    setThemeState(newTheme);
+    localStorage.setItem('theme', newTheme.name);
   };
 
   const setFontSize = (size: number) => {
