@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Lexend } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
@@ -10,10 +10,11 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const lexend = Lexend({
+const poppins = Poppins({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-lexend",
+  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${lexend.variable}`}>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body className="font-body antialiased">
           <FirebaseClientProvider>
             {children}
