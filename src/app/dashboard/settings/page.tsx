@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Palette } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
 import { themes } from '@/lib/themes';
@@ -29,6 +29,7 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
+import { ThemeCustomizer } from '@/components/theme-customizer';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -294,14 +295,23 @@ export default function SettingsPage() {
                         </p>
                       )}
                   </div>
-                   <Button
-                      onClick={() => setAdminTheme(theme)}
-                      disabled={isActive}
-                      size="sm"
-                      variant={isActive ? "secondary" : "outline"}
-                    >
-                      {isActive ? 'Activated' : 'Activate'}
-                    </Button>
+                  <div className="flex gap-2">
+                    <Button
+                        onClick={() => setAdminTheme(theme)}
+                        disabled={isActive}
+                        size="sm"
+                        variant={isActive ? "secondary" : "outline"}
+                        className='w-full'
+                      >
+                        {isActive ? 'Activated' : 'Activate'}
+                      </Button>
+                      <ThemeCustomizer theme={theme}>
+                        <Button size="sm" variant="outline">
+                            <Palette className="h-4 w-4" />
+                            <span className="sr-only">Customize</span>
+                        </Button>
+                      </ThemeCustomizer>
+                  </div>
                 </div>
               );
             })}
@@ -311,5 +321,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
