@@ -2,8 +2,8 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loading } from '@/components/loading';
@@ -18,12 +18,16 @@ type Post = {
   createdAt: Timestamp;
 };
 
-function PublicHeader() {
+type SiteSettings = {
+  siteName?: string;
+}
+
+function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-4 px-6 border-b">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                    My Awesome Site
+                    {siteName || 'My Awesome Site'}
                 </Link>
                 <nav>
                     <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary">
@@ -57,7 +61,13 @@ export default function HomePage() {
     );
   }, [firestore]);
 
-  const { data: posts, isLoading } = useCollection<Post>(postsCollection);
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
+  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsCollection);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   const sortedPosts = useMemo(() => {
     if (!posts) return [];
@@ -68,9 +78,11 @@ export default function HomePage() {
     });
   }, [posts]);
 
+  const isLoading = isLoadingPosts || isLoadingSettings;
+
   return (
     <div className="bg-background min-h-screen">
-        <PublicHeader />
+        <PublicHeader siteName={settings?.siteName} />
         <main className="container mx-auto py-8 px-6">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold font-headline tracking-tight lg:text-5xl">Our Blog</h1>
@@ -117,3 +129,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

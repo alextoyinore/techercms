@@ -197,7 +197,7 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "The timestamp when the post was last updated."
+          "description": "The timestamp when the page was last updated."
         }
       },
       "required": [
@@ -253,9 +253,15 @@
         "activeTheme": {
           "type": "string",
           "description": "The name of the currently active frontend theme."
+        },
+        "siteName": {
+          "type": "string",
+          "description": "The public name of the website."
         }
       },
-      "required": ["activeTheme"]
+      "required": [
+        "activeTheme"
+      ]
     }
   },
   "auth": {
@@ -346,7 +352,7 @@
           ]
         }
       },
-       {
+      {
         "path": "/site_settings/config",
         "definition": {
           "entityName": "SiteSettings",
@@ -360,3 +366,5 @@
     "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching."
   }
 }
+
+    

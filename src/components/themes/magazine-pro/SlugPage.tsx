@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -32,12 +32,16 @@ type Page = {
   createdAt: Timestamp;
 };
 
-function PublicHeader() {
+type SiteSettings = {
+    siteName?: string;
+}
+
+function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                    My Awesome Site
+                     {siteName || 'My Awesome Site'}
                 </Link>
                 <nav>
                     <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary">
@@ -74,8 +78,14 @@ export default function SlugPage() {
     return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
   }, [firestore, slug]);
 
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
   const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesQuery);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   const item: (Post | Page) | null = useMemo(() => {
     if (isLoadingPosts || isLoadingPages) return null;
@@ -84,7 +94,7 @@ export default function SlugPage() {
     return null;
   }, [posts, pages, isLoadingPosts, isLoadingPages]);
 
-  if (isLoadingPosts || isLoadingPages) {
+  if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
   }
 
@@ -109,7 +119,7 @@ export default function SlugPage() {
 
   return (
     <div className="bg-background">
-      <PublicHeader />
+      <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6 max-w-4xl">
         <article>
           <header className="mb-8">
@@ -150,3 +160,5 @@ export default function SlugPage() {
     </div>
   );
 }
+
+    

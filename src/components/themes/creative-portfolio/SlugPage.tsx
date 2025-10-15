@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -32,12 +32,16 @@ type Page = {
   createdAt: Timestamp;
 };
 
-function PublicHeader() {
+type SiteSettings = {
+  siteName?: string;
+}
+
+function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
-                    Portfolio
+                     {siteName || 'Portfolio'}
                 </Link>
                 <nav>
                     <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
@@ -73,9 +77,15 @@ export default function SlugPage() {
     if (!firestore || !slug) return null;
     return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
   }, [firestore, slug]);
+  
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
 
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
   const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesQuery);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   const item = useMemo(() => {
     if (posts && posts.length > 0) return posts[0];
@@ -83,7 +93,7 @@ export default function SlugPage() {
     return null;
   }, [posts, pages]);
 
-  if (isLoadingPosts || isLoadingPages) {
+  if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
   }
 
@@ -106,7 +116,7 @@ export default function SlugPage() {
 
   return (
     <div className="bg-background">
-      <PublicHeader />
+      <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6">
         <article className="max-w-4xl mx-auto">
           {item.featuredImageUrl && (
@@ -147,3 +157,5 @@ export default function SlugPage() {
     </div>
   );
 }
+
+    

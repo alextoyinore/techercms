@@ -6,11 +6,12 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
 import { themes } from '@/lib/themes';
@@ -23,13 +24,75 @@ import {
 } from "@/components/ui/select"
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
+type SiteSettings = {
+  activeTheme?: string;
+  siteName?: string;
+};
 
 export default function SettingsPage() {
   const themeImages = PlaceHolderImages.filter(img =>
     img.id.startsWith('theme-')
   );
-  const { theme: activeTheme, setTheme } = useTheme();
+  const { theme: activeAdminTheme, setTheme: setAdminTheme } = useTheme();
+  const { toast } = useToast();
+  const firestore = useFirestore();
+  const [isActivating, setIsActivating] = useState<string | null>(null);
+  const [isSavingSiteName, setIsSavingSiteName] = useState(false);
+  const [siteName, setSiteName] = useState('');
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
+  const { data: settings, isLoading } = useDoc<SiteSettings>(settingsRef);
+  
+  useEffect(() => {
+    if (settings?.siteName) {
+      setSiteName(settings.siteName);
+    }
+  }, [settings]);
+
+
+  const activeTheme = settings?.activeTheme || 'Magazine Pro';
+
+  const handleActivateTheme = async (themeName: string) => {
+    if (!firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.' });
+        return;
+    }
+    setIsActivating(themeName);
+    try {
+        await setDoc(doc(firestore, 'site_settings', 'config'), { activeTheme: themeName }, { merge: true });
+        toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not activate theme.' });
+    } finally {
+        setIsActivating(null);
+    }
+  }
+
+  const handleSaveSiteName = async () => {
+    if (!firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.' });
+        return;
+    }
+    setIsSavingSiteName(true);
+    try {
+        await setDoc(doc(firestore, 'site_settings', 'config'), { siteName }, { merge: true });
+        toast({ title: 'Site Name Updated', description: 'Your public site name has been changed.' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not save site name.' });
+    } finally {
+        setIsSavingSiteName(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,6 +101,25 @@ export default function SettingsPage() {
         description="Manage your account settings and preferences."
       />
       <div className="grid gap-6">
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Site Settings</CardTitle>
+                <CardDescription>
+                    Manage your public website's general settings.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-2 max-w-sm">
+                    <Label htmlFor="siteName">Site Name</Label>
+                    <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
+                </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+                <Button onClick={handleSaveSiteName} disabled={isSavingSiteName}>
+                    {isSavingSiteName ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Saving...</> : 'Save'}
+                </Button>
+            </CardFooter>
+        </Card>
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Localization</CardTitle>
@@ -192,7 +274,7 @@ export default function SettingsPage() {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {themes.map((theme, index) => {
               const image = themeImages[index % themeImages.length];
-              const isActive = activeTheme.name === theme.name;
+              const isActive = activeAdminTheme.name === theme.name;
               return (
                 <div key={theme.name} className="flex flex-col gap-2">
                    <Image
@@ -213,7 +295,7 @@ export default function SettingsPage() {
                       )}
                   </div>
                    <Button
-                      onClick={() => setTheme(theme)}
+                      onClick={() => setAdminTheme(theme)}
                       disabled={isActive}
                       size="sm"
                       variant={isActive ? "secondary" : "outline"}
@@ -229,3 +311,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
