@@ -4,7 +4,6 @@ import { collection, query, where } from 'firebase/firestore';
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Cloud } from 'lucide-react';
 
 type Post = {
@@ -16,7 +15,11 @@ type TagCount = {
     count: number;
 };
 
-export function TagCloudWidget() {
+type TagCloudWidgetProps = {
+    title?: string;
+}
+
+export function TagCloudWidget({ title = 'Tag Cloud' }: TagCloudWidgetProps) {
     const firestore = useFirestore();
 
     const postsQuery = useMemoFirebase(() => {
@@ -58,7 +61,7 @@ export function TagCloudWidget() {
             <CardHeader>
                 <CardTitle className="font-headline text-lg flex items-center gap-2">
                     <Cloud className="h-4 w-4" />
-                    Tag Cloud
+                    {title}
                 </CardTitle>
             </CardHeader>
             <CardContent>

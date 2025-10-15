@@ -55,7 +55,12 @@ export function WidgetArea({ areaName }: { areaName: string }) {
     }, [widgetInstances]);
 
     if (isLoadingAreas || isLoadingInstances) {
-        return <p>Loading widgets...</p>;
+        return (
+            <div className='space-y-4'>
+                <div className="p-4 border rounded-lg animate-pulse bg-muted/50 h-24"></div>
+                <div className="p-4 border rounded-lg animate-pulse bg-muted/50 h-32"></div>
+            </div>
+        )
     }
 
     if (!sortedInstances || sortedInstances.length === 0) {

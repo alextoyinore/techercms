@@ -62,6 +62,7 @@ type WidgetInstance = {
     config?: {
         title?: string;
         html?: string;
+        count?: number;
     }
 }
 
@@ -114,6 +115,29 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     
     const renderConfigFields = () => {
         switch (instance.type) {
+            case 'recent-posts':
+                 return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Recent Posts"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-count">Number of posts to show</Label>
+                            <Input
+                                id="widget-count"
+                                type="number"
+                                value={config.count || 5}
+                                onChange={(e) => setConfig({ ...config, count: parseInt(e.target.value, 10) || 5 })}
+                            />
+                        </div>
+                    </div>
+                );
             case 'custom-html':
                 return (
                     <div className="grid gap-4">
@@ -137,7 +161,17 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                     </div>
                 );
             default:
-                return <p className="text-sm text-muted-foreground">This widget has no configurable options.</p>;
+                return (
+                     <div className="grid gap-2">
+                        <Label htmlFor="widget-title">Title</Label>
+                        <Input
+                            id="widget-title"
+                            value={config.title || ''}
+                            onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                        />
+                        <p className="text-sm text-muted-foreground">This widget has no other configurable options.</p>
+                    </div>
+                )
         }
     }
 
@@ -147,7 +181,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
              <div {...attributes} {...listeners} className="flex-grow flex items-start gap-2">
                 <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="grid gap-0.5">
-                    <p className="font-medium">{name}</p>
+                    <p className="font-medium">{instance.config?.title || name}</p>
                 </div>
             </div>
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -308,14 +342,14 @@ export default function WidgetsPage() {
     const handleDragEnd = async (event: DragEndEvent) => {
         setActiveItem(null);
         const { active, over } = event;
-
+    
         if (!over) return;
         
         const activeId = active.id.toString();
         const overId = over.id.toString();
-
+    
         const fromAvailable = active.data.current?.from === 'available';
-
+    
         // Scenario 1: Dragging a new widget into an area
         if (fromAvailable) {
             const widgetType = active.data.current?.widget.type;
@@ -324,49 +358,54 @@ export default function WidgetsPage() {
             const targetAreaId = over.data.current?.isWidgetArea 
                 ? overId 
                 : over.data.current?.instance?.widgetAreaId;
-
+    
             if (!targetAreaId) return;
-
+    
             const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
             if (!targetArea || !firestore) return;
-
+    
+            const overIsInstance = over.data.current?.isWidgetInstance;
             const areaWidgets = widgetsByArea[targetAreaId] || [];
-            
-            let newOrder = 0;
-            const overInstance = localInstances?.find(i => i.id === overId);
-            if (overInstance) {
-                newOrder = overInstance.order;
-            } else if (areaWidgets.length > 0) {
-                 newOrder = areaWidgets.length;
-            }
-
+            const overIndex = overIsInstance ? areaWidgets.findIndex(w => w.id === overId) : areaWidgets.length;
+    
             const newWidgetData = {
                 widgetAreaId: targetAreaId,
                 type: widgetType,
-                order: newOrder,
+                order: overIndex, 
                 config: {},
             };
-            
+    
             try {
                 const instancesRef = collection(firestore, 'widget_instances');
                 const newDocRef = await addDocumentNonBlocking(instancesRef, newWidgetData);
-                 if (newDocRef) {
+                if (newDocRef) {
                     setLocalInstances(prev => {
-                        const newInstances = [...(prev || []), { ...newWidgetData, id: newDocRef.id }];
-                         // Recalculate order for the target area
-                        const itemsInArea = newInstances
-                            .filter(i => i.widgetAreaId === targetAreaId)
-                            .sort((a,b) => a.order - b.order);
+                        const newLocal = prev ? [...prev] : [];
+                        const newInstance = { ...newWidgetData, id: newDocRef.id };
                         
-                        itemsInArea.splice(newOrder, 0, { ...newWidgetData, id: newDocRef.id });
+                        let updatedAreaWidgets = widgetsByArea[targetAreaId] ? [...widgetsByArea[targetAreaId]] : [];
+                        updatedAreaWidgets.splice(overIndex, 0, newInstance);
+                        
+                        // Re-order the area
+                        updatedAreaWidgets = updatedAreaWidgets.map((item, index) => ({ ...item, order: index }));
 
-                        const otherItems = newInstances.filter(i => i.widgetAreaId !== targetAreaId);
-
-                        const finalInstances = [...otherItems, ...itemsInArea.map((item, index) => ({ ...item, order: index }))];
-
-                        return finalInstances;
+                        const otherWidgets = newLocal.filter(item => item.widgetAreaId !== targetAreaId);
+                        
+                        return [...otherWidgets, ...updatedAreaWidgets];
                     });
-                 }
+
+                    // Persist the new order for the entire area
+                    const batch = writeBatch(firestore);
+                    const updatedAreaWidgets = (widgetsByArea[targetAreaId] || [])
+                        .map((item, index) => ({ ...item, order: index }));
+                    
+                    updatedAreaWidgets.forEach(instance => {
+                        const docRef = doc(firestore, 'widget_instances', instance.id);
+                        batch.update(docRef, { order: instance.order });
+                    });
+                    
+                    await batch.commit();
+                }
                 
                 toast({
                     title: "Widget Added",
@@ -382,56 +421,66 @@ export default function WidgetsPage() {
             }
             return;
         }
-
+    
         // Scenario 2: Reordering widgets
         if (!fromAvailable && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
             const overInstance = localInstances.find(i => i.id === overId);
             const targetAreaId = over.data.current?.isWidgetArea ? overId : overInstance?.widgetAreaId;
-
+    
             if (!activeInstance || !targetAreaId) return;
-
+    
             let newInstances = [...localInstances];
             const sourceAreaId = activeInstance.widgetAreaId;
-
-            // Remove from old position
-            newInstances = newInstances.filter(i => i.id !== activeId);
-
-            // Find new position
+    
+            // Find the index to insert at
             let targetIndex;
-            if (overId && overInstance) {
+            // Case 1: Dragging into a different area (or same area, over an instance)
+            if (overInstance) {
                 targetIndex = newInstances.findIndex(i => i.id === overId);
             } else {
-                // Dropped on an empty area
+            // Case 2: Dragging into an empty area
                 targetIndex = newInstances.length;
             }
             
-            // Insert at new position
-            newInstances.splice(targetIndex, 0, {
+            // Create the new version of the moved instance
+            const movedInstance = {
                 ...activeInstance,
                 widgetAreaId: targetAreaId,
-            });
+            };
 
+            // Remove from old position and insert at new position
+            newInstances = newInstances.filter(i => i.id !== activeId);
+            newInstances.splice(targetIndex, 0, movedInstance);
+    
             // Re-calculate order for all affected areas
+            const affectedAreaIds = new Set([sourceAreaId, targetAreaId]);
             const finalInstances = widgetAreas?.reduce((acc, area) => {
                 const areaId = area.id;
-                // Get items for the current area from the latest state
-                const itemsInArea = newInstances
-                    .filter(i => i.widgetAreaId === areaId)
-                    // Keep relative order, then re-index
-                    .map((item, index) => ({ ...item, order: index }));
-                return [...acc, ...itemsInArea];
+                
+                // Only re-index affected areas to avoid unnecessary writes
+                if (affectedAreaIds.has(areaId)) {
+                    const itemsInArea = newInstances
+                        .filter(i => i.widgetAreaId === areaId)
+                        .map((item, index) => ({ ...item, order: index }));
+                    return [...acc, ...itemsInArea];
+                }
+                // For unaffected areas, just add their existing items
+                return [...acc, ...newInstances.filter(i => i.widgetAreaId === areaId)];
+
             }, [] as WidgetInstance[]) || [];
             
             setLocalInstances(finalInstances);
-
+    
             if (!firestore) return;
             const batch = writeBatch(firestore);
             finalInstances.forEach(instance => {
                 const docRef = doc(firestore, 'widget_instances', instance.id);
-                batch.set(docRef, instance);
+                // Using set with merge to handle new instance creation during drag-and-drop
+                // and also update existing ones.
+                batch.set(docRef, instance, { merge: true });
             });
-
+    
             try {
                 await batch.commit();
                 toast({ title: "Widgets updated" });
@@ -539,7 +588,7 @@ export default function WidgetsPage() {
                     <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
                        <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
                        <div className="grid gap-0.5">
-                           <p className="font-medium">{activeItem.name || availableWidgets.find(w => w.type === activeItem.type)?.name}</p>
+                           <p className="font-medium">{activeItem.config?.title || activeItem.name || availableWidgets.find(w => w.type === activeItem.type)?.name}</p>
                        </div>
                    </div>
                 ) : null}
@@ -547,4 +596,3 @@ export default function WidgetsPage() {
         </DndContext>
     );
 }
-

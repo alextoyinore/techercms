@@ -1,7 +1,6 @@
 'use client';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, orderBy, query } from 'firebase/firestore';
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { List } from 'lucide-react';
@@ -12,7 +11,11 @@ type Category = {
     slug: string;
 }
 
-export function CategoriesListWidget() {
+type CategoriesListWidgetProps = {
+    title?: string;
+}
+
+export function CategoriesListWidget({ title = 'Categories' }: CategoriesListWidgetProps) {
     const firestore = useFirestore();
 
     const categoriesQuery = useMemoFirebase(() => {
@@ -30,7 +33,7 @@ export function CategoriesListWidget() {
             <CardHeader>
                 <CardTitle className="font-headline text-lg flex items-center gap-2">
                     <List className="h-4 w-4" />
-                    Categories
+                    {title}
                 </CardTitle>
             </CardHeader>
             <CardContent>

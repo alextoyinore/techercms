@@ -5,13 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 
-export function SearchWidget() {
+type SearchWidgetProps = {
+    title?: string;
+}
+
+export function SearchWidget({ title = 'Search' }: SearchWidgetProps) {
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline text-lg flex items-center gap-2">
                     <Search className="h-4 w-4" />
-                    Search
+                    {title}
                 </CardTitle>
             </CardHeader>
             <CardContent>

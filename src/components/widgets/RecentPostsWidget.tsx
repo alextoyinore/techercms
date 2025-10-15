@@ -1,7 +1,6 @@
 'use client';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
@@ -13,7 +12,12 @@ type Post = {
     createdAt: Timestamp;
 }
 
-export function RecentPostsWidget() {
+type RecentPostsWidgetProps = {
+    title?: string;
+    count?: number;
+}
+
+export function RecentPostsWidget({ title = 'Recent Posts', count = 5 }: RecentPostsWidgetProps) {
     const firestore = useFirestore();
 
     const postsQuery = useMemoFirebase(() => {
@@ -22,16 +26,16 @@ export function RecentPostsWidget() {
             collection(firestore, 'posts'), 
             where('status', '==', 'published'),
             orderBy('createdAt', 'desc'),
-            limit(5)
+            limit(count)
         );
-    }, [firestore]);
+    }, [firestore, count]);
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg">Recent Posts</CardTitle>
+                <CardTitle className="font-headline text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 {isLoading && <p className="text-sm text-muted-foreground">Loading posts...</p>}
