@@ -1,8 +1,8 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { PageHeader } from "@/components/page-header";
 import {
     Card,
     CardContent,
@@ -964,11 +964,6 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     }
 
     const allWidgets = Object.values(availableWidgets).flat();
-    
-    const pageTitle = pageId ? "Page Widgets" : "Theme Widgets";
-    const pageDescription = pageId 
-        ? "Manage widgets specifically for this page. These will override theme-wide widgets in the same areas."
-        : "Manage widgets for your entire site. These appear in areas defined by your active theme.";
 
     return (
         <DndContext 
@@ -977,14 +972,7 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex flex-col gap-6">
-               {!pageId && (
-                 <PageHeader
-                    title={pageTitle}
-                    description={pageDescription}
-                />
-               )}
-
+            <div className="flex flex-col gap-6 mt-4">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     <div className="lg:col-span-2">
                         <Card>
