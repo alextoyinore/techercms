@@ -22,6 +22,15 @@ import { useAuth } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Switch } from '@/components/ui/switch';
+
 
 export default function SettingsPage() {
   const themeImages = PlaceHolderImages.filter(img =>
@@ -242,6 +251,80 @@ export default function SettingsPage() {
                 ) : 'Update Password'}
             </Button>
           </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Localization</CardTitle>
+                <CardDescription>
+                    Set your language and timezone preferences.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Select defaultValue="en">
+                        <SelectTrigger id="language">
+                            <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="en">English</SelectItem>
+                            <SelectItem value="es">Español</SelectItem>
+                            <SelectItem value="fr">Français</SelectItem>
+                            <SelectItem value="de">Deutsch</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select defaultValue="pst">
+                        <SelectTrigger id="timezone">
+                            <SelectValue placeholder="Select a timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="pst">Pacific Standard Time (PST)</SelectItem>
+                            <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
+                            <SelectItem value="gmt">Greenwich Mean Time (GMT)</SelectItem>
+                            <SelectItem value="cet">Central European Time (CET)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+                <Button>Save Preferences</Button>
+            </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Notifications</CardTitle>
+                <CardDescription>
+                    Manage how you receive notifications from the app.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                        <Label>Email Notifications</Label>
+                        <p className="text-xs text-muted-foreground">
+                            Receive emails about new comments and mentions.
+                        </p>
+                    </div>
+                    <Switch />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                        <Label>Weekly Digest</Label>
+                        <p className="text-xs text-muted-foreground">
+                            Get a summary of your site's activity once a week.
+                        </p>
+                    </div>
+                    <Switch />
+                </div>
+            </CardContent>
+             <CardFooter className="border-t px-6 py-4">
+                <Button>Save Notifications</Button>
+            </CardFooter>
         </Card>
         
         <Card>
