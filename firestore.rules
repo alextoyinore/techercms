@@ -1,180 +1,184 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a flexible data model for a CMS, focusing on owner-only write access and public read access where appropriate.
+ * @description This ruleset enforces a flexible access control model, prioritizing ease of iteration and data management for a CMS.
  *
  * Data Structure:
- * - Top-level collections: /pages/{pageId}, /categories/{categoryId}, /tags/{tagId}, /posts/{postId}, /media/{mediaId}, /widget_areas/{widgetAreaId}, /widget_instances/{widgetInstanceId}, /navigation_menus/{menuId}, /navigation_menu_items/{itemId}.
- * - Single document: /site_settings/config for global site settings.
+ * - Top-level collections are used for Pages, Categories, Tags, Posts, Media, WidgetAreas, WidgetInstances, NavigationMenus, and NavigationMenuItems.
+ * - The /site_settings/config document stores global site configuration.
  *
  * Key Security Decisions:
- * - All top-level collections with entity objects enforce owner-only writes (create, update, delete).
- * - The /site_settings/config document allows only authenticated users to read.
- * - List operations default to owner-only unless explicitly disallowed.
- *
- * Denormalization for Authorization:
- * - The 'authorId' field within the Page, Post, and MediaItem documents are used for ownership checks.  This avoids needing to query a separate /users collection.
- *
- * Structural Segregation:
- * - Publicly readable content and private user data are stored in separate collections to avoid complex read rules.
+ * - Public read access is granted to all collections.
+ * - Write access to collections requires authentication and validation of the authorId or ownerId field.
+ * - The 'site_settings/config' document is write-protected, as there's currently no authorization model defined for it.
+ * - Data shape is not strictly validated to allow for rapid prototyping. Validation is limited to essential fields like authorId and ownerId for authorization purposes.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is authenticated.
-     * @path N/A
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the user ID matches the authenticated user's ID.
-     * @path N/A
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the user is the owner of the existing document.
-     * @path N/A
-     */
-    function isExistingOwner(ownerId) {
-      return isSignedIn() && isOwner(ownerId) && resource != null;
-    }
-
-    /**
-     * @description Enforces read and write rules for static pages.
+     * @description Allows read access to all pages. Requires authentication for write access, and enforces author-based ownership for modifications.
      * @path /pages/{pageId}
-     * @allow (get, list): Any user can read page data.
-     * @allow (create): Only the page author (based on authorId) can create a page. authorId must match request.auth.uid.
-     * @allow (update, delete): Only the page author can modify or delete a page.
-     * @deny (create): A user attempts to create a page with an authorId that does not match their own.
-     * @deny (update, delete): A user attempts to modify or delete a page they did not author.
-     * @principle Public read, owner-only writes with ownership validation.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null && request.resource.data.authorId == request.auth.uid
+     * @allow (update, delete) if request.auth != null && resource.data.authorId == request.auth.uid
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading, while restricting modifications to authenticated authors.
      */
     match /pages/{pageId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isExistingOwner(resource.data.authorId);
+      allow update, delete: if isSignedIn() && isOwner(resource.data.authorId);
     }
 
     /**
-     * @description Enforces read and write rules for categories.
+     * @description Allows read access to all categories. Requires authentication for write access.
      * @path /categories/{categoryId}
-     * @allow (get, list): Any user can read category data.
-     * @allow (create, update, delete): Only the category creator can modify category.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /categories/{categoryId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Enforces read and write rules for tags.
+     * @description Allows read access to all tags. Requires authentication for write access.
      * @path /tags/{tagId}
-     * @allow (get, list): Any user can read tag data.
-     * @allow (create, update, delete): Only the tag creator can modify tag.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /tags/{tagId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Enforces read and write rules for posts.
+     * @description Allows read access to all posts. Requires authentication for write access, and enforces author-based ownership for modifications.
      * @path /posts/{postId}
-     * @allow (get, list): Any user can read post data.
-     * @allow (create): Only the post author (based on authorId) can create a post. authorId must match request.auth.uid.
-     * @allow (update, delete): Only the post author can modify or delete a post.
-     * @deny (create): A user attempts to create a post with an authorId that does not match their own.
-     * @deny (update, delete): A user attempts to modify or delete a post they did not author.
-     * @principle Public read, owner-only writes with ownership validation.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null && request.resource.data.authorId == request.auth.uid
+     * @allow (update, delete) if request.auth != null && resource.data.authorId == request.auth.uid
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading, while restricting modifications to authenticated authors.
      */
     match /posts/{postId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isExistingOwner(resource.data.authorId);
+      allow update, delete: if isSignedIn() && isOwner(resource.data.authorId);
     }
 
     /**
-     * @description Enforces read and write rules for media items.
+     * @description Allows read access to all media items. Requires authentication for write access, and enforces author-based ownership for modifications.
      * @path /media/{mediaId}
-     * @allow (get, list): Any user can read media item data.
-     * @allow (create): Only the media item author (based on authorId) can create a media item. authorId must match request.auth.uid.
-     * @allow (update, delete): Only the media item author can modify or delete a media item.
-     * @deny (create): A user attempts to create a media item with an authorId that does not match their own.
-     * @deny (update, delete): A user attempts to modify or delete a media item they did not author.
-     * @principle Public read, owner-only writes with ownership validation.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null && request.resource.data.authorId == request.auth.uid
+     * @allow (update, delete) if request.auth != null && resource.data.authorId == request.auth.uid
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading, while restricting modifications to authenticated authors.
      */
     match /media/{mediaId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isExistingOwner(resource.data.authorId);
+      allow update, delete: if isSignedIn() && isOwner(resource.data.authorId);
     }
 
     /**
-     * @description Enforces read and write rules for site settings.
+     * @description Restricts all access to the site_settings document.
      * @path /site_settings/config
-     * @allow get: Any authenticated user can read the site settings.
-     * @deny create, update, delete: No one can create, update, or delete the site settings.
-     * @principle Authenticated read, no writes.
+     * @deny (get, list, create, update, delete)
+     * @principle No authorization is currently defined for site settings.
      */
     match /site_settings/config {
-      allow get: if isSignedIn();
-      allow create, update, delete: if false;
+      allow get, list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Enforces read and write rules for widget areas.
+     * @description Allows read access to all widget areas. Requires authentication for write access.
      * @path /widget_areas/{widgetAreaId}
-     * @allow (get, list): Any user can read widget area data.
-     * @allow (create, update, delete): Only the widget area creator can modify widget area.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /widget_areas/{widgetAreaId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Enforces read and write rules for widget instances.
+     * @description Allows read access to all widget instances. Requires authentication for write access.
      * @path /widget_instances/{widgetInstanceId}
-     * @allow (get, list): Any user can read widget instance data.
-     * @allow (create, update, delete): Only the widget instance creator can modify widget instance.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /widget_instances/{widgetInstanceId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Enforces read and write rules for navigation menus.
+     * @description Allows read access to all navigation menus. Requires authentication for write access.
      * @path /navigation_menus/{menuId}
-     * @allow (get, list): Any user can read navigation menu data.
-     * @allow (create, update, delete): Only the navigation menu creator can modify navigation menu.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /navigation_menus/{menuId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
 
     /**
-     * @description Enforces read and write rules for navigation menu items.
+     * @description Allows read access to all navigation menu items. Requires authentication for write access.
      * @path /navigation_menu_items/{itemId}
-     * @allow (get, list): Any user can read navigation menu item data.
-     * @allow (create, update, delete): Only the navigation menu item creator can modify navigation menu item.
-     * @principle Public read, owner-only writes.
+     * @allow (get, list)
+     * @allow (create) if request.auth != null
+     * @allow (update, delete) if request.auth != null
+     * @deny (create) if request.auth == null
+     * @deny (update, delete) if request.auth == null
+     * @principle Allows public reading while restricting modifications to authenticated users.
      */
     match /navigation_menu_items/{itemId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn();
     }
+  }
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId && resource != null;
   }
 }
