@@ -14,6 +14,7 @@ import {
     Gem,
     User,
     File,
+    LayoutTemplate,
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -30,6 +31,7 @@ const navItems = [
     { href: "/dashboard/categories", icon: Folder, label: "Categories" },
     { href: "/dashboard/tags", icon: Tag, label: "Tags" },
     { href: "/dashboard/themes", icon: Paintbrush, label: "Themes" },
+    { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets" },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
     { href: "/dashboard/profile", icon: User, label: "Profile" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },

@@ -17,9 +17,10 @@ type WidgetDropAreaProps = {
   areaName: string;
   widgets: WidgetInstance[];
   onDeleteWidget: (id: string, name: string) => void;
+  onWidgetClick: (widget: WidgetInstance) => void;
 };
 
-export function WidgetDropArea({ areaName, widgets, onDeleteWidget }: WidgetDropAreaProps) {
+export function WidgetDropArea({ areaName, widgets, onDeleteWidget, onWidgetClick }: WidgetDropAreaProps) {
   const { setNodeRef } = useDroppable({
     id: areaName,
     data: {
@@ -41,17 +42,18 @@ export function WidgetDropArea({ areaName, widgets, onDeleteWidget }: WidgetDrop
                 <DraggableWidget
                     key={widget.id}
                     widget={{
-                        id: widget.id,
-                        type: widget.type,
-                        label: '',
-                        areaName: areaName
+                        ...widget,
+                        label: widget.config?.title || widget.type,
+                        areaName: areaName,
+                        icon: () => null,
                     }}
                     onDelete={onDeleteWidget}
+                    onClick={onWidgetClick}
                 />
             ))}
         </SortableContext>
         {widgets.length === 0 && (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full border-2 border-dashed rounded-md">
                 <p className="text-sm text-muted-foreground">Drop widgets here</p>
             </div>
         )}

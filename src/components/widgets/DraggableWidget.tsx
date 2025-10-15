@@ -4,22 +4,25 @@
 import { useDraggable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Trash2, Settings } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { availableWidgets, Widget } from './widget-list';
 import { cn } from '@/lib/utils';
+import { type WidgetInstance } from '@/app/dashboard/widgets/page';
 
 type DraggableWidgetProps = {
-  widget: Widget;
+  widget: Widget | (WidgetInstance & { areaName: string });
   isNewWidget?: boolean;
   isOverlay?: boolean;
   onDelete?: (id: string, name: string) => void;
+  onClick?: (widget: WidgetInstance) => void;
 };
 
-export function DraggableWidget({ widget, isNewWidget = false, isOverlay = false, onDelete }: DraggableWidgetProps) {
+export function DraggableWidget({ widget, isNewWidget = false, isOverlay = false, onDelete, onClick }: DraggableWidgetProps) {
   
   const componentData = isNewWidget ? widget : availableWidgets.find(w => w.type === widget.type);
+  const instance = isNewWidget ? null : widget as WidgetInstance;
   
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: isNewWidget ? widget.type : widget.id,
@@ -38,7 +41,7 @@ export function DraggableWidget({ widget, isNewWidget = false, isOverlay = false
   } = useSortable({ 
       id: widget.id,
       data: {
-        containerId: widget.areaName,
+        containerId: (widget as any).areaName,
       }
    });
 
@@ -55,17 +58,22 @@ export function DraggableWidget({ widget, isNewWidget = false, isOverlay = false
 
   return (
     <div ref={ref} style={style} {...combinedAttributes} className={cn(isOverlay && "z-50", "touch-none")}>
-       <Card className={cn("cursor-grab", isOverlay && "shadow-2xl")}>
+       <Card className={cn("cursor-default", isOverlay && "shadow-2xl")}>
         <CardContent className="p-2 flex items-center gap-2">
-            <div {...combinedListeners} className="flex items-center gap-2 flex-grow">
+            <div {...combinedListeners} className="flex items-center gap-2 flex-grow cursor-grab">
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
                 {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-                <span className="text-sm font-medium">{componentData?.label || 'Unknown Widget'}</span>
+                <span className="text-sm font-medium">{instance?.config?.title || componentData?.label || 'Unknown Widget'}</span>
             </div>
-            {!isNewWidget && onDelete && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => onDelete(widget.id, widget.type)}>
+            {!isNewWidget && instance && (
+              <div className='flex items-center'>
+                <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => onClick?.(instance)}>
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6 cursor-pointer" onClick={() => onDelete?.(instance.id, instance.type)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
+              </div>
             )}
         </CardContent>
       </Card>
