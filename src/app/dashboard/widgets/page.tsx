@@ -23,6 +23,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -75,7 +76,7 @@ function SortableWidgetInstance({ instance }: { instance: WidgetInstance }) {
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
          id: instance.id,
-         data: { instance, from: 'area' } 
+         data: { instance, from: 'area', isWidgetInstance: true } 
     });
 
     const style = {
@@ -155,19 +156,25 @@ export default function WidgetsPage() {
         const overId = over.id.toString();
 
         const fromAvailable = active.data.current?.from === 'available';
-        
+
         // Scenario 1: Dragging a new widget into an area
-        if (fromAvailable && over.data.current?.isWidgetArea) {
+        if (fromAvailable) {
             const widgetType = active.data.current?.widget.type;
             const widgetName = active.data.current?.widget.name;
-            const targetAreaId = overId;
+            
+            // Determine the target area ID. It could be the area itself or an instance within the area.
+            const targetAreaId = over.data.current?.isWidgetArea 
+                ? overId 
+                : over.data.current?.instance?.widgetAreaId;
+
+            if (!targetAreaId) return;
 
             const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
             if (!targetArea || !firestore) return;
 
             const areaWidgets = widgetsByArea[targetAreaId] || [];
 
-            const newWidgetInstance = {
+            const newWidgetData = {
                 widgetAreaId: targetAreaId,
                 type: widgetType,
                 order: areaWidgets.length,
@@ -176,11 +183,15 @@ export default function WidgetsPage() {
             
             try {
                 const instancesRef = collection(firestore, 'widget_instances');
-                await addDoc(instancesRef, newWidgetInstance);
+                const newDocRef = await addDoc(instancesRef, newWidgetData);
+                
+                // Optimistically update local state
+                setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
+                
                 toast({
                     title: "Widget Added",
                     description: `The "${widgetName}" widget was added to the "${targetArea.name}" area.`
-                })
+                });
             } catch (error: any) {
                 toast({
                     variant: "destructive",
@@ -191,9 +202,8 @@ export default function WidgetsPage() {
             return;
         }
 
-        const isOverInstance = over.data.current?.isWidgetInstance;
         // Scenario 2: Reordering widgets within the same area
-        if (!fromAvailable && isOverInstance && localInstances) {
+        if (!fromAvailable && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
             const overInstance = localInstances.find(i => i.id === overId);
             
@@ -231,9 +241,9 @@ export default function WidgetsPage() {
         });
 
         return (
-            <div ref={setNodeRef} className={cn('p-4 rounded-lg', isOver ? 'bg-primary/10 ring-2 ring-primary' : '')}>
+            <div ref={setNodeRef} className={cn('p-4 rounded-lg min-h-[100px]', isOver ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/30')}>
                 <SortableContext items={areaWidgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
-                    <div className="grid gap-2 min-h-[80px]">
+                    <div className="grid gap-2">
                         {areaWidgets.length > 0 ? (
                             areaWidgets.map(instance => (
                                 <SortableWidgetInstance key={instance.id} instance={instance} />
@@ -270,14 +280,14 @@ export default function WidgetsPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                               <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="space-y-4">
+                               <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="w-full space-y-4">
                                     {isLoadingAreas && <p>Loading widget areas...</p>}
                                     {widgetAreas?.map((area) => {
                                         const areaWidgets = widgetsByArea[area.id] || [];
                                         return (
                                             <Card key={area.id}>
                                                 <AccordionItem value={area.id} className="border-b-0">
-                                                    <AccordionTrigger className="p-4 hover:no-underline">
+                                                    <AccordionTrigger className="p-4 hover:no-underline rounded-t-lg">
                                                         <div className="flex-1 text-left">
                                                             <h3 className="font-semibold">{area.name}</h3>
                                                             <p className="text-sm text-muted-foreground">{area.description}</p>
