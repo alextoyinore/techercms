@@ -1,78 +1,64 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a "public read, owner write" security model for a CMS.
+ * @fileoverview Firestore Security Rules for a CMS application.
  *
- * Core Philosophy:
- * All content is publicly readable by default to support the public-facing website.
- * Write operations (create, update, delete) are strictly controlled and require authentication.
- * Content creation and modification is restricted to the content's owner.
+ * @description
+ * This ruleset follows a "public read, authenticated write" model. All content
+ * is readable by any user, but creating, updating, or deleting content requires
+ * authentication. Specific content types like posts and pages are further
+ * restricted to their authors for write operations.
  *
- * Data Structure:
- * - /pages/{pageId}: Static pages.
- * - /categories/{categoryId}: Content categories.
- * - /tags/{tagId}: Content tags.
- * - /posts/{postId}: Blog posts.
- * - /media/{mediaId}: Uploaded media files.
- * - /site_settings/config: Global site configuration.
- * - /widget_areas/{widgetAreaId}: Definitions for theme widget areas.
- * - /widget_instances/{widgetInstanceId}: Configured widget instances.
+ * @path /databases/{database}/documents
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check for authentication.
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the requester is the owner of an existing document.
-    function isOwner(authorId) {
-      return request.auth.uid == authorId;
-    }
-
-    // Default rule: All documents are publicly readable.
-    // This allows the frontend website to fetch any necessary content without authentication.
+    /**
+     * @description
+     * Default-deny all writes, and allow public reads for all collections.
+     * Specific write permissions will be granted in subsequent match blocks.
+     */
     match /{document=**} {
       allow read: if true;
+      allow write: if false; // Default deny all writes
     }
 
-    // --- WRITE RULE OVERRIDES ---
-    // The following rules secure write access for each collection, overriding the public read default.
-
-    // Pages: Only the author can create, update, or delete.
-    match /pages/{pageId} {
-      allow write: if isSignedIn() && (
-        (request.resource.data.authorId == request.auth.uid) || // create/update
-        (isOwner(resource.data.authorId)) // delete
-      );
+    /**
+     * @description
+     * Secures write access for owner-based content (Posts, Pages, Media).
+     * Users can only create, update, or delete content they own.
+     * The path wildcard `{collection}` matches 'posts', 'pages', or 'media'.
+     */
+    match /{collection}/{docId} where collection in ['posts', 'pages', 'media'] {
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
-    // Posts: Only the author can create, update, or delete.
-    match /posts/{postId} {
-       allow write: if isSignedIn() && (
-        (request.resource.data.authorId == request.auth.uid) || // create/update
-        (isOwner(resource.data.authorId)) // delete
-      );
+    /**
+     * @description
+     * Secures write access for general content management (Categories, Tags, Widgets).
+     * Any authenticated user can manage these resources.
+     */
+    match /{collection}/{docId} where collection in ['categories', 'tags', 'widget_areas', 'widget_instances'] {
+      allow write: if isSignedIn();
     }
 
-    // Media: Only the author can create, update, or delete.
-    match /media/{mediaId} {
-       allow write: if isSignedIn() && (
-        (request.resource.data.authorId == request.auth.uid) || // create/update
-        (isOwner(resource.data.authorId)) // delete
-      );
-    }
-
-    // Categories, Tags, Widget Areas, and Widget Instances: Any authenticated user can manage these.
-    match /{collectionName}/{docId}
-    where collectionName in ['categories', 'tags', 'widget_areas', 'widget_instances'] {
+    /**
+     * @description
+     * Secures write access to the global site configuration.
+     * Any authenticated user can change the site settings.
+     */
+    match /site_settings/config {
         allow write: if isSignedIn();
     }
 
-    // Site Settings: Any authenticated user can modify the single config document.
-    match /site_settings/config {
-      allow write: if isSignedIn();
+    /**
+     * @description
+     * Helper function to check if a user is authenticated.
+     * @returns {boolean} True if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
     }
   }
 }
