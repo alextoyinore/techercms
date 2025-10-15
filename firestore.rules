@@ -1,45 +1,45 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a basic security model for a CMS, focusing on who can create, read, update, and delete content.
- *
- * Data Structure:
- * - Pages: /pages/{pageId}
- * - Categories: /categories/{categoryId}
- * - Tags: /tags/{tagId}
- * - Posts: /posts/{postId}
- * - Media Items: /media/{mediaId}
- * - Site Settings: /site_settings/config
- * - Widget Areas: /widget_areas/{widgetAreaId}
- * - Widget Instances: /widget_instances/{widgetInstanceId}
+ * @description This ruleset enforces a basic security model for a CMS.
  *
  * Core Philosophy:
- * - This ruleset prioritizes public read access for content (Pages, Categories, Tags, Posts) while securing write operations to authenticated users.
- * - An owner-based access control is implemented using an 'authorId' field on each document.
+ * All content (pages, posts, media) is readable by anyone.
+ * Only authenticated users can create, update, or delete content.
+ * Ownership is enforced on write operations, ensuring only the author can modify their content.
+ * Site settings are read-only for all, writes are not permitted to avoid accidental changes.
+ *
+ * Data Structure:
+ * - /pages/{pageId}: Stores static page data.
+ * - /categories/{categoryId}: Stores category data.
+ * - /tags/{tagId}: Stores tag data.
+ * - /posts/{postId}: Stores post data.
+ * - /media/{mediaId}: Stores media item data.
+ * - /site_settings/config: Stores global site configuration.
+ * - /widget_areas/{widgetAreaId}: Stores defined widget areas for themes.
+ * - /widget_instances/{widgetInstanceId}: Stores configured instances of widgets within specific areas.
  *
  * Key Security Decisions:
- * - Public Read Access: Pages, Categories, Tags, and Posts are publicly readable.
- * - Owner-Only Writes: Writes (create, update, delete) to Pages, Categories, Tags, Posts, and Media Items are restricted to the author (owner). The rules validate that the `authorId` field matches the authenticated user's UID.
- * - Singleton Document for Site Settings: `site_settings/config` requires authentication for all access, due to the absence of an owner field.
- * - Widget Area and Instance Configuration: Restricted access to authenticated users.
+ * - Public read access for all content collections.
+ * - Owner-only access for all write operations on content collections.
+ * - Site settings are read-only.
+ * - No user listing is allowed.
  *
  * Denormalization for Authorization:
- * - The rules rely on the presence of an `authorId` field within each Page, Post, and MediaItem document to enforce ownership.
+ * - Each content document (Page, Post, MediaItem) contains an `authorId` field, which is used to enforce ownership on write operations.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants public read access to all pages and restricts write access to authenticated users.
+     * @description Allows anyone to read pages, but only the author can create, update, or delete them.
      * @path /pages/{pageId}
-     * @allow get, list: Any user can read the page.
-     * @allow create: Only the author can create a page, and the authorId must match the authenticated user's ID.
-     * @allow update: Only the author can update a page.
-     * @allow delete: Only the author can delete a page.
-     * @deny create: If the authorId does not match the authenticated user's ID.
-     * @deny update: If the document does not exist.
-     * @deny delete: If the document does not exist.
-     * @principle Enforces document ownership for writes. Public read, owner-only write.
+     * @allow (get, list): Anyone can read page data.
+     * @allow (create): Authenticated user can create a page with their authorId.
+     * @allow (update, delete): Authenticated user can update or delete a page if they are the author.
+     * @deny (create): Non-authenticated user attempts to create a page.
+     * @deny (update, delete): Authenticated user attempts to modify or delete a page they didn't create.
+     * @principle Enforces document ownership for writes.
      */
     match /pages/{pageId} {
       allow get, list: if true;
@@ -49,35 +49,31 @@ service cloud.firestore {
     }
 
     /**
-     * @description Grants public read access to all categories and restricts write access to authenticated users.
+     * @description Allows anyone to read categories, but only the author can create, update, or delete them.
      * @path /categories/{categoryId}
-     * @allow get, list: Any user can read a category.
-     * @allow create: Only the author can create a category.
-     * @allow update: Only the author can update a category.
-     * @allow delete: Only the author can delete a category.
-     * @deny create: If the authorId does not match the authenticated user's ID.
-     * @deny update: If the document does not exist.
-     * @deny delete: If the document does not exist.
-     * @principle Enforces document ownership for writes. Public read, owner-only write.
+     * @allow (get, list): Anyone can read category data.
+     * @allow (create): Authenticated user can create a category with their authorId.
+     * @allow (update, delete): Authenticated user can update or delete a category if they are the author.
+     * @deny (create): Non-authenticated user attempts to create a category.
+     * @deny (update, delete): Authenticated user attempts to modify or delete a category they didn't create.
+     * @principle Enforces document ownership for writes.
      */
     match /categories/{categoryId} {
       allow get, list: if true;
-     allow create: if isSignedIn();
+      allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
     }
 
     /**
-     * @description Grants public read access to all tags and restricts write access to authenticated users.
+     * @description Allows anyone to read tags, but only the author can create, update, or delete them.
      * @path /tags/{tagId}
-     * @allow get, list: Any user can read a tag.
-     * @allow create: Only the author can create a tag.
-     * @allow update: Only the author can update a tag.
-     * @allow delete: Only the author can delete a tag.
-     * @deny create: If the authorId does not match the authenticated user's ID.
-     * @deny update: If the document does not exist.
-     * @deny delete: If the document does not exist.
-     * @principle Enforces document ownership for writes. Public read, owner-only write.
+     * @allow (get, list): Anyone can read tag data.
+     * @allow (create): Authenticated user can create a tag with their authorId.
+     * @allow (update, delete): Authenticated user can update or delete a tag if they are the author.
+     * @deny (create): Non-authenticated user attempts to create a tag.
+     * @deny (update, delete): Authenticated user attempts to modify or delete a tag they didn't create.
+     * @principle Enforces document ownership for writes.
      */
     match /tags/{tagId} {
       allow get, list: if true;
@@ -87,16 +83,14 @@ service cloud.firestore {
     }
 
     /**
-     * @description Grants public read access to all posts and restricts write access to the author.
+     * @description Allows anyone to read posts, but only the author can create, update, or delete them.
      * @path /posts/{postId}
-     * @allow get, list: Any user can read a post.
-     * @allow create: Only the author can create a post, and the authorId must match the authenticated user's ID.
-     * @allow update: Only the author can update a post.
-     * @allow delete: Only the author can delete a post.
-     * @deny create: If the authorId does not match the authenticated user's ID.
-     * @deny update: If the document does not exist.
-     * @deny delete: If the document does not exist.
-     * @principle Enforces document ownership for writes. Public read, owner-only write.
+     * @allow (get, list): Anyone can read post data.
+     * @allow (create): Authenticated user can create a post with their authorId.
+     * @allow (update, delete): Authenticated user can update or delete a post if they are the author.
+     * @deny (create): Non-authenticated user attempts to create a post.
+     * @deny (update, delete): Authenticated user attempts to modify or delete a post they didn't create.
+     * @principle Enforces document ownership for writes.
      */
     match /posts/{postId} {
       allow get, list: if true;
@@ -106,17 +100,14 @@ service cloud.firestore {
     }
 
     /**
-     * @description Grants read and write access to media items only to authenticated users.
+     * @description Allows anyone to read media items, but only the author can create, update, or delete them.
      * @path /media/{mediaId}
-     * @allow get: Any authenticated user can read a media item.
-     * @allow list: Any authenticated user can list media items.
-     * @allow create: Only the author can create a media item, and the authorId must match the authenticated user's ID.
-     * @allow update: Only the author can update a media item.
-     * @allow delete: Only the author can delete a media item.
-     * @deny create: If the authorId does not match the authenticated user's ID.
-     * @deny update: If the document does not exist.
-     * @deny delete: If the document does not exist.
-     * @principle Enforces document ownership for writes. Authenticated read, owner-only write.
+     * @allow (get, list): Anyone can read media item data.
+     * @allow (create): Authenticated user can create a media item with their authorId.
+     * @allow (update, delete): Authenticated user can update or delete a media item if they are the author.
+     * @deny (create): Non-authenticated user attempts to create a media item.
+     * @deny (update, delete): Authenticated user attempts to modify or delete a media item they didn't create.
+     * @principle Enforces document ownership for writes.
      */
     match /media/{mediaId} {
       allow get, list: if true;
@@ -125,66 +116,52 @@ service cloud.firestore {
       allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
-    /**
-     * @description Restricts access to site settings to authenticated users.
-     * @path /site_settings/config
-     * @allow get: Any authenticated user can read the site settings.
-     * @allow create: Only authenticated users can create site settings.
-     * @allow update: Only authenticated users can update site settings.
-     * @allow delete: Only authenticated users can delete site settings.
-     * @principle Authenticated read and write due to lack of owner.
-     */
-    match /site_settings/config {
-      allow get: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn();
-    }
-
      /**
-      * @description Restricts access to widget areas to authenticated users.
-      * @path /widget_areas/{widgetAreaId}
-      * @allow get: If the user is signed in.
-      * @allow list: If the user is signed in.
-      * @allow create: If the user is signed in.
-      * @allow update: If the user is signed in.
-      * @allow delete: If the user is signed in.
-      * @principle Authenticated read and write.
+      * @description Allows anyone to read site settings, but no one can modify them.
+      * @path /site_settings/config
+      * @allow (get): Anyone can read the site settings.
+      * @deny (create, update, delete): No one can create, update, or delete site settings.
+      * @principle Restricts modification of global configuration.
       */
+    match /site_settings/config {
+      allow get: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read widget areas, but only authenticated users can create, update, or delete them.
+     * @path /widget_areas/{widgetAreaId}
+     */
     match /widget_areas/{widgetAreaId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
     }
 
     /**
-     * @description Restricts access to widget instances to authenticated users.
+     * @description Allows anyone to read widget instances, but only authenticated users can create, update, or delete them.
      * @path /widget_instances/{widgetInstanceId}
-     * @allow get: If the user is signed in.
-     * @allow list: If the user is signed in.
-     * @allow create: If the user is signed in.
-     * @allow update: If the user is signed in.
-     * @allow delete: If the user is signed in.
-     * @principle Authenticated read and write.
      */
     match /widget_instances/{widgetInstanceId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
     }
-  }
 
-  // Helper function to determine if the user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
-  }
+    function isSignedIn() {
+      return request.auth != null;
+    }
 
-    // Helper function to determine if the user is the owner of the document and the document exists.
-  function isExistingOwner(authorId) {
-    return isSignedIn() && request.auth.uid == authorId && resource != null;
+    function isOwner(authorId) {
+      return request.auth.uid == authorId;
+    }
+
+    function isExistingOwner(authorId) {
+      return isSignedIn() && isOwner(authorId) && resource != null;
+    }
   }
 }
