@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -31,7 +32,7 @@ import { ThemeCustomizer } from '@/components/theme-customizer';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { themes as defaultThemes, type Theme } from '@/lib/themes';
+import { themes as defaultThemes, type Theme, defaultTheme } from '@/lib/themes';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { timezones } from '@/lib/timezones';
 import { languages } from '@/lib/languages';
@@ -239,50 +240,60 @@ export default function SettingsPage() {
                              const isActive = theme.name === activeTheme.name;
                              const isProcessing = isActivating === theme.name;
                              return (
-                                <div key={theme.name} className="relative group">
-                                     <Image
-                                        src={image.imageUrl}
-                                        alt={theme.name}
-                                        width={300}
-                                        height={150}
-                                        className={cn("rounded-md aspect-[2/1] object-cover border-2", isActive ? "border-primary" : "border-muted")}
-                                    />
-                                    {isActive && (
-                                        <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
-                                            <CheckCircle className="h-8 w-8 text-white" />
+                                <div key={theme.name} className="group">
+                                     <div className='relative'>
+                                        <Image
+                                            src={image.imageUrl}
+                                            alt={theme.name}
+                                            width={300}
+                                            height={150}
+                                            className={cn("rounded-md aspect-[2/1] object-cover border-2", isActive ? "border-primary" : "border-muted")}
+                                        />
+                                        {isActive && (
+                                            <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                                <CheckCircle className="h-8 w-8 text-white" />
+                                            </div>
+                                        )}
+                                     </div>
+                                    <div className='mt-2 space-y-2'>
+                                        <p className='text-sm font-medium'>{theme.name}</p>
+                                        <div className='flex items-center gap-2'>
+                                            <Button size="sm" onClick={() => handleActivateTheme(theme.name)} disabled={!!isActivating || isActive} className='flex-1'>
+                                                {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : isActive ? 'Active' : 'Activate'}
+                                            </Button>
+                                            <ThemeCustomizer theme={theme}>
+                                                <Button size="sm" variant="outline"><Palette className='h-4 w-4' /></Button>
+                                            </ThemeCustomizer>
                                         </div>
-                                    )}
-                                    <div className={cn("absolute inset-0 bg-black/50 flex flex-col items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-opacity", isActive && "hidden")}>
-                                        <Button size="sm" onClick={() => handleActivateTheme(theme.name)} disabled={!!isActivating}>
-                                            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</> : 'Activate'}
-                                        </Button>
                                     </div>
-                                    <p className='text-sm font-medium mt-2'>{theme.name}</p>
                                 </div>
                              )
                         })}
                     </div>
                 </div>
-                 <ThemeCustomizer theme={activeTheme}>
-                    <Button variant="outline" className="w-fit">
-                        <Palette className="mr-2 h-4 w-4" />
-                        Customize & Create New Theme
-                    </Button>
-                </ThemeCustomizer>
                 <Separator />
-                <div className='grid gap-2 max-w-sm'>
-                    <Label>Font Scaling</Label>
-                    <div className='flex items-center gap-4'>
-                        <Slider
-                            value={[fontSize]}
-                            onValueChange={(value) => setFontSize(value[0])}
-                            min={12}
-                            max={18}
-                            step={1}
-                        />
-                        <span className='text-sm text-muted-foreground w-12 text-center'>{fontSize}px</span>
+                <div className='flex flex-col gap-4'>
+                    <ThemeCustomizer theme={defaultTheme}>
+                        <Button variant="outline" className="w-fit">
+                            <Palette className="mr-2 h-4 w-4" />
+                            Create New Theme
+                        </Button>
+                    </ThemeCustomizer>
+
+                    <div className='grid gap-2 max-w-sm'>
+                        <Label>Font Scaling</Label>
+                        <div className='flex items-center gap-4'>
+                            <Slider
+                                value={[fontSize]}
+                                onValueChange={(value) => setFontSize(value[0])}
+                                min={12}
+                                max={18}
+                                step={1}
+                            />
+                            <span className='text-sm text-muted-foreground w-12 text-center'>{fontSize}px</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Adjust the base font size for the dashboard interface.</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">Adjust the base font size for the dashboard interface.</p>
                 </div>
             </CardContent>
         </Card>
