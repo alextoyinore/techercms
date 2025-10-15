@@ -18,6 +18,14 @@ import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 type SiteSettings = {
   activeTheme: string;
@@ -56,14 +64,22 @@ export default function ThemesPage() {
     const newSettings = { activeTheme: themeName };
 
     // Use non-blocking update and catch permission errors
-    setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
-
-    // Optimistically show toast, the error will be caught by the global listener
-    toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
-    
-    // We can't await the result here, so we'll just reset the loading state
-    // after a short delay to provide visual feedback.
-    setTimeout(() => setIsActivating(null), 1000);
+    setDocumentNonBlocking(settingsRef, newSettings, { merge: true })
+      .catch((error: any) => {
+          toast({
+              variant: "destructive",
+              title: "Uh oh! Something went wrong.",
+              description: error.message || "Could not activate the theme.",
+          });
+      })
+      .finally(() => {
+          // Optimistically show toast, the error will be caught by the global listener
+          toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
+          
+          // We can't await the result here, so we'll just reset the loading state
+          // after a short delay to provide visual feedback.
+          setTimeout(() => setIsActivating(null), 1000);
+      });
   }
 
   return (
@@ -127,9 +143,21 @@ export default function ThemesPage() {
                      <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
                   ) : isActive ? 'Activated' : 'Activate'}
                 </Button>
-                <Button variant="outline" className="w-full" disabled={!!isActivating}>
-                  Customize
-                </Button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="w-full" disabled={!!isActivating}>
+                      Customize
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Customize {theme.name}</SheetTitle>
+                      <SheetDescription>
+                        Frontend theme customization is coming soon!
+                      </SheetDescription>
+                    </SheetHeader>
+                  </SheetContent>
+                </Sheet>
               </CardFooter>
             </Card>
           );
