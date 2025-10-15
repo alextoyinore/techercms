@@ -866,14 +866,14 @@ export default function WidgetsPage() {
                         </Card>
                     </div>
                     <div className="lg:col-span-1 sticky top-20">
-                        <Card className="flex flex-col max-h-[calc(100vh-16rem)]">
+                         <Card className="flex flex-col max-h-[calc(100vh-16rem)]">
                             <CardHeader>
                                 <CardTitle className="font-headline">Available Widgets</CardTitle>
                                  <CardDescription>
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-1 -mx-6 px-6">
+                            <CardContent className="flex-1 -mx-6 px-6 overflow-y-auto">
                                 <ScrollArea className="h-full pr-6">
                                     <div className="grid gap-4">
                                         {Object.entries(availableWidgets).map(([groupName, widgets]) => (
