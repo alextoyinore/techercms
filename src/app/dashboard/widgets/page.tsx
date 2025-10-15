@@ -131,6 +131,28 @@ export default function WidgetsPage() {
             setLocalInstances(widgetInstances);
         }
     }, [widgetInstances]);
+    
+     useEffect(() => {
+        if (!isLoadingAreas && widgetAreas && widgetAreas.length === 0 && firestore) {
+            const batch = writeBatch(firestore);
+            defaultWidgetAreas.forEach(areaData => {
+                const newAreaRef = doc(collection(firestore, 'widget_areas'));
+                batch.set(newAreaRef, areaData);
+            });
+            batch.commit().then(() => {
+                toast({
+                    title: "Widget Areas Initialized",
+                    description: "Default widget areas have been created.",
+                });
+            }).catch(error => {
+                toast({
+                    variant: "destructive",
+                    title: "Error Initializing Areas",
+                    description: error.message || "Could not create default widget areas.",
+                });
+            });
+        }
+    }, [isLoadingAreas, widgetAreas, firestore, toast]);
 
 
     const widgetsByArea = useMemo(() => {
@@ -191,9 +213,13 @@ export default function WidgetsPage() {
             
             try {
                 const instancesRef = collection(firestore, 'widget_instances');
-                const newDocRef = await addDoc(instancesRef, newWidgetData);
-                
-                setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
+                // Use addDocumentNonBlocking and handle promise
+                addDocumentNonBlocking(instancesRef, newWidgetData)
+                    .then(newDocRef => {
+                         if (newDocRef) {
+                            setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
+                         }
+                    });
                 
                 toast({
                     title: "Widget Added",
@@ -214,28 +240,73 @@ export default function WidgetsPage() {
             const activeInstance = localInstances.find(i => i.id === activeId);
             const overInstance = localInstances.find(i => i.id === overId);
             
-            if (activeInstance && overInstance && activeInstance.widgetAreaId === overInstance.widgetAreaId) {
-                const areaId = activeInstance.widgetAreaId;
-                const areaWidgets = widgetsByArea[areaId];
-                const oldIndex = areaWidgets.findIndex(i => i.id === activeId);
-                const newIndex = areaWidgets.findIndex(i => i.id === overId);
+            // Check if dropping over an empty area or over another widget
+            const overIsArea = over.data.current?.isWidgetArea;
 
-                if (oldIndex !== newIndex) {
-                    const reorderedInstances = arrayMove(areaWidgets, oldIndex, newIndex);
+            if (activeInstance && (overInstance || overIsArea)) {
+                const areaId = overIsArea ? overId : overInstance?.widgetAreaId;
+                if (!areaId) return;
+
+                const areaWidgets = widgetsByArea[areaId] || [];
+                const oldIndex = localInstances.findIndex(i => i.id === activeId);
+                let newIndex: number;
+                
+                if (activeInstance.widgetAreaId !== areaId) { // Moving to a different area
+                    const newAreaWidgets = widgetsByArea[areaId] || [];
+                    newIndex = newAreaWidgets.length;
                     
-                    const updatedLocalInstances = [...localInstances.filter(i => i.widgetAreaId !== areaId), ...reorderedInstances];
-                    setLocalInstances(updatedLocalInstances);
+                    const movedInstance = { ...activeInstance, widgetAreaId: areaId, order: newIndex };
+                    const sourceAreaWidgets = (widgetsByArea[activeInstance.widgetAreaId] || []).filter(i => i.id !== activeId);
 
+                    const newLocalState = localInstances.map(i => i.id === activeId ? movedInstance : i);
+                    
+                    setLocalInstances(newLocalState);
+                    
                     if (!firestore) return;
+
                     const batch = writeBatch(firestore);
-                    reorderedInstances.forEach((instance, index) => {
-                        const docRef = doc(firestore, 'widget_instances', instance.id);
-                        batch.update(docRef, { order: index });
+                    const docRef = doc(firestore, 'widget_instances', activeId);
+                    batch.update(docRef, { widgetAreaId: areaId, order: newIndex });
+                    
+                    // Re-order source area
+                    sourceAreaWidgets.forEach((instance, index) => {
+                        const ref = doc(firestore, 'widget_instances', instance.id);
+                        batch.update(ref, { order: index });
                     });
+                    
                     await batch.commit().catch(error => {
-                        toast({ variant: 'destructive', title: 'Error updating order', description: error.message });
+                        toast({ variant: 'destructive', title: 'Error moving widget', description: error.message });
                         setLocalInstances(widgetInstances); // Revert on error
                     });
+
+
+                } else if(overInstance) { // Reordering within the same area
+                    const oldIndexInArea = areaWidgets.findIndex(i => i.id === activeId);
+                    const newIndexInArea = areaWidgets.findIndex(i => i.id === overId);
+                    
+                    if (oldIndexInArea !== newIndexInArea) {
+                        const reorderedInstances = arrayMove(areaWidgets, oldIndexInArea, newIndexInArea);
+                        
+                        const updatedLocalInstances = localInstances.map(i => {
+                            const reorderedIndex = reorderedInstances.findIndex(ri => ri.id === i.id);
+                            if (i.widgetAreaId === areaId && reorderedIndex !== -1) {
+                                return { ...i, order: reorderedIndex };
+                            }
+                            return i;
+                        });
+                        setLocalInstances(updatedLocalInstances);
+
+                        if (!firestore) return;
+                        const batch = writeBatch(firestore);
+                        reorderedInstances.forEach((instance, index) => {
+                            const docRef = doc(firestore, 'widget_instances', instance.id);
+                            batch.update(docRef, { order: index });
+                        });
+                        await batch.commit().catch(error => {
+                            toast({ variant: 'destructive', title: 'Error updating order', description: error.message });
+                            setLocalInstances(widgetInstances); // Revert on error
+                        });
+                    }
                 }
             }
         }
@@ -288,7 +359,7 @@ export default function WidgetsPage() {
                             </CardHeader>
                             <CardContent>
                                <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="w-full space-y-4">
-                                    {isLoadingAreas && <p>Loading widget areas...</p>}
+                                    {(isLoadingAreas && !widgetAreas) && <p>Loading widget areas...</p>}
                                     {widgetAreas?.map((area) => {
                                         const areaWidgets = widgetsByArea[area.id] || [];
                                         return (
@@ -307,6 +378,11 @@ export default function WidgetsPage() {
                                             </Card>
                                         )
                                     })}
+                                    {!isLoadingAreas && widgetAreas?.length === 0 && (
+                                         <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+                                            <p>No widget areas found. They will be created automatically.</p>
+                                        </div>
+                                    )}
                                 </Accordion>
                             </CardContent>
                         </Card>
