@@ -51,6 +51,16 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
+    match /navigation_menus/{menuId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /navigation_menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
     match /site_settings/config {
       allow read: if true;
       allow write: if isSignedIn();
