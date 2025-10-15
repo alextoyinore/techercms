@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
 import { ThemeCustomizer } from '@/components/theme-customizer';
+import { WebsiteThemeCustomizer } from '@/components/website-theme-customizer';
 import { defaultTheme, type Theme } from '@/lib/themes';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -163,7 +164,7 @@ export default function ThemesPage() {
                                 <CardTitle className="font-headline">{theme.name}</CardTitle>
                                 <CardDescription className="mt-2">{theme.description}</CardDescription>
                             </CardContent>
-                            <div className="p-4 pt-0">
+                            <div className="p-4 pt-0 flex gap-2">
                                 <Button
                                     className="w-full"
                                     onClick={() => handleActivateWebsiteTheme(theme.name)}
@@ -177,6 +178,9 @@ export default function ThemesPage() {
                                         'Activate'
                                     )}
                                 </Button>
+                                <WebsiteThemeCustomizer>
+                                    <Button variant="outline"><Palette className='h-4 w-4' /></Button>
+                                </WebsiteThemeCustomizer>
                             </div>
                         </Card>
                     )
