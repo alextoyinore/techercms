@@ -8,6 +8,7 @@ import { SearchWidget } from '@/components/widgets/SearchWidget';
 import { TagCloudWidget } from '@/components/widgets/TagCloudWidget';
 import { CustomHtmlWidget } from '@/components/widgets/CustomHtmlWidget';
 import { ImageWidget } from '@/components/widgets/ImageWidget';
+import { SocialFollowWidget } from '@/components/widgets/SocialFollowWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -30,6 +31,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'tag-cloud': TagCloudWidget,
     'custom-html': CustomHtmlWidget,
     'image': ImageWidget,
+    'social-follow': SocialFollowWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {

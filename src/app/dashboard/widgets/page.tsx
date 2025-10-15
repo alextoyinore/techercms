@@ -16,7 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical, X, Cog, Library } from "lucide-react";
+import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
@@ -31,6 +31,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const socialPlatforms = [
+    { value: 'twitter', label: 'Twitter', icon: Twitter },
+    { value: 'facebook', label: 'Facebook', icon: Facebook },
+    { value: 'instagram', label: 'Instagram', icon: Instagram },
+    { value: 'linkedin', label: 'LinkedIn', icon: Linkedin },
+    { value: 'youtube', label: 'YouTube', icon: Youtube },
+    { value: 'github', label: 'GitHub', icon: Github },
+];
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -39,6 +49,7 @@ const availableWidgets = [
     { type: 'search', name: 'Search', description: 'Display a search form.' },
     { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
     { type: 'image', name: 'Image', description: 'Display an image from your media library.' },
+    { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
 ];
 
 const defaultWidgetAreas: Omit<WidgetArea, 'id'>[] = [
@@ -56,6 +67,12 @@ type WidgetArea = {
     theme: string;
 }
 
+type SocialLink = {
+    id: string;
+    platform: string;
+    url: string;
+}
+
 type WidgetInstance = {
     id: string;
     widgetAreaId: string;
@@ -68,6 +85,7 @@ type WidgetInstance = {
         imageUrl?: string;
         caption?: string;
         linkUrl?: string;
+        socialLinks?: SocialLink[];
     }
 }
 
@@ -112,14 +130,90 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
 
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [config, setConfig] = useState(instance.config || {});
+    
+    useEffect(() => {
+        // Reset local config state if sheet closes or instance config prop changes
+        if (!isSheetOpen || instance.config) {
+            setConfig(instance.config || {});
+        }
+    }, [isSheetOpen, instance.config]);
 
     const handleSave = () => {
         onSaveConfig(instance.id, config);
         setIsSheetOpen(false);
     }
     
+    const handleSocialLinkChange = (index: number, field: 'platform' | 'url', value: string) => {
+        const newLinks = [...(config.socialLinks || [])];
+        newLinks[index] = { ...newLinks[index], [field]: value };
+        setConfig({ ...config, socialLinks: newLinks });
+    }
+
+    const addSocialLink = () => {
+        const newLink: SocialLink = { id: `link-${Date.now()}`, platform: 'twitter', url: '' };
+        setConfig({ ...config, socialLinks: [...(config.socialLinks || []), newLink] });
+    }
+    
+    const removeSocialLink = (index: number) => {
+        const newLinks = [...(config.socialLinks || [])];
+        newLinks.splice(index, 1);
+        setConfig({ ...config, socialLinks: newLinks });
+    }
+
     const renderConfigFields = () => {
         switch (instance.type) {
+            case 'social-follow':
+                return (
+                     <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Follow Us"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-4">
+                            <Label>Social Links</Label>
+                            {(config.socialLinks || []).map((link, index) => (
+                                <div key={link.id} className="grid gap-2 rounded-md border p-3">
+                                    <div className='flex gap-2'>
+                                        <div className='flex-1 grid gap-2'>
+                                            <Label htmlFor={`platform-${index}`} className='text-xs'>Platform</Label>
+                                            <Select value={link.platform} onValueChange={(value) => handleSocialLinkChange(index, 'platform', value)}>
+                                                <SelectTrigger id={`platform-${index}`}>
+                                                    <SelectValue placeholder="Select platform" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {socialPlatforms.map(p => (
+                                                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                         <div className='flex-1 grid gap-2'>
+                                            <Label htmlFor={`url-${index}`} className='text-xs'>URL</Label>
+                                            <Input
+                                                id={`url-${index}`}
+                                                placeholder="https://twitter.com/user"
+                                                value={link.url}
+                                                onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => removeSocialLink(index)} className='text-destructive hover:text-destructive w-fit'>
+                                        <Trash2 className="mr-2 h-3 w-3" />
+                                        Remove
+                                    </Button>
+                                </div>
+                            ))}
+                             <Button variant="outline" onClick={addSocialLink}>
+                                <Plus className="mr-2 h-4 w-4" /> Add Link
+                            </Button>
+                        </div>
+                    </div>
+                );
             case 'image':
                 return (
                     <div className="grid gap-4">
@@ -322,15 +416,22 @@ export default function WidgetsPage() {
 
     const widgetsByArea = useMemo(() => {
         if (!localInstances) return {};
-        return localInstances.reduce((acc, instance) => {
+        const result = (localInstances || []).reduce((acc, instance) => {
             if (!acc[instance.widgetAreaId]) {
                 acc[instance.widgetAreaId] = [];
             }
             acc[instance.widgetAreaId].push(instance);
-            acc[instance.widgetAreaId].sort((a, b) => a.order - b.order);
             return acc;
         }, {} as Record<string, WidgetInstance[]>);
+    
+        // Now sort each area's widgets by the 'order' property
+        for (const areaId in result) {
+            result[areaId].sort((a, b) => a.order - b.order);
+        }
+    
+        return result;
     }, [localInstances]);
+    
 
     const sensors = useSensors(useSensor(PointerSensor));
 
@@ -394,26 +495,15 @@ export default function WidgetsPage() {
     
         if (!over) return;
     
-        const activeId = String(active.id);
-        const overId = String(over.id);
-    
-        // Item is dropped in the same container
-        if (activeId === overId) {
-            return;
-        }
-    
         const fromAvailable = active.data.current?.from === 'available';
+        const targetAreaId = over.data.current?.isWidgetArea ? String(over.id) : over.data.current?.instance?.widgetAreaId;
         
-        // Scenario 1: Dragging a new widget into an area
+        if (!targetAreaId) return;
+
+        // SCENARIO 1: Dragging a new widget from the "Available" list
         if (fromAvailable && firestore) {
             const widgetType = active.data.current?.widget.type;
             const widgetName = active.data.current?.widget.name;
-    
-            const targetAreaId = over.data.current?.isWidgetArea 
-                ? overId 
-                : over.data.current?.instance?.widgetAreaId;
-    
-            if (!targetAreaId) return;
             const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
             if (!targetArea) return;
     
@@ -440,67 +530,65 @@ export default function WidgetsPage() {
             }
             return;
         }
-    
-        // Scenario 2: Reordering widgets
+
+        // SCENARIO 2: Reordering widgets within or between areas
         if (!fromAvailable && localInstances && firestore) {
-            setLocalInstances((instances) => {
-                if (!instances) return null;
-                const activeIndex = instances.findIndex((t) => t.id === activeId);
-                const overIndex = instances.findIndex((t) => t.id === overId);
-                const activeInstance = instances[activeIndex];
-                const overInstance = instances[overIndex];
-    
-                if (!activeInstance) return instances;
-    
-                const targetAreaId = over.data.current?.isWidgetArea ? overId : overInstance?.widgetAreaId;
-    
-                if (!targetAreaId) return instances;
-    
-                let newInstances = [...instances];
-    
-                // Update widget's areaId if moved to a new area
-                if (activeInstance.widgetAreaId !== targetAreaId) {
-                    newInstances[activeIndex] = {
-                        ...activeInstance,
-                        widgetAreaId: targetAreaId,
-                    };
+            const activeId = String(active.id);
+            const overId = String(over.id);
+            const activeInstance = localInstances.find(i => i.id === activeId);
+            if (!activeInstance) return;
+
+            setLocalInstances(prev => {
+                if (!prev) return null;
+                const activeIndex = prev.findIndex(i => i.id === activeId);
+                const overIndex = prev.findIndex(i => i.id === overId);
+
+                let newInstances: WidgetInstance[];
+
+                // If moving within the same area
+                if (activeInstance.widgetAreaId === targetAreaId) {
+                    newInstances = arrayMove(prev.filter(i => i.widgetAreaId === targetAreaId), activeIndex, overIndex);
+                } else {
+                // If moving to a different area
+                    const sourceAreaInstances = prev.filter(i => i.widgetAreaId === activeInstance.widgetAreaId && i.id !== activeId);
+                    const targetAreaInstances = prev.filter(i => i.widgetAreaId === targetAreaId);
+                    
+                    const movedInstance = { ...activeInstance, widgetAreaId: targetAreaId };
+                    const overWidget = prev[overIndex];
+                    
+                    const overTargetIndex = targetAreaInstances.findIndex(i => i.id === overId);
+
+                    targetAreaInstances.splice(overTargetIndex >= 0 ? overTargetIndex : targetAreaInstances.length, 0, movedInstance);
+
+                    const otherInstances = prev.filter(i => i.widgetAreaId !== activeInstance.widgetAreaId && i.widgetAreaId !== targetAreaId);
+                    newInstances = [...otherInstances, ...sourceAreaInstances, ...targetAreaInstances];
                 }
-    
-                // Reorder
-                newInstances = arrayMove(newInstances, activeIndex, overIndex);
-    
-                // Update order property for all affected widgets
-                const affectedAreaIds = new Set([activeInstance.widgetAreaId, targetAreaId]);
                 
+                // Re-calculate order for all instances and commit to Firestore
+                const batch = writeBatch(firestore);
                 const finalInstances: WidgetInstance[] = [];
-                const processedIds = new Set<string>();
-
-                widgetAreas?.forEach(area => {
-                    const itemsInArea = newInstances
-                        .filter(i => i.widgetAreaId === area.id)
-                        .sort((a,b) => a.order - b.order) // Ensure stable sort before re-indexing
-                        .map((item, index) => ({ ...item, order: index }));
-
-                    itemsInArea.forEach(item => {
-                        if (!processedIds.has(item.id)) {
-                            finalInstances.push(item);
-                            processedIds.add(item.id);
-                        }
+                const areasToUpdate = new Set(newInstances.map(i => i.widgetAreaId));
+                
+                areasToUpdate.forEach(areaId => {
+                    const itemsInArea = newInstances.filter(i => i.widgetAreaId === areaId);
+                    itemsInArea.sort((a,b) => {
+                        const aIdx = newInstances.findIndex(item => item.id === a.id);
+                        const bIdx = newInstances.findIndex(item => item.id === b.id);
+                        return aIdx - bIdx;
+                    });
+                    itemsInArea.forEach((item, index) => {
+                        const updatedItem = { ...item, order: index };
+                        finalInstances.push(updatedItem);
+                        const docRef = doc(firestore, 'widget_instances', item.id);
+                        batch.set(docRef, updatedItem, { merge: true });
                     });
                 });
                 
-                // Persist changes to Firestore
-                const batch = writeBatch(firestore);
-                finalInstances.forEach(instance => {
-                    const docRef = doc(firestore, 'widget_instances', instance.id);
-                    batch.set(docRef, instance, { merge: true });
-                });
-    
                 batch.commit().catch(error => {
                     toast({ variant: 'destructive', title: 'Error updating widgets', description: error.message });
                     setLocalInstances(widgetInstances); // Revert on error
                 });
-    
+                
                 return finalInstances;
             });
         }
@@ -553,7 +641,7 @@ export default function WidgetsPage() {
                             </CardHeader>
                             <CardContent>
                                <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="w-full space-y-4">
-                                    {(isLoadingAreas && !widgetAreas) && <p>Loading widget areas...</p>}
+                                    {(isLoadingAreas || isLoadingInstances && !localInstances) && <p>Loading widget areas...</p>}
                                     {widgetAreas?.map((area) => {
                                         const areaWidgets = widgetsByArea[area.id] || [];
                                         return (
