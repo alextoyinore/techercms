@@ -5,6 +5,7 @@ import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase
 import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
+import { WidgetArea } from '@/components/widgets/WidgetArea';
 
 type Post = {
   id: string;
@@ -37,9 +38,15 @@ function PublicHeader({ siteName }: { siteName?: string }) {
 
 function PublicFooter() {
     return (
-        <footer className="py-8 px-6 mt-16">
-            <div className="container mx-auto max-w-3xl text-center text-muted-foreground text-xs">
-                <p>&copy; {new Date().getFullYear()} A Minimalist Blog. All rights reserved.</p>
+        <footer className="py-12 px-6 mt-16 border-t">
+            <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                     <p className="font-semibold font-headline text-foreground">A Minimalist Blog</p>
+                     <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All rights reserved.</p>
+                </div>
+                <div className="space-y-4">
+                    <WidgetArea areaName="Footer Column 1" />
+                </div>
             </div>
         </footer>
     )
@@ -115,5 +122,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
