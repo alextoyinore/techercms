@@ -10,6 +10,7 @@ import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { WidgetArea } from '@/components/widgets/WidgetArea';
 
 type Post = {
   id: string;
@@ -120,45 +121,50 @@ export default function SlugPage() {
   return (
     <div className="bg-background">
       <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-6 max-w-4xl">
-        <article>
-          <header className="mb-8">
-            <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-5xl mb-4">{item.title}</h1>
-            <time className="text-muted-foreground text-sm">
-              Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}
-            </time>
-          </header>
-          
-          {item.featuredImageUrl && (
-            <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-lg">
-              <Image
-                src={item.featuredImageUrl}
-                alt={item.title}
-                fill
-                className="object-cover"
-              />
-            </div>
-          )}
-          
-          <div
-            className="prose dark:prose-invert lg:prose-lg max-w-none mx-auto"
-            dangerouslySetInnerHTML={{ __html: item.content }}
-          />
+      <main className="container mx-auto py-8 px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <div className="lg:col-span-3">
+                <article>
+                <header className="mb-8">
+                    <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-5xl mb-4">{item.title}</h1>
+                    <time className="text-muted-foreground text-sm">
+                    Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}
+                    </time>
+                </header>
+                
+                {item.featuredImageUrl && (
+                    <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-lg">
+                    <Image
+                        src={item.featuredImageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                    />
+                    </div>
+                )}
+                
+                <div
+                    className="prose dark:prose-invert lg:prose-lg max-w-none mx-auto"
+                    dangerouslySetInnerHTML={{ __html: item.content }}
+                />
 
-          {isPost && item.tagIds && item.tagIds.length > 0 && (
-            <footer className="mt-12">
-                <div className="flex flex-wrap gap-2">
-                    {item.tagIds.map(tag => (
-                        <Badge key={tag} variant="secondary">{tag}</Badge>
-                    ))}
-                </div>
-            </footer>
-          )}
-        </article>
+                {isPost && item.tagIds && item.tagIds.length > 0 && (
+                    <footer className="mt-12">
+                        <div className="flex flex-wrap gap-2">
+                            {item.tagIds.map(tag => (
+                                <Badge key={tag} variant="secondary">{tag}</Badge>
+                            ))}
+                        </div>
+                    </footer>
+                )}
+                </article>
+            </div>
+            <aside className="lg:col-span-1 space-y-8">
+                <WidgetArea areaName="Sidebar" />
+            </aside>
+        </div>
       </main>
       <PublicFooter />
     </div>
   );
 }
-
-    
