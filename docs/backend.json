@@ -265,6 +265,18 @@
         "timezone": {
             "type": "string",
             "description": "The timezone for the website."
+        },
+        "bodyFont": {
+            "type": "string",
+            "description": "The font for the body text."
+        },
+        "headlineFont": {
+            "type": "string",
+            "description": "The font for headlines."
+        },
+        "baseFontSize": {
+            "type": "number",
+            "description": "The base font size in pixels."
         }
       },
       "required": [
@@ -423,3 +435,5 @@
     "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts."
   }
 }
+
+    

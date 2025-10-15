@@ -25,7 +25,14 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import WidgetsPage from '@/app/dashboard/widgets/page';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { fontList } from '@/lib/fonts';
 
 const websiteThemes = [
     {
@@ -62,12 +69,17 @@ const websiteThemes = [
 
 type SiteSettings = {
   activeTheme?: string;
+  dashboardTheme?: string;
+  bodyFont?: string;
+  headlineFont?: string;
+  baseFontSize?: number;
 };
 
 export default function ThemesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const [isActivatingWebsiteTheme, setIsActivatingWebsiteTheme] = useState<string | null>(null);
+    const [isSavingTypography, setIsSavingTypography] = useState(false);
 
     const { 
         theme: activeDashboardTheme, 
@@ -87,9 +99,17 @@ export default function ThemesPage() {
     const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
     const [activeWebsiteTheme, setActiveWebsiteTheme] = useState<string | undefined>(undefined);
     
+    // Typography state
+    const [bodyFont, setBodyFont] = useState('Inter');
+    const [headlineFont, setHeadlineFont] = useState('Poppins');
+    const [baseFontSize, setBaseFontSize] = useState(16);
+    
     useEffect(() => {
         if (settings) {
             setActiveWebsiteTheme(settings.activeTheme);
+            setBodyFont(settings.bodyFont || 'Inter');
+            setHeadlineFont(settings.headlineFont || 'Poppins');
+            setBaseFontSize(settings.baseFontSize || 16);
         }
     }, [settings]);
 
@@ -124,6 +144,30 @@ export default function ThemesPage() {
         }
     }
 
+    const handleSaveTypography = async () => {
+        if (!firestore || !settingsRef) return;
+        setIsSavingTypography(true);
+        try {
+            await setDoc(settingsRef, {
+                bodyFont,
+                headlineFont,
+                baseFontSize,
+            }, { merge: true });
+            toast({
+                title: 'Typography Saved',
+                description: 'Your new font settings have been saved and applied.',
+            });
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Saving Typography',
+                description: error.message,
+            });
+        } finally {
+            setIsSavingTypography(false);
+        }
+    }
+
     const themeImages = PlaceHolderImages.filter(img => img.id.startsWith('theme-'));
 
   return (
@@ -135,7 +179,6 @@ export default function ThemesPage() {
       <Tabs defaultValue="themes" className="w-full">
         <TabsList>
             <TabsTrigger value="themes">Appearance</TabsTrigger>
-            <TabsTrigger value="widgets">Widgets</TabsTrigger>
             <TabsTrigger value="typography">Typography</TabsTrigger>
         </TabsList>
         <TabsContent value="themes">
@@ -273,25 +316,69 @@ export default function ThemesPage() {
                 </Card>
             </div>
         </TabsContent>
-        <TabsContent value="widgets">
-            <WidgetsPage />
-        </TabsContent>
         <TabsContent value="typography">
              <Card>
                 <CardHeader>
                     <CardTitle className="font-headline">Typography</CardTitle>
                     <CardDescription>
-                        Manage your website's fonts and text styles. This feature is under construction.
+                        Manage your website's fonts and text styles. These settings apply globally to your public-facing site.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center h-48 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">Typography controls will be available here.</p>
+                <CardContent className="grid gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="headlineFont">Headline Font</Label>
+                             <Select value={headlineFont} onValueChange={setHeadlineFont}>
+                                <SelectTrigger id="headlineFont">
+                                    <SelectValue placeholder="Select a font..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fontList.map(font => (
+                                        <SelectItem key={font.name} value={font.name}>{font.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="bodyFont">Body Font</Label>
+                            <Select value={bodyFont} onValueChange={setBodyFont}>
+                                <SelectTrigger id="bodyFont">
+                                    <SelectValue placeholder="Select a font..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {fontList.map(font => (
+                                        <SelectItem key={font.name} value={font.name}>{font.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                     <div className='grid gap-2 max-w-sm'>
+                        <Label>Base Font Size</Label>
+                        <div className='flex items-center gap-4'>
+                            <Slider
+                                value={[baseFontSize]}
+                                onValueChange={(value) => setBaseFontSize(value[0])}
+                                min={14}
+                                max={20}
+                                step={1}
+                            />
+                            <span className='text-sm text-muted-foreground w-12 text-center'>{baseFontSize}px</span>
+                        </div>
                     </div>
                 </CardContent>
+                <div className="sticky bottom-0 bg-background/95 py-4 px-6 border-t mt-4 -mx-6 -mb-6 rounded-b-lg">
+                    <div className='flex justify-end'>
+                        <Button onClick={handleSaveTypography} disabled={isSavingTypography}>
+                            {isSavingTypography ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>Saving...</> : 'Save Typography Settings'}
+                        </Button>
+                    </div>
+                </div>
             </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+    
