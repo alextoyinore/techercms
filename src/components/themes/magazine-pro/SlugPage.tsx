@@ -161,10 +161,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     dangerouslySetInnerHTML={{ __html: item.content }}
                 />
 
-                {isPost && item.tagIds && item.tagIds.length > 0 && (
+                {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
                     <footer className="mt-12">
                         <div className="flex flex-wrap gap-2">
-                            {item.tagIds.map(tag => (
+                            {(item as Post).tagIds!.map(tag => (
                                 <Badge key={tag} variant="secondary">{tag}</Badge>
                             ))}
                         </div>

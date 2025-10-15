@@ -123,7 +123,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     );
   }
   
-  const isPost = 'tagIds' in item;
+  const isPost = 'excerpt' in item;
   const pageId = !isPost ? item.id : undefined;
 
   return (
@@ -155,10 +155,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             dangerouslySetInnerHTML={{ __html: item.content }}
           />
 
-          {isPost && item.tagIds && item.tagIds.length > 0 && (
+          {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
             <footer className="mt-12 text-center">
                 <div className="flex flex-wrap gap-2 justify-center">
-                    {item.tagIds.map(tag => (
+                    {(item as Post).tagIds!.map(tag => (
                         <Badge key={tag} variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
                     ))}
                 </div>

@@ -94,7 +94,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     return null;
   }, [preloadedItem, posts, pages]);
   
-  const isPost = item ? 'tagIds' in item : false;
+  const isPost = item ? 'excerpt' in item : false;
   const pageId = !isPost && item ? item.id : undefined;
 
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
