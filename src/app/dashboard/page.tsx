@@ -255,8 +255,8 @@ export default function Dashboard() {
           />
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
-          <Card className="lg:col-span-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-max">
+          <Card>
               <CardHeader>
                   <CardTitle className="font-headline">Quick Draft</CardTitle>
                   <CardDescription>Jot down a new post idea.</CardDescription>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                   </Button>
               </CardContent>
           </Card>
-          <Card className="lg:col-span-1">
+          <Card>
               <CardHeader>
                   <CardTitle className="font-headline">Recent Posts</CardTitle>
               </CardHeader>
@@ -311,7 +311,7 @@ export default function Dashboard() {
                   </Button>
               </CardFooter>
           </Card>
-          <Card className="md:col-span-1 lg:col-span-2">
+          <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Posts per Category</CardTitle>
                 <CardDescription>A breakdown of your content distribution.</CardDescription>
@@ -320,7 +320,7 @@ export default function Dashboard() {
                 {isLoadingPosts || isLoadingCategories ? (
                     <Skeleton className='w-full aspect-video'/>
                 ) : postsPerCategoryChartData.length > 0 ? (
-                    <ChartContainer config={chartConfig} className='w-full'>
+                    <ChartContainer config={chartConfig} className='w-full aspect-video'>
                         <BarChart data={postsPerCategoryChartData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
@@ -336,7 +336,7 @@ export default function Dashboard() {
                 )}
             </CardContent>
           </Card>
-          <Card className="md:col-span-2 lg:col-span-3">
+          <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Content Over Time</CardTitle>
                 <CardDescription>Your publishing trend for the last 6 months.</CardDescription>
@@ -345,7 +345,7 @@ export default function Dashboard() {
                 {isLoadingPosts || isLoadingPages ? (
                     <Skeleton className='w-full aspect-video'/>
                 ) : contentOverTimeChartData.length > 0 ? (
-                    <ChartContainer config={chartConfig} className='w-full'>
+                    <ChartContainer config={chartConfig} className='w-full aspect-video'>
                         <LineChart data={contentOverTimeChartData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
