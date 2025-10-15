@@ -76,12 +76,13 @@ const availableWidgets = {
     ]
 };
 
-const defaultWidgetAreas: Omit<WidgetArea, 'id'>[] = [
+const defaultWidgetAreas: Omit<WidgetArea, 'id' | 'pageId'>[] = [
     { name: 'Sidebar', description: 'Main sidebar for posts and pages.', theme: 'all' },
     { name: 'Header', description: 'Header area, useful for banners or announcements.', theme: 'all' },
     { name: 'Footer Column 1', description: 'First column in the site footer.', theme: 'all' },
     { name: 'Footer Column 2', description: 'Second column in the site footer.', theme: 'all' },
     { name: 'Homepage Content', description: 'Special content area on the homepage.', theme: 'all' },
+    { name: 'Page Content', description: 'Displays as the main content of the page.', theme: 'all' },
 ];
 
 type WidgetArea = {
@@ -1071,5 +1072,3 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         </DndContext>
     );
 }
-
-    
