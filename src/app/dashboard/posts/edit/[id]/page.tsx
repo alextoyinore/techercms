@@ -20,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,7 +113,7 @@ export default function EditPostPage() {
   
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !firestore || !auth?.currentUser) return;
 
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -144,9 +144,19 @@ export default function EditPostPage() {
 
       const data = await response.json();
       setFeaturedImageUrl(data.secure_url);
+
+      const mediaCollectionRef = collection(firestore, "media");
+      addDocumentNonBlocking(mediaCollectionRef, {
+        url: data.secure_url,
+        filename: file.name,
+        authorId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+
+
       toast({
         title: "Image Uploaded",
-        description: "Your featured image has been successfully uploaded.",
+        description: "Your featured image has been successfully uploaded and saved.",
       });
 
     } catch (error: any) {
@@ -425,3 +435,5 @@ export default function EditPostPage() {
     </div>
   );
 }
+
+    

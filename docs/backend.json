@@ -203,6 +203,42 @@
         "status",
         "authorId"
       ]
+    },
+    "MediaItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MediaItem",
+      "type": "object",
+      "description": "Represents an uploaded media file.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Media Item."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of the uploaded file."
+        },
+        "filename": {
+          "type": "string",
+          "description": "The original filename of the file."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who uploaded the file."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the file was uploaded."
+        }
+      },
+      "required": [
+        "id",
+        "url",
+        "filename",
+        "authorId",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -276,8 +312,26 @@
             }
           ]
         }
+      },
+      {
+        "path": "/media/{mediaId}",
+        "definition": {
+          "entityName": "MediaItem",
+          "schema": {
+            "$ref": "#/backend/entities/MediaItem"
+          },
+          "description": "Stores media item data. `mediaId` is the unique identifier for each item.",
+          "params": [
+            {
+              "name": "mediaId",
+              "description": "The unique identifier for the media item."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, and Posts are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication."
   }
 }
+
+    

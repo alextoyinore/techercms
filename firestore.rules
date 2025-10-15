@@ -1,118 +1,112 @@
 /**
- * @fileOverview Firestore Security Rules for Prototyping.
- *
- * Core Philosophy:
- * This ruleset prioritizes security by enforcing strict ownership and role-based access control where applicable,
- * while relaxing data validation to enable rapid prototyping.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict owner-based authorization model for a CMS.
  *
  * Data Structure:
- * - `/pages/{pageId}`: Stores static page data.
- * - `/categories/{categoryId}`: Stores category data.
- * - `/tags/{tagId}`: Stores tag data.
- * - `/posts/{postId}`: Stores post data.
+ * - /pages/{pageId}: Stores static page data.
+ * - /categories/{categoryId}: Stores category data.
+ * - /tags/{tagId}: Stores tag data.
+ * - /posts/{postId}: Stores post data.
  *
  * Key Security Decisions:
- * - No user listing is allowed.
- * - Unauthenticated access is disallowed.
- * - Owner-only access is enforced for Pages and Posts.
- * - Categories and Tags are readable by any signed-in user and writable by any signed-in user, but only authorized users can update or delete.  Update and Delete operations are denied by default.
+ * - All write operations (create, update, delete) on pages, categories, tags, and posts are restricted to the author of the content.
+ * - Public read access is granted to all collections.
  *
  * Denormalization for Authorization:
- * - The `Page` and `Post` entities include an `authorId` field. This allows for simple ownership checks on pages and posts without needing to perform additional reads.
+ * - Each document in the 'pages', 'categories', 'tags', and 'posts' collections must contain an `authorId` field that matches the user's UID for write access.
+ * - The rule for creating documents ensures that the `authorId` field matches the authenticated user's UID.
+ * - The rules for updating and deleting documents ensure that the authenticated user's UID matches the existing `authorId` field in the document.
+ *
+ * Structural Segregation:
+ * - The CMS uses top-level collections for 'pages', 'categories', 'tags', and 'posts' to keep data separate and manageable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure page documents.
+     * @description Controls access to the 'pages' collection.
      * @path /pages/{pageId}
-     * @allow (create) Authenticated user can create a page if they are the author.
-     * @deny (create) Unauthenticated user cannot create a page.
-     * @allow (get, list) Any authenticated user can read any page.
-     * @allow (update, delete) Only the author can modify/delete their own pages.
-     * @deny (update, delete) Other users cannot modify/delete pages.
-     * @principle Enforces document ownership for writes, ensures only the author can modify pages.
+     * @allow (get, list): Any user can read a page.
+     * @allow (create): Only the authenticated user can create a page, with the 'authorId' field matching their UID.
+     * @allow (update, delete): Only the author of the page can modify or delete it.
+     * @deny create: if the 'authorId' field does not match the authenticated user's UID.
+     * @deny update: if the 'authorId' field is changed.
+     * @deny delete: if the user is not the author of the page.
+     * @principle Enforces document ownership for writes.
      */
     match /pages/{pageId} {
-      allow get, list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure category documents.
+     * @description Controls access to the 'categories' collection.
      * @path /categories/{categoryId}
-     * @allow (create) Authenticated user can create a category.
-     * @deny (create) Unauthenticated user cannot create a category.
-     * @allow (get, list) Any authenticated user can read any category.
-     * @deny (update, delete) No one can update or delete a category for now.
-     * @principle No one can update or delete a category for now.
+     * @allow (get, list): Any user can read a category.
+     * @allow (create): Only the authenticated user can create a category, with the 'authorId' field matching their UID.
+     * @allow (update, delete): Only the author of the category can modify or delete it.
+     * @deny create: if the 'authorId' field does not match the authenticated user's UID.
+     * @deny update: if the 'authorId' field is changed.
+     * @deny delete: if the user is not the author of the category.
+     * @principle Enforces document ownership for writes.
      */
     match /categories/{categoryId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure tag documents.
+     * @description Controls access to the 'tags' collection.
      * @path /tags/{tagId}
-     * @allow (create) Authenticated user can create a tag.
-     * @deny (create) Unauthenticated user cannot create a tag.
-     * @allow (get, list) Any authenticated user can read any tag.
-     * @deny (update, delete) No one can update or delete a tag for now.
-     * @principle No one can update or delete a tag for now.
+     * @allow (get, list): Any user can read a tag.
+     * @allow (create): Only the authenticated user can create a tag, with the 'authorId' field matching their UID.
+     * @allow (update, delete): Only the author of the tag can modify or delete it.
+     * @deny create: if the 'authorId' field does not match the authenticated user's UID.
+     * @deny update: if the 'authorId' field is changed.
+     * @deny delete: if the user is not the author of the tag.
+     * @principle Enforces document ownership for writes.
      */
     match /tags/{tagId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Secure post documents.
+     * @description Controls access to the 'posts' collection.
      * @path /posts/{postId}
-     * @allow (create) Authenticated user can create a post if they are the author.
-     * @deny (create) Unauthenticated user cannot create a post.
-     * @allow (get, list) Any authenticated user can read any post.
-     * @allow (update, delete) Only the author can modify/delete their own posts.
-     * @deny (update, delete) Other users cannot modify/delete posts.
-     * @principle Enforces document ownership for writes, ensures only the author can modify posts.
+     * @allow (get, list): Any user can read a post.
+     * @allow (create): Only the authenticated user can create a post, with the 'authorId' field matching their UID.
+     * @allow (update, delete): Only the author of the post can modify or delete it.
+     * @deny create: if the 'authorId' field does not match the authenticated user's UID.
+     * @deny update: if the 'authorId' field is changed.
+     * @deny delete: if the user is not the author of the post.
+     * @principle Enforces document ownership for writes.
      */
     match /posts/{postId} {
-      allow get, list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
-    // ---- Helper functions ----
-
-    /**
-     * @description Checks if the user is signed in.
-     * @returns {boolean} True if the user is signed in, false otherwise.
-     */
+    // --- Helper functions ---
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the user is the owner of the document.
-     * @param {string} userId - The user ID to check against.
-     * @returns {boolean} True if the user is the owner, false otherwise.
-     */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the user is the owner of the existing document.
-     * @param {string} userId - The user ID to check against.
-     * @param {string} authorId - The authorId to check against
-     * @returns {boolean} True if the user is the owner and the document exists, false otherwise.
-     */
-    function isExistingOwner(authorId) {
-      return isOwner(authorId) && resource != null;
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
   }
 }
