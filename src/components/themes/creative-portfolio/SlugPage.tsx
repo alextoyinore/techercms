@@ -1,0 +1,149 @@
+'use client';
+import { useMemo } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useParams } from 'next/navigation';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { format } from 'date-fns';
+import { Loading } from '@/components/loading';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+  slug: string;
+  featuredImageUrl: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: Timestamp;
+  tagIds?: string[];
+};
+
+type Page = {
+  id:string;
+  title: string;
+  content: string;
+  slug: string;
+  featuredImageUrl: string;
+  status: 'draft' | 'published';
+  createdAt: Timestamp;
+};
+
+function PublicHeader() {
+    return (
+        <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
+            <div className="container mx-auto flex justify-between items-center">
+                <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
+                    Portfolio
+                </Link>
+                <nav>
+                    <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
+                        Admin Login
+                    </Link>
+                </nav>
+            </div>
+        </header>
+    )
+}
+
+function PublicFooter() {
+    return (
+        <footer className="py-8 px-6 border-t mt-16">
+            <div className="container mx-auto text-center text-muted-foreground text-sm">
+                <p>&copy; {new Date().getFullYear()} A Creative Portfolio. All Rights Reserved.</p>
+            </div>
+        </footer>
+    )
+}
+
+export default function SlugPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const firestore = useFirestore();
+
+  const postsQuery = useMemoFirebase(() => {
+    if (!firestore || !slug) return null;
+    return query(collection(firestore, 'posts'), where('slug', '==', slug), where('status', '==', 'published'));
+  }, [firestore, slug]);
+
+  const pagesQuery = useMemoFirebase(() => {
+    if (!firestore || !slug) return null;
+    return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
+  }, [firestore, slug]);
+
+  const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
+  const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesQuery);
+
+  const item = useMemo(() => {
+    if (posts && posts.length > 0) return posts[0];
+    if (pages && pages.length > 0) return pages[0];
+    return null;
+  }, [posts, pages]);
+
+  if (isLoadingPosts || isLoadingPages) {
+    return <Loading />;
+  }
+
+  if (!item) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
+            <h1 className="text-6xl font-bold font-headline mb-4">404</h1>
+            <p className="text-xl text-muted-foreground mb-8">The content you're looking for seems to be lost in space.</p>
+            <Button asChild variant="default" size="lg">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Return to Home Base
+                </Link>
+            </Button>
+        </div>
+    );
+  }
+  
+  const isPost = 'tagIds' in item;
+
+  return (
+    <div className="bg-background">
+      <PublicHeader />
+      <main className="container mx-auto py-8 px-6">
+        <article className="max-w-4xl mx-auto">
+          {item.featuredImageUrl && (
+            <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
+              <Image
+                src={item.featuredImageUrl}
+                alt={item.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+          <header className="mb-8 text-center">
+            <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>
+            <time className="text-muted-foreground text-sm uppercase tracking-widest">
+              {item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}
+            </time>
+          </header>
+          
+          <div
+            className="prose dark:prose-invert lg:prose-xl max-w-none mx-auto"
+            dangerouslySetInnerHTML={{ __html: item.content }}
+          />
+
+          {isPost && item.tagIds && item.tagIds.length > 0 && (
+            <footer className="mt-12 text-center">
+                <div className="flex flex-wrap gap-2 justify-center">
+                    {item.tagIds.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                    ))}
+                </div>
+            </footer>
+          )}
+        </article>
+      </main>
+      <PublicFooter />
+    </div>
+  );
+}
