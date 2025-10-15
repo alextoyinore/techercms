@@ -68,23 +68,11 @@ export default function ThemesPage() {
     
     const newSettings = { activeTheme: themeName };
 
-    // Use non-blocking update and catch permission errors
-    setDocumentNonBlocking(settingsRef, newSettings, { merge: true })
-      .catch((error: any) => {
-          toast({
-              variant: "destructive",
-              title: "Uh oh! Something went wrong.",
-              description: error.message || "Could not activate the theme.",
-          });
-      })
-      .finally(() => {
-          // Optimistically show toast, the error will be caught by the global listener
-          toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
-          
-          // We can't await the result here, so we'll just reset the loading state
-          // after a short delay to provide visual feedback.
-          setTimeout(() => setIsActivating(null), 1000);
-      });
+    setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
+
+    toast({ title: 'Theme Activated', description: `"${themeName}" is now your active website theme.` });
+    
+    setTimeout(() => setIsActivating(null), 1000);
   }
 
   return (
