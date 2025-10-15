@@ -13,50 +13,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description
-     * Default-deny all writes, and allow public reads for all collections.
-     * Specific write permissions will be granted in subsequent match blocks.
-     */
-    match /{document=**} {
+    match /posts/{postId} {
       allow read: if true;
-      allow write: if false; // Default deny all writes
-    }
-
-    /**
-     * @description
-     * Secures write access for owner-based content (Posts, Pages, Media).
-     * Users can only create, update, or delete content they own.
-     * The path wildcard `{collection}` matches 'posts', 'pages', or 'media'.
-     */
-    match /{collection}/{docId} where collection in ['posts', 'pages', 'media'] {
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
-    /**
-     * @description
-     * Secures write access for general content management (Categories, Tags, Widgets).
-     * Any authenticated user can manage these resources.
-     */
-    match /{collection}/{docId} where collection in ['categories', 'tags', 'widget_areas', 'widget_instances'] {
+    match /pages/{pageId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+    
+    match /media/{mediaId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
       allow write: if isSignedIn();
     }
 
-    /**
-     * @description
-     * Secures write access to the global site configuration.
-     * Any authenticated user can change the site settings.
-     */
-    match /site_settings/config {
-        allow write: if isSignedIn();
+    match /tags/{tagId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    match /widget_areas/{widgetAreaId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    match /widget_instances/{widgetInstanceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
 
-    /**
-     * @description
-     * Helper function to check if a user is authenticated.
-     * @returns {boolean} True if the user is signed in.
-     */
+    match /site_settings/config {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
