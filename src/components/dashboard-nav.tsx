@@ -22,7 +22,6 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import type { User as FirebaseUser } from "firebase/auth";
-import { UserNav } from "./user-nav";
 
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -32,6 +31,7 @@ const navItems = [
     { href: "/dashboard/categories", icon: Folder, label: "Categories" },
     { href: "/dashboard/tags", icon: Tag, label: "Tags" },
     { href: "/dashboard/widgets", icon: Blocks, label: "Widgets" },
+    { href: "/dashboard/themes", icon: Paintbrush, label: "Website Themes" },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
     { href: "/dashboard/profile", icon: User, label: "Profile" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
