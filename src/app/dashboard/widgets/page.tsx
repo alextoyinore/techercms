@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -177,9 +178,9 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
 
 
     return (
-        <div ref={setNodeRef} style={style}  className={cn(`relative group/item flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
-             <div {...attributes} {...listeners} className="flex-grow flex items-start gap-2">
-                <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+        <div ref={setNodeRef} style={style}  className={cn(`relative group/item flex items-center gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
+             <div {...attributes} {...listeners} className="flex-grow flex items-center gap-2">
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <div className="grid gap-0.5">
                     <p className="font-medium">{instance.config?.title || name}</p>
                 </div>
@@ -187,10 +188,10 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
                      <button
-                        className="absolute top-1 right-8 z-10 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
+                        className="absolute top-1/2 -translate-y-1/2 right-10 z-10 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
                         aria-label="Configure widget"
                     >
-                        <Cog className="h-3 w-3" />
+                        <Cog className="h-4 w-4" />
                     </button>
                 </SheetTrigger>
                 <SheetContent>
@@ -211,10 +212,10 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
             </Sheet>
             <button
                 onClick={() => onDelete(instance.id)}
-                className="absolute top-1 right-1 z-10 p-1 text-muted-foreground hover:text-destructive rounded-full hover:bg-destructive/10"
+                className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-1 text-muted-foreground hover:text-destructive rounded-full hover:bg-destructive/10"
                 aria-label="Remove widget"
             >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
             </button>
         </div>
     );
@@ -379,27 +380,42 @@ export default function WidgetsPage() {
                 const instancesRef = collection(firestore, 'widget_instances');
                 const newDocRef = await addDocumentNonBlocking(instancesRef, newWidgetData);
                 if (newDocRef) {
-                    setLocalInstances(prev => {
-                        const newLocal = prev ? [...prev] : [];
-                        const newInstance = { ...newWidgetData, id: newDocRef.id };
+                    const newInstance = { ...newWidgetData, id: newDocRef.id };
+    
+                    setLocalInstances(prevInstances => {
+                        const instances = prevInstances ? [...prevInstances] : [];
                         
-                        let updatedAreaWidgets = widgetsByArea[targetAreaId] ? [...widgetsByArea[targetAreaId]] : [];
-                        updatedAreaWidgets.splice(overIndex, 0, newInstance);
-                        
-                        // Re-order the area
-                        updatedAreaWidgets = updatedAreaWidgets.map((item, index) => ({ ...item, order: index }));
-
-                        const otherWidgets = newLocal.filter(item => item.widgetAreaId !== targetAreaId);
-                        
-                        return [...otherWidgets, ...updatedAreaWidgets];
+                        // Add the new instance at the correct position
+                        const overWidgetIndex = overIsInstance ? instances.findIndex(w => w.id === overId) : -1;
+                        if (overWidgetIndex !== -1) {
+                            instances.splice(overWidgetIndex, 0, newInstance);
+                        } else {
+                            instances.push(newInstance);
+                        }
+    
+                        // Re-order all affected areas
+                        const affectedAreaIds = new Set([targetAreaId]);
+                        const finalInstances = widgetAreas?.reduce((acc, area) => {
+                            const areaId = area.id;
+                            if (affectedAreaIds.has(areaId)) {
+                                const itemsInArea = instances
+                                    .filter(i => i.widgetAreaId === areaId)
+                                    .map((item, index) => ({ ...item, order: index }));
+                                return [...acc, ...itemsInArea];
+                            }
+                            return [...acc, ...instances.filter(i => i.widgetAreaId === areaId)];
+                        }, [] as WidgetInstance[]) || [];
+    
+                        return finalInstances;
                     });
-
+    
                     // Persist the new order for the entire area
                     const batch = writeBatch(firestore);
-                    const updatedAreaWidgets = (widgetsByArea[targetAreaId] || [])
-                        .map((item, index) => ({ ...item, order: index }));
-                    
-                    updatedAreaWidgets.forEach(instance => {
+                    const finalInstances = (localInstances || [])
+                        .filter(i => i.widgetAreaId === targetAreaId)
+                        .map((item, index) => ({...item, order: index}));
+                        
+                    finalInstances.forEach(instance => {
                         const docRef = doc(firestore, 'widget_instances', instance.id);
                         batch.update(docRef, { order: instance.order });
                     });
@@ -430,55 +446,63 @@ export default function WidgetsPage() {
     
             if (!activeInstance || !targetAreaId) return;
     
-            let newInstances = [...localInstances];
             const sourceAreaId = activeInstance.widgetAreaId;
-    
-            // Find the index to insert at
-            let targetIndex;
-            // Case 1: Dragging into a different area (or same area, over an instance)
-            if (overInstance) {
-                targetIndex = newInstances.findIndex(i => i.id === overId);
-            } else {
-            // Case 2: Dragging into an empty area
-                targetIndex = newInstances.length;
-            }
             
-            // Create the new version of the moved instance
-            const movedInstance = {
-                ...activeInstance,
-                widgetAreaId: targetAreaId,
-            };
-
-            // Remove from old position and insert at new position
-            newInstances = newInstances.filter(i => i.id !== activeId);
-            newInstances.splice(targetIndex, 0, movedInstance);
+            // Optimistically update local state
+            setLocalInstances(previousInstances => {
+                if (!previousInstances) return [];
     
-            // Re-calculate order for all affected areas
-            const affectedAreaIds = new Set([sourceAreaId, targetAreaId]);
-            const finalInstances = widgetAreas?.reduce((acc, area) => {
-                const areaId = area.id;
+                const activeIndex = previousInstances.findIndex(i => i.id === activeId);
+                const overIndex = over.data.current?.isWidgetArea 
+                                ? previousInstances.length // Dropped on an area, append to the end temporarily
+                                : previousInstances.findIndex(i => i.id === overId);
+    
+                if (activeIndex === -1 || overIndex === -1) return previousInstances;
+    
+                // Create a mutable copy of the instances array
+                let newInstances = [...previousInstances];
                 
-                // Only re-index affected areas to avoid unnecessary writes
-                if (affectedAreaIds.has(areaId)) {
+                // If moving to a new area, update the widget's areaId
+                newInstances[activeIndex] = { ...newInstances[activeIndex], widgetAreaId: targetAreaId };
+    
+                // Reorder the array
+                newInstances = arrayMove(newInstances, activeIndex, overIndex);
+                
+                // Re-calculate order for all affected areas
+                const affectedAreaIds = new Set([sourceAreaId, targetAreaId]);
+                const finalInstances = widgetAreas?.reduce((acc, area) => {
+                    const areaId = area.id;
                     const itemsInArea = newInstances
                         .filter(i => i.widgetAreaId === areaId)
                         .map((item, index) => ({ ...item, order: index }));
                     return [...acc, ...itemsInArea];
-                }
-                // For unaffected areas, just add their existing items
-                return [...acc, ...newInstances.filter(i => i.widgetAreaId === areaId)];
-
-            }, [] as WidgetInstance[]) || [];
-            
-            setLocalInstances(finalInstances);
+                }, [] as WidgetInstance[]) || [];
+                
+                return finalInstances;
+            });
     
+            // After local state update, persist to Firestore
             if (!firestore) return;
             const batch = writeBatch(firestore);
-            finalInstances.forEach(instance => {
-                const docRef = doc(firestore, 'widget_instances', instance.id);
-                // Using set with merge to handle new instance creation during drag-and-drop
-                // and also update existing ones.
-                batch.set(docRef, instance, { merge: true });
+            
+            // Re-fetch the newly calculated instances from the updated local state
+            const finalInstances = (localInstances || []).map(instance => {
+                if (instance.id === activeInstance.id) {
+                    return { ...instance, widgetAreaId: targetAreaId };
+                }
+                return instance;
+            });
+
+            const affectedAreaIds = new Set([sourceAreaId, targetAreaId]);
+            affectedAreaIds.forEach(areaId => {
+                const itemsInArea = finalInstances
+                    .filter(i => i.widgetAreaId === areaId)
+                    .map((item, index) => ({ ...item, order: index }));
+                
+                itemsInArea.forEach(instance => {
+                    const docRef = doc(firestore, 'widget_instances', instance.id);
+                    batch.set(docRef, instance, { merge: true });
+                });
             });
     
             try {
