@@ -255,13 +255,45 @@
           "description": "The name of the currently active frontend theme."
         },
         "siteName": {
-          "type": "string",
-          "description": "The public name of the website."
+            "type": "string",
+            "description": "The public name of the website."
         }
       },
       "required": [
         "activeTheme"
       ]
+    },
+     "WidgetArea": {
+      "title": "Widget Area",
+      "description": "Represents a designated area in a theme where widgets can be placed, like a sidebar or footer.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the widget area (e.g., 'sidebar-primary')." },
+        "name": { "type": "string", "description": "A human-readable name for the area (e.g., 'Main Sidebar')." },
+        "description": { "type": "string", "description": "A short description of where this area appears in the theme." },
+        "theme": { "type": "string", "description": "The theme this widget area belongs to." }
+      },
+      "required": ["id", "name", "theme"]
+    },
+    "WidgetInstance": {
+      "title": "Widget Instance",
+      "description": "An instance of a specific widget placed within a widget area.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the widget instance." },
+        "widgetAreaId": { "type": "string", "description": "The ID of the WidgetArea this instance belongs to." },
+        "type": {
+          "type": "string",
+          "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html"]
+        },
+        "order": { "type": "number", "description": "The display order of the widget within its area." },
+        "config": {
+          "type": "object",
+          "description": "A flexible object to store widget-specific settings (e.g., title, number of posts to show)."
+        }
+      },
+      "required": ["id", "widgetAreaId", "type", "order"]
     }
   },
   "auth": {
@@ -361,10 +393,24 @@
           },
           "description": "Stores global configuration for the site, like the active theme."
         }
+      },
+       {
+        "path": "/widget_areas/{widgetAreaId}",
+        "definition": {
+          "entityName": "WidgetArea",
+          "schema": { "$ref": "#/backend/entities/WidgetArea" },
+          "description": "Stores defined widget areas for themes."
+        }
+      },
+      {
+        "path": "/widget_instances/{widgetInstanceId}",
+        "definition": {
+          "entityName": "WidgetInstance",
+          "schema": { "$ref": "#/backend/entities/WidgetInstance" },
+          "description": "Stores configured instances of widgets within specific areas."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts."
   }
 }
-
-    
