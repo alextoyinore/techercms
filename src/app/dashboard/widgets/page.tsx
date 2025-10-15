@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -574,40 +575,50 @@ export default function WidgetsPage() {
                 const activeIndex = prevInstances.findIndex((i) => i.id === activeId);
                 const overIndex = prevInstances.findIndex((i) => i.id === overId);
                 const activeInstance = prevInstances[activeIndex];
-
+        
+                if (!activeInstance || overIndex < 0) return prevInstances;
+        
                 const isDroppingOnArea = over.data.current?.isWidgetArea;
                 const destinationAreaId = isDroppingOnArea ? String(over.id) : prevInstances[overIndex].widgetAreaId;
-                
-                if (!activeInstance || !destinationAreaId) return prevInstances;
-
+        
                 let newItems = [...prevInstances];
-                let batch = writeBatch(firestore);
-
-                // If moving to a different area
+        
                 if (activeInstance.widgetAreaId !== destinationAreaId) {
-                    // Update the moved item's areaId
-                    newItems[activeIndex] = { ...activeInstance, widgetAreaId: destinationAreaId };
-
-                    // Re-sort to get the correct drop position
+                    const movedItem = { ...newItems[activeIndex], widgetAreaId: destinationAreaId };
+                    newItems.splice(activeIndex, 1);
+        
                     const itemsInDest = newItems.filter(i => i.widgetAreaId === destinationAreaId);
                     const overInDestIndex = isDroppingOnArea ? itemsInDest.length : itemsInDest.findIndex(i => i.id === overId);
-                    
-                    // Temporarily move to a placeholder array to reorder
-                    const activeItemForReorder = newItems.splice(activeIndex, 1)[0];
-                    newItems.splice(overIndex, 0, activeItemForReorder);
-                    
+        
+                    // Find the correct global index to insert into
+                    const globalOverIndex = isDroppingOnArea 
+                        ? newItems.length 
+                        : newItems.findIndex(i => i.id === overId);
+        
+                    newItems.splice(globalOverIndex, 0, movedItem);
                 } else {
-                     newItems = arrayMove(prevInstances, activeIndex, overIndex);
+                    newItems = arrayMove(prevInstances, activeIndex, overIndex);
                 }
-
-                // Re-calculate order for all affected instances and prepare batch write
+        
+                let batch = writeBatch(firestore);
                 const areasToUpdate = new Set([activeInstance.widgetAreaId, destinationAreaId]);
-                
+        
                 areasToUpdate.forEach(areaId => {
-                    const itemsInArea = newItems.filter(i => i.widgetAreaId === areaId);
-                    itemsInArea.forEach((item, index) => {
-                        if (item.order !== index) {
-                            const updatedItem = { ...item, order: index };
+                    const itemsInArea = newItems.filter(i => i.widgetAreaId === areaId).sort((a, b) => {
+                        // Find original index to sort stably before re-ordering
+                        const originalA = prevInstances.find(p => p.id === a.id);
+                        const originalB = prevInstances.find(p => p.id === b.id);
+                        if (a.widgetAreaId === b.widgetAreaId && a.widgetAreaId === activeInstance.widgetAreaId) {
+                             const idxA = prevInstances.findIndex(p => p.id === a.id);
+                             const idxB = prevInstances.findIndex(p => p.id === b.id);
+                             return idxA - idxB;
+                        }
+                        return a.order - b.order;
+                    });
+                     // Re-calculate order for all affected instances and prepare batch write
+                     itemsInArea.forEach((item, index) => {
+                        if (item.order !== index || item.widgetAreaId !== areaId) {
+                            const updatedItem = { ...item, order: index, widgetAreaId: areaId };
                             const itemIndexInNewItems = newItems.findIndex(i => i.id === item.id);
                             if(itemIndexInNewItems !== -1) {
                                 newItems[itemIndexInNewItems] = updatedItem;
@@ -713,15 +724,19 @@ export default function WidgetsPage() {
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent className="grid gap-4">
-                                {Object.entries(availableWidgets).map(([groupName, widgets]) => (
-                                    <div key={groupName} className="grid gap-2">
-                                        <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
-                                        {widgets.map((widget) => (
-                                            <AvailableWidgetCard key={widget.type} widget={widget} />
+                            <CardContent>
+                                <ScrollArea className="h-full max-h-[calc(100vh-16rem)]">
+                                    <div className="grid gap-4 pr-4">
+                                        {Object.entries(availableWidgets).map(([groupName, widgets]) => (
+                                            <div key={groupName} className="grid gap-2">
+                                                <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
+                                                {widgets.map((widget) => (
+                                                    <AvailableWidgetCard key={widget.type} widget={widget} />
+                                                ))}
+                                            </div>
                                         ))}
                                     </div>
-                                ))}
+                                </ScrollArea>
                             </CardContent>
                         </Card>
                     </div>
