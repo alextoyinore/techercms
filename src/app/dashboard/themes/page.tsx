@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/page-header';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, Palette } from 'lucide-react';
@@ -53,6 +53,7 @@ import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlo
 import { DraggableWidget } from '@/components/widgets/DraggableWidget';
 import { WidgetDropArea } from '@/components/widgets/WidgetDropArea';
 import { availableWidgets, Widget } from '@/components/widgets/widget-list';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const websiteThemes = [
     {
@@ -585,5 +586,3 @@ export default function ThemesPage() {
     </div>
   );
 }
-
-    
