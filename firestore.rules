@@ -16,7 +16,7 @@
  *
  * Key Security Decisions:
  * - Users can only create, update, and delete Pages, Posts, and Media that they own (i.e., where `authorId` matches their UID).
- * - Site settings can be read by anyone but can only be updated or deleted by an authenticated user.
+ * - Site settings can be read by anyone but can only be updated or deleted by any authenticated user.
  * - Listing of Pages, Posts, and Media is public.
  * - Categories, Tags, WidgetAreas, and WidgetInstances are managed by any authenticated user.
  *
@@ -122,8 +122,7 @@ service cloud.firestore {
      * @principle Restricts modification of site settings to authenticated users.
      */
     match /site_settings/config {
-      allow get: if true;
-      allow list: if true;
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
