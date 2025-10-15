@@ -255,66 +255,63 @@ export default function Dashboard() {
           />
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-1 grid gap-4 auto-rows-max">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Quick Draft</CardTitle>
-                    <CardDescription>Jot down a new post idea.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-2">
-                    <Input 
-                        placeholder="Draft Title" 
-                        value={draftTitle} 
-                        onChange={(e) => setDraftTitle(e.target.value)}
-                        disabled={isSavingDraft}
-                    />
-                    <Button onClick={handleSaveDraft} disabled={isSavingDraft}>
-                        {isSavingDraft ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
-                        ) : 'Save Draft'}
-                    </Button>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Recent Posts</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {isLoadingPosts ? (
-                       <div className="space-y-4">
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-5/6" />
-                            <Skeleton className="h-6 w-full" />
-                       </div>
-                    ) : recentPosts.length > 0 ? (
-                        <div className="space-y-4">
-                            {recentPosts.map(post => (
-                                <div key={post.id} className="flex justify-between items-center text-sm">
-                                    <Link href={`/dashboard/posts/edit/${post.id}`} className="hover:underline truncate" title={post.title}>
-                                        {post.title}
-                                    </Link>
-                                    <span className='text-muted-foreground shrink-0 ml-4'>
-                                        {post.createdAt ? format(post.createdAt.toDate(), 'MMM d') : ''}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground text-center">No recent posts.</p>
-                    )}
-                </CardContent>
-                <CardFooter>
-                    <Button variant="outline" asChild className="w-full">
-                        <Link href="/dashboard/posts">
-                            View All Posts <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-        <div className="lg:col-span-2 grid gap-4 auto-rows-max">
-            <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
+          <Card className="lg:col-span-1">
+              <CardHeader>
+                  <CardTitle className="font-headline">Quick Draft</CardTitle>
+                  <CardDescription>Jot down a new post idea.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-2">
+                  <Input 
+                      placeholder="Draft Title" 
+                      value={draftTitle} 
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      disabled={isSavingDraft}
+                  />
+                  <Button onClick={handleSaveDraft} disabled={isSavingDraft}>
+                      {isSavingDraft ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                      ) : 'Save Draft'}
+                  </Button>
+              </CardContent>
+          </Card>
+          <Card className="lg:col-span-1">
+              <CardHeader>
+                  <CardTitle className="font-headline">Recent Posts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  {isLoadingPosts ? (
+                     <div className="space-y-4">
+                          <Skeleton className="h-6 w-full" />
+                          <Skeleton className="h-6 w-5/6" />
+                          <Skeleton className="h-6 w-full" />
+                     </div>
+                  ) : recentPosts.length > 0 ? (
+                      <div className="space-y-4">
+                          {recentPosts.map(post => (
+                              <div key={post.id} className="flex justify-between items-center text-sm">
+                                  <Link href={`/dashboard/posts/edit/${post.id}`} className="hover:underline truncate" title={post.title}>
+                                      {post.title}
+                                  </Link>
+                                  <span className='text-muted-foreground shrink-0 ml-4'>
+                                      {post.createdAt ? format(post.createdAt.toDate(), 'MMM d') : ''}
+                                  </span>
+                              </div>
+                          ))}
+                      </div>
+                  ) : (
+                      <p className="text-sm text-muted-foreground text-center">No recent posts.</p>
+                  )}
+              </CardContent>
+              <CardFooter>
+                  <Button variant="outline" asChild className="w-full">
+                      <Link href="/dashboard/posts">
+                          View All Posts <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                  </Button>
+              </CardFooter>
+          </Card>
+          <Card className="md:col-span-1 lg:col-span-2">
             <CardHeader>
                 <CardTitle className="font-headline">Posts per Category</CardTitle>
                 <CardDescription>A breakdown of your content distribution.</CardDescription>
@@ -338,8 +335,8 @@ export default function Dashboard() {
                     </div>
                 )}
             </CardContent>
-            </Card>
-            <Card>
+          </Card>
+          <Card className="md:col-span-2 lg:col-span-3">
             <CardHeader>
                 <CardTitle className="font-headline">Content Over Time</CardTitle>
                 <CardDescription>Your publishing trend for the last 6 months.</CardDescription>
@@ -374,8 +371,7 @@ export default function Dashboard() {
                     </div>
                 )}
             </CardContent>
-            </Card>
-        </div>
+          </Card>
       </div>
     </div>
   );
