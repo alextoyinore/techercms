@@ -1,6 +1,6 @@
 'use client';
 
-import { Sidebar, SidebarFooter, SidebarProvider } from "@/components/ui/sidebar";
+import { Sidebar, SidebarFooter, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -59,6 +59,10 @@ export default function DashboardLayout({
           </div>
         </Sidebar>
         <div className="flex flex-col flex-1">
+          <header className="p-2 md:p-4 border-b flex items-center justify-between lg:hidden sticky top-0 bg-background z-10">
+              <SidebarTrigger />
+              <UserNav user={user} />
+          </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
       </div>

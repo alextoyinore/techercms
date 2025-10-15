@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
     FileText,
@@ -20,7 +19,6 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import type { User } from "firebase/auth";
-import { UserNav } from "./user-nav";
 
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -45,10 +43,6 @@ export function DashboardNav({ user }: { user: User | null }) {
                         Techer CMS
                     </span>
                 </Link>
-                {/* Mobile-only header elements */}
-                <div className="md:hidden flex items-center gap-2">
-                    <UserNav user={user} />
-                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
