@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from 'next/navigation';
+import { Textarea } from '@/components/ui/textarea';
 
 type ContentItem = {
   id: string;
@@ -82,6 +83,7 @@ export default function Dashboard() {
   const router = useRouter();
 
   const [draftTitle, setDraftTitle] = useState('');
+  const [draftContent, setDraftContent] = useState('');
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const postsCollection = useMemoFirebase(
@@ -207,8 +209,8 @@ export default function Dashboard() {
     const newPostRef = doc(collection(firestore, "posts"));
     const newPost = {
         title: draftTitle,
+        content: draftContent,
         status: 'draft',
-        content: '',
         excerpt: '',
         featuredImageUrl: '',
         slug: draftTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
@@ -225,6 +227,7 @@ export default function Dashboard() {
             action: <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/posts/edit/${newPostRef.id}`)}>Edit</Button>
         });
         setDraftTitle('');
+        setDraftContent('');
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -261,12 +264,19 @@ export default function Dashboard() {
                   <CardTitle className="font-headline">Quick Draft</CardTitle>
                   <CardDescription>Jot down a new post idea.</CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-2">
+              <CardContent className="grid gap-4">
                   <Input 
                       placeholder="Draft Title" 
                       value={draftTitle} 
                       onChange={(e) => setDraftTitle(e.target.value)}
                       disabled={isSavingDraft}
+                  />
+                  <Textarea 
+                      placeholder="Start writing your draft content here..."
+                      value={draftContent}
+                      onChange={(e) => setDraftContent(e.target.value)}
+                      disabled={isSavingDraft}
+                      rows={5}
                   />
                   <Button onClick={handleSaveDraft} disabled={isSavingDraft}>
                       {isSavingDraft ? (
