@@ -257,6 +257,14 @@
         "siteName": {
             "type": "string",
             "description": "The public name of the website."
+        },
+        "language": {
+            "type": "string",
+            "description": "The primary language of the website."
+        },
+        "timezone": {
+            "type": "string",
+            "description": "The timezone for the website."
         }
       },
       "required": [
@@ -348,7 +356,7 @@
           "params": [
             {
               "name": "tagId",
-              "description": "The unique identifier of the tag."
+              "description": "The unique identifier for the tag."
             }
           ]
         }

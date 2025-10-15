@@ -13,8 +13,6 @@ import {
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
 import { CheckCircle, Loader2, Palette } from 'lucide-react';
-import { themes } from '@/lib/themes';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
 import {
   Select,
@@ -34,12 +32,18 @@ import { ThemeCustomizer } from '@/components/theme-customizer';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { themes as defaultThemes, type Theme } from '@/lib/themes';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { timezones } from '@/lib/timezones';
+import { languages } from '@/lib/languages';
 
 type SiteSettings = {
   activeTheme?: string;
   siteName?: string;
   homepageType?: 'latest' | 'static';
   homepagePageId?: string;
+  language?: string;
+  timezone?: string;
 };
 
 type Page = {
@@ -58,6 +62,8 @@ export default function SettingsPage() {
   const [siteName, setSiteName] = useState('');
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
   const [homepagePageId, setHomepagePageId] = useState<string | undefined>(undefined);
+  const [language, setLanguage] = useState<string>('en');
+  const [timezone, setTimezone] = useState<string>('UTC');
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -77,6 +83,8 @@ export default function SettingsPage() {
       setSiteName(settings.siteName || '');
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
+      setLanguage(settings.language || 'en');
+      setTimezone(settings.timezone || 'UTC');
     }
   }, [settings]);
 
@@ -91,6 +99,8 @@ export default function SettingsPage() {
         homepageType,
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
         activeTheme: activeTheme.name,
+        language,
+        timezone,
     };
     try {
         await setDoc(doc(firestore, 'site_settings', 'config'), settingsToSave, { merge: true });
@@ -107,7 +117,6 @@ export default function SettingsPage() {
     if (newTheme) {
         setIsActivating(themeName);
         setActiveTheme(newTheme);
-        // Persist this change when the user saves all settings
         toast({ title: 'Theme Selected', description: `"${themeName}" is now active. Save settings to persist.` });
         setTimeout(() => setIsActivating(null), 1000);
     }
@@ -134,6 +143,36 @@ export default function SettingsPage() {
                     <Label htmlFor="siteName">Site Name</Label>
                     <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
                     <p className="text-sm text-muted-foreground">This name is displayed publicly on your site.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="language">Language</Label>
+                        <Select value={language} onValueChange={setLanguage}>
+                            <SelectTrigger id='language'>
+                                <SelectValue placeholder="Select a language..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {languages.map(lang => (
+                                    <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-muted-foreground">The primary language of your site.</p>
+                    </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="timezone">Timezone</Label>
+                        <Select value={timezone} onValueChange={setTimezone}>
+                            <SelectTrigger id='timezone'>
+                                <SelectValue placeholder="Select a timezone..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {timezones.map(tz => (
+                                    <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-muted-foreground">Set the timezone for your site.</p>
+                    </div>
                 </div>
                 <Separator />
                 <div className="grid gap-4">
