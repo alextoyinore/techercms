@@ -13,6 +13,9 @@ import { TradingTickerWidget } from '@/components/widgets/TradingTickerWidget';
 import { BreakingNewsWidget } from '@/components/widgets/BreakingNewsWidget';
 import { LiveScoreWidget } from '@/components/widgets/LiveScoreWidget';
 import { SportingTablesWidget } from '@/components/widgets/SportingTablesWidget';
+import { TextWidget } from '@/components/widgets/TextWidget';
+import { GalleryWidget } from '@/components/widgets/GalleryWidget';
+import { NavigationWidget } from '@/components/widgets/NavigationWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -40,6 +43,9 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'breaking-news': BreakingNewsWidget,
     'live-score': LiveScoreWidget,
     'sporting-tables': SportingTablesWidget,
+    'text': TextWidget,
+    'gallery': GalleryWidget,
+    'navigation-menu': NavigationWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
@@ -76,7 +82,7 @@ export function WidgetArea({ areaName }: { areaName: string }) {
     }
 
     if (!sortedInstances || sortedInstances.length === 0) {
-        return null; // Don't render anything if there are no widgets for this area
+        return null;
     }
 
     return (
@@ -86,7 +92,6 @@ export function WidgetArea({ areaName }: { areaName: string }) {
                 if (WidgetComponent) {
                     return <WidgetComponent key={instance.id} {...instance.config} />;
                 }
-                // Render a placeholder for unknown widget types
                 return (
                     <Card key={instance.id}>
                         <CardHeader>

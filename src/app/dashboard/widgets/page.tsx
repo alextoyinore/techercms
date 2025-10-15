@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -46,14 +47,19 @@ const socialPlatforms = [
 
 const availableWidgets = {
     'Content': [
+        { type: 'text', name: 'Text', description: 'Display a block of text with an optional title.' },
+        { type: 'image', name: 'Image', description: 'Display an image from your media library.' },
+        { type: 'gallery', name: 'Gallery', description: 'Display a gallery of images.' },
+        { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
         { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
         { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
         { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
-        { type: 'image', name: 'Image', description: 'Display an image from your media library.' },
+    ],
+    'Navigation': [
+        { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a list of links.' },
     ],
     'Utility': [
         { type: 'search', name: 'Search', description: 'Display a search form.' },
-        { type: 'custom-html', name: 'Custom HTML', description: 'Enter arbitrary HTML.' },
     ],
     'Social': [
         { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
@@ -89,6 +95,17 @@ type SocialLink = {
     url: string;
 }
 
+type NavLink = {
+    id: string;
+    label: string;
+    url: string;
+}
+
+type GalleryImage = {
+    id: string;
+    url: string;
+}
+
 type WidgetInstance = {
     id: string;
     widgetAreaId: string;
@@ -97,11 +114,14 @@ type WidgetInstance = {
     config?: {
         title?: string;
         html?: string;
+        text?: string;
         count?: number;
         imageUrl?: string;
         caption?: string;
         linkUrl?: string;
         socialLinks?: SocialLink[];
+        galleryImages?: GalleryImage[];
+        navLinks?: NavLink[];
     }
 }
 
@@ -149,7 +169,6 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     const [config, setConfig] = useState(instance.config || {});
     
     useEffect(() => {
-        // Reset local config state if sheet closes or instance config prop changes
         if (!isSheetOpen || instance.config) {
             setConfig(instance.config || {});
         }
@@ -176,9 +195,143 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
         newLinks.splice(index, 1);
         setConfig({ ...config, socialLinks: newLinks });
     }
+    
+    const handleNavLinkChange = (index: number, field: 'label' | 'url', value: string) => {
+        const newLinks = [...(config.navLinks || [])];
+        newLinks[index] = { ...newLinks[index], [field]: value };
+        setConfig({ ...config, navLinks: newLinks });
+    }
+    
+    const addNavLink = () => {
+        const newLink: NavLink = { id: `nav-link-${Date.now()}`, label: 'New Link', url: '#' };
+        setConfig({ ...config, navLinks: [...(config.navLinks || []), newLink] });
+    }
+
+    const removeNavLink = (index: number) => {
+        const newLinks = [...(config.navLinks || [])];
+        newLinks.splice(index, 1);
+        setConfig({ ...config, navLinks: newLinks });
+    }
+
+    const addGalleryImage = (url: string) => {
+        const newImage: GalleryImage = { id: `gallery-img-${Date.now()}`, url };
+        setConfig({ ...config, galleryImages: [...(config.galleryImages || []), newImage] });
+    };
+
+    const removeGalleryImage = (index: number) => {
+        const newImages = [...(config.galleryImages || [])];
+        newImages.splice(index, 1);
+        setConfig({ ...config, galleryImages: newImages });
+    };
 
     const renderConfigFields = () => {
         switch (instance.type) {
+            case 'text':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Widget Title (optional)"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-text">Content</Label>
+                            <Textarea
+                                id="widget-text"
+                                className="min-h-40"
+                                placeholder="Enter your text content here."
+                                value={config.text || ''}
+                                onChange={(e) => setConfig({ ...config, text: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                );
+             case 'gallery':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Gallery Title (optional)"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Images</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {(config.galleryImages || []).map((image: GalleryImage, index: number) => (
+                                    <div key={image.id} className="relative group">
+                                        <Image src={image.url} alt={`Gallery image ${index + 1}`} width={100} height={100} className="rounded-md object-cover aspect-square" />
+                                        <Button
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
+                                            onClick={() => removeGalleryImage(index)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                             <MediaLibrary onSelect={addGalleryImage}>
+                                <Button variant="outline" className="w-full">
+                                    <Plus className="mr-2 h-4 w-4" /> Add Image from Library
+                                </Button>
+                            </MediaLibrary>
+                        </div>
+                    </div>
+                );
+             case 'navigation-menu':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Menu Title"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-4">
+                            <Label>Menu Links</Label>
+                            {(config.navLinks || []).map((link: NavLink, index: number) => (
+                                <div key={link.id} className="grid gap-2 rounded-md border p-3">
+                                    <div className='grid gap-2'>
+                                        <Label htmlFor={`label-${index}`} className='text-xs'>Link Label</Label>
+                                        <Input
+                                            id={`label-${index}`}
+                                            placeholder="Home"
+                                            value={link.label}
+                                            onChange={(e) => handleNavLinkChange(index, 'label', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className='grid gap-2'>
+                                        <Label htmlFor={`url-${index}`} className='text-xs'>URL</Label>
+                                        <Input
+                                            id={`url-${index}`}
+                                            placeholder="/"
+                                            value={link.url}
+                                            onChange={(e) => handleNavLinkChange(index, 'url', e.target.value)}
+                                        />
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => removeNavLink(index)} className='text-destructive hover:text-destructive w-fit'>
+                                        <Trash2 className="mr-2 h-3 w-3" /> Remove
+                                    </Button>
+                                </div>
+                            ))}
+                            <Button variant="outline" onClick={addNavLink}>
+                                <Plus className="mr-2 h-4 w-4" /> Add Link
+                            </Button>
+                        </div>
+                    </div>
+                );
             case 'trading-ticker':
             case 'breaking-news':
             case 'live-score':
@@ -534,7 +687,6 @@ export default function WidgetsPage() {
         
         if (!targetAreaId) return;
 
-        // SCENARIO 1: Dragging a new widget from the "Available" list
         if (fromAvailable && firestore) {
             try {
                 const widgetType = active.data.current?.widget.type;
@@ -565,7 +717,6 @@ export default function WidgetsPage() {
             return;
         }
 
-        // SCENARIO 2: Reordering widgets within or between areas
         if (!fromAvailable && localInstances && firestore) {
             const activeId = String(active.id);
             const overId = String(over.id);
@@ -591,7 +742,6 @@ export default function WidgetsPage() {
                     const itemsInDest = newItems.filter(i => i.widgetAreaId === destinationAreaId);
                     const overInDestIndex = isDroppingOnArea ? itemsInDest.length : itemsInDest.findIndex(i => i.id === overId);
         
-                    // Find the correct global index to insert into
                     const globalOverIndex = isDroppingOnArea 
                         ? newItems.length 
                         : newItems.findIndex(i => i.id === overId);
@@ -606,7 +756,6 @@ export default function WidgetsPage() {
         
                 areasToUpdate.forEach(areaId => {
                     const itemsInArea = newItems.filter(i => i.widgetAreaId === areaId).sort((a, b) => {
-                        // Find original index to sort stably before re-ordering
                         const originalA = prevInstances.find(p => p.id === a.id);
                         const originalB = prevInstances.find(p => p.id === b.id);
                         if (a.widgetAreaId === b.widgetAreaId && a.widgetAreaId === activeInstance.widgetAreaId) {
@@ -616,7 +765,6 @@ export default function WidgetsPage() {
                         }
                         return a.order - b.order;
                     });
-                     // Re-calculate order for all affected instances and prepare batch write
                      itemsInArea.forEach((item, index) => {
                         if (item.order !== index || item.widgetAreaId !== areaId) {
                             const updatedItem = { ...item, order: index, widgetAreaId: areaId };
@@ -632,7 +780,7 @@ export default function WidgetsPage() {
         
                 batch.commit().catch(error => {
                     toast({ variant: 'destructive', title: 'Error updating widgets', description: error.message });
-                    setLocalInstances(widgetInstances); // Revert on error
+                    setLocalInstances(widgetInstances);
                 });
                 
                 return newItems;
@@ -718,24 +866,26 @@ export default function WidgetsPage() {
                         </Card>
                     </div>
                     <div className="lg:col-span-1 sticky top-20">
-                        <Card className="flex flex-col max-h-[calc(100vh-6rem)]">
+                        <Card className="flex flex-col max-h-[calc(100vh-16rem)]">
                             <CardHeader>
                                 <CardTitle className="font-headline">Available Widgets</CardTitle>
                                  <CardDescription>
                                     Drag these to a widget area on the left.
                                  </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-1 overflow-y-auto">
-                                <div className="grid gap-4 pr-1">
-                                    {Object.entries(availableWidgets).map(([groupName, widgets]) => (
-                                        <div key={groupName} className="grid gap-2">
-                                            <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
-                                            {widgets.map((widget) => (
-                                                <AvailableWidgetCard key={widget.type} widget={widget} />
-                                            ))}
-                                        </div>
-                                    ))}
-                                </div>
+                            <CardContent className="flex-1 -mx-6 px-6">
+                                <ScrollArea className="h-full pr-6">
+                                    <div className="grid gap-4">
+                                        {Object.entries(availableWidgets).map(([groupName, widgets]) => (
+                                            <div key={groupName} className="grid gap-2">
+                                                <h4 className="font-medium text-sm text-muted-foreground">{groupName}</h4>
+                                                {widgets.map((widget) => (
+                                                    <AvailableWidgetCard key={widget.type} widget={widget} />
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
                             </CardContent>
                         </Card>
                     </div>
@@ -754,3 +904,4 @@ export default function WidgetsPage() {
         </DndContext>
     );
 }
+
