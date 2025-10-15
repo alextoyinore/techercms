@@ -3,6 +3,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { useMemo } from 'react';
 import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
+import { CategoriesListWidget } from '@/components/widgets/CategoriesListWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -20,8 +21,7 @@ type WidgetArea = {
 
 const widgetComponents: Record<string, React.FC<any>> = {
     'recent-posts': RecentPostsWidget,
-    // Future widgets can be added here
-    // 'categories-list': CategoriesListWidget,
+    'categories-list': CategoriesListWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
@@ -63,7 +63,17 @@ export function WidgetArea({ areaName }: { areaName: string }) {
                 if (WidgetComponent) {
                     return <WidgetComponent key={instance.id} {...instance.config} />;
                 }
-                return null;
+                // Render a placeholder for unknown widget types
+                return (
+                    <Card key={instance.id}>
+                        <CardHeader>
+                            <CardTitle className="text-base">Unknown Widget</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">Widget type "{instance.type}" is not implemented.</p>
+                        </CardContent>
+                    </Card>
+                )
             })}
         </>
     );
