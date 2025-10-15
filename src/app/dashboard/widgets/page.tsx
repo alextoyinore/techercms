@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/accordion"
 import { GripVertical } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, addDoc } from 'firebase/firestore';
-import { DndContext, useDraggable, useDroppable, DragEndEvent, DragOverlay, Active, DragStartEvent } from '@dnd-kit/core';
-import { SortableContext, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { collection, doc, addDoc, writeBatch } from 'firebase/firestore';
+import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,20 +47,14 @@ type WidgetInstance = {
 type AvailableWidget = typeof availableWidgets[0];
 
 function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: `available-${widget.type}`,
-        data: { widget },
+        data: { widget, from: 'available' },
     });
-
-    const style = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 100,
-    } : undefined;
 
     return (
         <div 
-            ref={setNodeRef} 
-            style={style} 
+            ref={setNodeRef}
             className={`flex items-start gap-2 rounded-md border p-3 bg-muted/50 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
             {...listeners} 
             {...attributes}
@@ -74,20 +68,30 @@ function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
     )
 }
 
-function WidgetInstanceCard({ instance }: { instance: WidgetInstance }) {
+function SortableWidgetInstance({ instance }: { instance: WidgetInstance }) {
     const widgetInfo = availableWidgets.find(w => w.type === instance.type);
     const name = widgetInfo?.name || instance.type;
-    
+
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+         id: instance.id,
+         data: { instance, from: 'area' } 
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 100 : 'auto',
+    };
+
     return (
-        <div className="flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing">
-            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 shadow-lg' : ''}`}>
+             <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="grid gap-0.5">
                 <p className="font-medium">{name}</p>
             </div>
         </div>
     );
 }
-
 
 function WidgetPlaceholder() {
     return (
@@ -97,40 +101,11 @@ function WidgetPlaceholder() {
     )
 }
 
-function DroppableWidgetArea({ area, widgets }: { area: WidgetArea, widgets: WidgetInstance[] }) {
-    const { setNodeRef } = useDroppable({
-        id: area.id,
-    });
-    
-    return (
-         <Card>
-            <AccordionItem value={area.id} className="border-b-0">
-                <AccordionTrigger className="p-4 hover:no-underline">
-                    <div className="flex-1 text-left">
-                        <h3 className="font-semibold">{area.name}</h3>
-                        <p className="text-sm text-muted-foreground">{area.description}</p>
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 pt-0">
-                    <div ref={setNodeRef} className="grid gap-2 min-h-[80px]">
-                        {widgets && widgets.length > 0 ? (
-                            widgets.map(instance => (
-                                <WidgetInstanceCard key={instance.id} instance={instance} />
-                            ))
-                        ) : (
-                            <WidgetPlaceholder />
-                        )}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-        </Card>
-    );
-}
 
 export default function WidgetsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const [activeDragItem, setActiveDragItem] = useState<Active | null>(null);
+    const [activeItem, setActiveItem] = useState<any>(null);
 
     const areasCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_areas') : null, [firestore]);
     const instancesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'widget_instances') : null, [firestore]);
@@ -138,9 +113,18 @@ export default function WidgetsPage() {
     const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(areasCollection);
     const { data: widgetInstances, isLoading: isLoadingInstances } = useCollection<WidgetInstance>(instancesCollection);
 
+    const [localInstances, setLocalInstances] = useState<WidgetInstance[] | null>(null);
+
+     useEffect(() => {
+        if (widgetInstances) {
+            setLocalInstances(widgetInstances);
+        }
+    }, [widgetInstances]);
+
+
     const widgetsByArea = useMemo(() => {
-        if (!widgetInstances) return {};
-        return widgetInstances.reduce((acc, instance) => {
+        if (!localInstances) return {};
+        return localInstances.reduce((acc, instance) => {
             if (!acc[instance.widgetAreaId]) {
                 acc[instance.widgetAreaId] = [];
             }
@@ -148,15 +132,20 @@ export default function WidgetsPage() {
             acc[instance.widgetAreaId].sort((a, b) => a.order - b.order);
             return acc;
         }, {} as Record<string, WidgetInstance[]>);
-    }, [widgetInstances]);
+    }, [localInstances]);
 
+    const sensors = useSensors(useSensor(PointerSensor));
 
     const handleDragStart = (event: DragStartEvent) => {
-        setActiveDragItem(event.active);
+        if(event.active.data.current?.from === 'available') {
+            setActiveItem(event.active.data.current?.widget);
+        } else {
+            setActiveItem(event.active.data.current?.instance);
+        }
     };
 
     const handleDragEnd = async (event: DragEndEvent) => {
-        setActiveDragItem(null);
+        setActiveItem(null);
         const { active, over } = event;
 
         if (!over) return;
@@ -164,24 +153,31 @@ export default function WidgetsPage() {
         const activeId = active.id.toString();
         const overId = over.id.toString();
 
-        const isAddingNewWidget = activeId.startsWith('available-');
+        const fromAvailable = active.data.current?.from === 'available';
+        const targetIsArea = widgetAreas?.some(a => a.id === overId) ?? false;
+        const targetIsInstance = localInstances?.some(i => i.id === overId) ?? false;
 
-        if (isAddingNewWidget) {
-            if (!firestore) return;
+        // Scenario 1: Dragging a new widget into an area
+        if (fromAvailable && (targetIsArea || targetIsInstance)) {
             const widgetType = active.data.current?.widget.type;
-            const targetAreaId = overId;
+            const widgetName = active.data.current?.widget.name;
 
-            // Ensure the drop target is a valid widget area
+            let targetAreaId = overId;
+            // If we dropped on an instance, get its areaId
+            if (targetIsInstance) {
+                targetAreaId = localInstances?.find(i => i.id === overId)?.widgetAreaId ?? '';
+            }
+
             const targetArea = widgetAreas?.find(area => area.id === targetAreaId);
-            if (!targetArea) return;
+            if (!targetArea || !firestore) return;
 
             const areaWidgets = widgetsByArea[targetAreaId] || [];
 
             const newWidgetInstance = {
                 widgetAreaId: targetAreaId,
                 type: widgetType,
-                order: areaWidgets.length, // Add to the end
-                config: {}, // Default empty config
+                order: areaWidgets.length,
+                config: {},
             };
             
             try {
@@ -189,7 +185,7 @@ export default function WidgetsPage() {
                 await addDoc(instancesRef, newWidgetInstance);
                 toast({
                     title: "Widget Added",
-                    description: `The "${active.data.current?.widget.name}" widget was added to the "${targetArea.name}" area.`
+                    description: `The "${widgetName}" widget was added to the "${targetArea.name}" area.`
                 })
             } catch (error: any) {
                 toast({
@@ -199,19 +195,42 @@ export default function WidgetsPage() {
                 });
             }
         }
-    };
-    
-    const activeDraggableWidget = useMemo(() => {
-        if (!activeDragItem) return null;
-        const activeId = activeDragItem.id.toString();
-        if (activeId.startsWith('available-')) {
-            return activeDragItem.data.current?.widget as AvailableWidget;
+
+        // Scenario 2: Reordering widgets within the same area
+        if (!fromAvailable && targetIsInstance && localInstances) {
+            const activeInstance = localInstances.find(i => i.id === activeId);
+            const overInstance = localInstances.find(i => i.id === overId);
+            
+            if (activeInstance && overInstance && activeInstance.widgetAreaId === overInstance.widgetAreaId) {
+                const areaId = activeInstance.widgetAreaId;
+                const oldIndex = widgetsByArea[areaId].findIndex(i => i.id === activeId);
+                const newIndex = widgetsByArea[areaId].findIndex(i => i.id === overId);
+
+                if (oldIndex !== newIndex) {
+                    const movedInstances = arrayMove(widgetsByArea[areaId], oldIndex, newIndex);
+                    
+                    const updatedLocalInstances = localInstances.filter(i => i.widgetAreaId !== areaId).concat(movedInstances);
+                    setLocalInstances(updatedLocalInstances);
+
+                    if (!firestore) return;
+                    const batch = writeBatch(firestore);
+                    movedInstances.forEach((instance, index) => {
+                        const docRef = doc(firestore, 'widget_instances', instance.id);
+                        batch.update(docRef, { order: index });
+                    });
+                    await batch.commit().catch(error => {
+                        toast({ variant: 'destructive', title: 'Error updating order', description: error.message });
+                        setLocalInstances(widgetInstances); // Revert on error
+                    });
+                }
+            }
         }
-        return null;
-    }, [activeDragItem]);
+    };
 
     return (
         <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
@@ -227,15 +246,40 @@ export default function WidgetsPage() {
                             <CardHeader>
                                 <CardTitle className="font-headline">Widget Areas</CardTitle>
                                 <CardDescription>
-                                    Drag widgets from the right to a widget area below to activate them.
+                                    Drag widgets from the right to a widget area below to activate them. Drag existing widgets to reorder.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                <Accordion type="multiple" defaultValue={widgetAreas?.map(a => a.id) || []} className="space-y-4">
                                     {isLoadingAreas && <p>Loading widget areas...</p>}
-                                    {widgetAreas?.map((area) => (
-                                        <DroppableWidgetArea key={area.id} area={area} widgets={widgetsByArea[area.id] || []} />
-                                    ))}
+                                    {widgetAreas?.map((area) => {
+                                        const areaWidgets = widgetsByArea[area.id] || [];
+                                        return (
+                                            <Card key={area.id}>
+                                                <AccordionItem value={area.id} className="border-b-0">
+                                                    <AccordionTrigger className="p-4 hover:no-underline">
+                                                        <div className="flex-1 text-left">
+                                                            <h3 className="font-semibold">{area.name}</h3>
+                                                            <p className="text-sm text-muted-foreground">{area.description}</p>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="p-4 pt-0">
+                                                        <SortableContext items={areaWidgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+                                                            <div className="grid gap-2 min-h-[80px]">
+                                                                {areaWidgets.length > 0 ? (
+                                                                    areaWidgets.map(instance => (
+                                                                        <SortableWidgetInstance key={instance.id} instance={instance} />
+                                                                    ))
+                                                                ) : (
+                                                                    <WidgetPlaceholder />
+                                                                )}
+                                                            </div>
+                                                        </SortableContext>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            </Card>
+                                        )
+                                    })}
                                 </Accordion>
                             </CardContent>
                         </Card>
@@ -258,16 +302,22 @@ export default function WidgetsPage() {
                 </div>
             </div>
              <DragOverlay>
-                {activeDraggableWidget ? (
-                    <AvailableWidgetCard widget={activeDraggableWidget} />
-                ) : activeDragItem ? (
-                    // Placeholder for when we drag existing widgets
-                    <div className="flex items-start gap-2 rounded-md border p-3 bg-card cursor-grabbing shadow-lg">
-                        <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
-                        <div className="grid gap-0.5">
-                            <p className="font-medium">Moving Widget...</p>
+                {activeItem ? (
+                    activeItem.from === 'available' ? (
+                         <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
+                            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div className="grid gap-0.5">
+                                <p className="font-medium">{activeItem.name}</p>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="flex items-start gap-2 rounded-md border p-3 bg-card shadow-lg cursor-grabbing">
+                            <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+                            <div className="grid gap-0.5">
+                                <p className="font-medium">{availableWidgets.find(w => w.type === activeItem.type)?.name || activeItem.type}</p>
+                            </div>
+                        </div>
+                    )
                 ) : null}
             </DragOverlay>
         </DndContext>
