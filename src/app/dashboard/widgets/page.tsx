@@ -15,7 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical } from "lucide-react";
+import { GripVertical, X } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
@@ -23,7 +23,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const availableWidgets = [
     { type: 'recent-posts', name: 'Recent Posts', description: 'Display a list of your most recent posts.' },
@@ -79,7 +79,7 @@ function AvailableWidgetCard({ widget }: { widget: AvailableWidget }) {
     )
 }
 
-function SortableWidgetInstance({ instance }: { instance: WidgetInstance }) {
+function SortableWidgetInstance({ instance, onDelete }: { instance: WidgetInstance; onDelete: (id: string) => void }) {
     const widgetInfo = availableWidgets.find(w => w.type === instance.type);
     const name = widgetInfo?.name || instance.type;
 
@@ -95,11 +95,20 @@ function SortableWidgetInstance({ instance }: { instance: WidgetInstance }) {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(`flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
-             <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div className="grid gap-0.5">
-                <p className="font-medium">{name}</p>
+        <div ref={setNodeRef} style={style}  className={cn(`relative flex items-start gap-2 rounded-md border p-3 bg-card cursor-grab active:cursor-grabbing`, isDragging && 'opacity-50 shadow-lg')}>
+             <div {...attributes} {...listeners} className="flex-grow flex items-start gap-2">
+                <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="grid gap-0.5">
+                    <p className="font-medium">{name}</p>
+                </div>
             </div>
+            <button
+                onClick={() => onDelete(instance.id)}
+                className="absolute top-1 right-1 z-10 p-1 text-muted-foreground hover:text-destructive rounded-full hover:bg-destructive/10"
+                aria-label="Remove widget"
+            >
+                <X className="h-3 w-3" />
+            </button>
         </div>
     );
 }
@@ -176,6 +185,29 @@ export default function WidgetsPage() {
             setActiveItem(event.active.data.current?.instance);
         }
     };
+    
+    const handleDeleteWidget = (instanceId: string) => {
+        if (!firestore) return;
+
+        const widgetName = localInstances?.find(i => i.id === instanceId)?.type || 'Widget';
+        
+        try {
+            deleteDocumentNonBlocking(doc(firestore, 'widget_instances', instanceId));
+            
+            setLocalInstances(prev => (prev || []).filter(i => i.id !== instanceId));
+
+            toast({
+                title: "Widget Removed",
+                description: `The "${widgetName}" widget has been removed.`
+            });
+        } catch(error: any) {
+             toast({
+                variant: "destructive",
+                title: "Error Removing Widget",
+                description: error.message || "Could not remove the widget.",
+            });
+        }
+    };
 
     const handleDragEnd = async (event: DragEndEvent) => {
         setActiveItem(null);
@@ -214,12 +246,10 @@ export default function WidgetsPage() {
             try {
                 const instancesRef = collection(firestore, 'widget_instances');
                 // Use addDocumentNonBlocking and handle promise
-                addDocumentNonBlocking(instancesRef, newWidgetData)
-                    .then(newDocRef => {
-                         if (newDocRef) {
-                            setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
-                         }
-                    });
+                const newDocRef = await addDocumentNonBlocking(instancesRef, newWidgetData);
+                 if (newDocRef) {
+                    setLocalInstances(prev => [...(prev || []), { ...newWidgetData, id: newDocRef.id }]);
+                 }
                 
                 toast({
                     title: "Widget Added",
@@ -236,79 +266,68 @@ export default function WidgetsPage() {
             return;
         }
 
-        // Scenario 2: Reordering widgets within the same area
+        // Scenario 2: Reordering widgets
         if (!fromAvailable && localInstances) {
             const activeInstance = localInstances.find(i => i.id === activeId);
-            const overInstance = localInstances.find(i => i.id === overId);
             
-            // Check if dropping over an empty area or over another widget
-            const overIsArea = over.data.current?.isWidgetArea;
+            // Determine if dropping over an area or another instance
+            const targetAreaId = over.data.current?.isWidgetArea ? overId : over.data.current?.instance?.widgetAreaId;
+            const targetInstanceId = over.data.current?.isWidgetArea ? null : overId;
 
-            if (activeInstance && (overInstance || overIsArea)) {
-                const areaId = overIsArea ? overId : overInstance?.widgetAreaId;
-                if (!areaId) return;
+            if (!activeInstance || !targetAreaId) return;
 
-                const areaWidgets = widgetsByArea[areaId] || [];
-                const oldIndex = localInstances.findIndex(i => i.id === activeId);
-                let newIndex: number;
+            const sourceAreaWidgets = widgetsByArea[activeInstance.widgetAreaId] || [];
+            const targetAreaWidgets = widgetsByArea[targetAreaId] || [];
+
+            let updatedInstances: WidgetInstance[];
+
+            if (activeInstance.widgetAreaId === targetAreaId) {
+                // Reordering within the same area
+                const oldIndex = sourceAreaWidgets.findIndex(i => i.id === activeId);
+                const newIndex = targetInstanceId ? targetAreaWidgets.findIndex(i => i.id === targetInstanceId) : targetAreaWidgets.length;
                 
-                if (activeInstance.widgetAreaId !== areaId) { // Moving to a different area
-                    const newAreaWidgets = widgetsByArea[areaId] || [];
-                    newIndex = newAreaWidgets.length;
-                    
-                    const movedInstance = { ...activeInstance, widgetAreaId: areaId, order: newIndex };
-                    const sourceAreaWidgets = (widgetsByArea[activeInstance.widgetAreaId] || []).filter(i => i.id !== activeId);
+                if (oldIndex === newIndex) return;
 
-                    const newLocalState = localInstances.map(i => i.id === activeId ? movedInstance : i);
-                    
-                    setLocalInstances(newLocalState);
-                    
-                    if (!firestore) return;
+                const reorderedInArea = arrayMove(sourceAreaWidgets, oldIndex, newIndex);
+                
+                updatedInstances = localInstances.map(inst => {
+                    if (inst.widgetAreaId !== targetAreaId) return inst;
+                    const newOrder = reorderedInArea.findIndex(i => i.id === inst.id);
+                    return { ...inst, order: newOrder };
+                });
 
-                    const batch = writeBatch(firestore);
-                    const docRef = doc(firestore, 'widget_instances', activeId);
-                    batch.update(docRef, { widgetAreaId: areaId, order: newIndex });
-                    
-                    // Re-order source area
-                    sourceAreaWidgets.forEach((instance, index) => {
-                        const ref = doc(firestore, 'widget_instances', instance.id);
-                        batch.update(ref, { order: index });
-                    });
-                    
-                    await batch.commit().catch(error => {
-                        toast({ variant: 'destructive', title: 'Error moving widget', description: error.message });
-                        setLocalInstances(widgetInstances); // Revert on error
-                    });
+            } else {
+                // Moving to a different area
+                const oldIndex = sourceAreaWidgets.findIndex(i => i.id === activeId);
+                const newIndex = targetInstanceId ? targetAreaWidgets.findIndex(i => i.id === targetInstanceId) : targetAreaWidgets.length;
 
+                const [movedItem] = sourceAreaWidgets.splice(oldIndex, 1);
+                targetAreaWidgets.splice(newIndex, 0, { ...movedItem, widgetAreaId: targetAreaId });
+                
+                const reorderedSource = sourceAreaWidgets.map((item, index) => ({...item, order: index}));
+                const reorderedTarget = targetAreaWidgets.map((item, index) => ({...item, widgetAreaId: targetAreaId, order: index}));
 
-                } else if(overInstance) { // Reordering within the same area
-                    const oldIndexInArea = areaWidgets.findIndex(i => i.id === activeId);
-                    const newIndexInArea = areaWidgets.findIndex(i => i.id === overId);
-                    
-                    if (oldIndexInArea !== newIndexInArea) {
-                        const reorderedInstances = arrayMove(areaWidgets, oldIndexInArea, newIndexInArea);
-                        
-                        const updatedLocalInstances = localInstances.map(i => {
-                            const reorderedIndex = reorderedInstances.findIndex(ri => ri.id === i.id);
-                            if (i.widgetAreaId === areaId && reorderedIndex !== -1) {
-                                return { ...i, order: reorderedIndex };
-                            }
-                            return i;
-                        });
-                        setLocalInstances(updatedLocalInstances);
+                updatedInstances = localInstances
+                    .filter(inst => inst.widgetAreaId !== activeInstance.widgetAreaId && inst.widgetAreaId !== targetAreaId)
+                    .concat(reorderedSource, reorderedTarget);
+            }
+            
+            setLocalInstances(updatedInstances);
+            
+            // Persist changes to Firestore
+            if (!firestore) return;
+            const batch = writeBatch(firestore);
+            updatedInstances.forEach(instance => {
+                const docRef = doc(firestore, 'widget_instances', instance.id);
+                batch.set(docRef, instance); // Use set to handle moves and reorders
+            });
 
-                        if (!firestore) return;
-                        const batch = writeBatch(firestore);
-                        reorderedInstances.forEach((instance, index) => {
-                            const docRef = doc(firestore, 'widget_instances', instance.id);
-                            batch.update(docRef, { order: index });
-                        });
-                        await batch.commit().catch(error => {
-                            toast({ variant: 'destructive', title: 'Error updating order', description: error.message });
-                            setLocalInstances(widgetInstances); // Revert on error
-                        });
-                    }
-                }
+            try {
+                await batch.commit();
+                toast({ title: "Widgets updated" });
+            } catch (error: any) {
+                toast({ variant: 'destructive', title: 'Error updating widgets', description: error.message });
+                setLocalInstances(widgetInstances); // Revert on error
             }
         }
     };
@@ -316,7 +335,7 @@ export default function WidgetsPage() {
     function DroppableWidgetArea({ area, areaWidgets }: { area: WidgetArea, areaWidgets: WidgetInstance[] }) {
         const { setNodeRef, isOver } = useDroppable({
             id: area.id,
-            data: { isWidgetArea: true },
+            data: { isWidgetArea: true, areaId: area.id },
         });
 
         return (
@@ -325,7 +344,7 @@ export default function WidgetsPage() {
                     <div className="grid gap-2">
                         {areaWidgets.length > 0 ? (
                             areaWidgets.map(instance => (
-                                <SortableWidgetInstance key={instance.id} instance={instance} />
+                                <SortableWidgetInstance key={instance.id} instance={instance} onDelete={handleDeleteWidget} />
                             ))
                         ) : (
                             <WidgetPlaceholder />
