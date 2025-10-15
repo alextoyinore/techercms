@@ -63,20 +63,20 @@ function PublicFooter() {
     )
 }
 
-export default function SlugPage() {
+export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Post }) {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = preloadedItem ? (preloadedItem as any).slug : params.slug as string;
   const firestore = useFirestore();
 
   const postsQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
+    if (!firestore || !slug || preloadedItem) return null;
     return query(collection(firestore, 'posts'), where('slug', '==', slug), where('status', '==', 'published'));
-  }, [firestore, slug]);
+  }, [firestore, slug, preloadedItem]);
 
   const pagesQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
+    if (!firestore || !slug || preloadedItem) return null;
     return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
-  }, [firestore, slug]);
+  }, [firestore, slug, preloadedItem]);
   
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -88,10 +88,14 @@ export default function SlugPage() {
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   const item = useMemo(() => {
+    if(preloadedItem) return preloadedItem;
     if (posts && posts.length > 0) return posts[0];
     if (pages && pages.length > 0) return pages[0];
     return null;
-  }, [posts, pages]);
+  }, [preloadedItem, posts, pages]);
+  
+  const isPost = item ? 'tagIds' in item : false;
+  const pageId = !isPost && item ? item.id : undefined;
 
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
@@ -114,7 +118,7 @@ export default function SlugPage() {
 
   return (
     <div className="bg-background">
-      <WidgetArea areaName="Page Header" isPageSpecific={true} />
+      <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6 max-w-3xl">
         <article>
@@ -132,10 +136,10 @@ export default function SlugPage() {
 
         </article>
          <aside className="mt-12 space-y-8">
-            <WidgetArea areaName="Page Sidebar" isPageSpecific={true} />
+            <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
         </aside>
       </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={true} />
+      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId}/>
       <PublicFooter />
     </div>
   );

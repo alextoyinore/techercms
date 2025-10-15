@@ -19,7 +19,6 @@ import { NavigationWidget } from '@/components/widgets/NavigationWidget';
 import { PostShowcaseWidget } from '@/components/widgets/PostShowcaseWidget';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useParams } from 'next/navigation';
 
 type WidgetInstance = {
     id: string;
@@ -54,19 +53,23 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'weather': WeatherWidget,
 };
 
-export function WidgetArea({ areaName, isPageSpecific = false }: { areaName: string, isPageSpecific?: boolean }) {
+export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaName: string, isPageSpecific?: boolean, pageId?: string }) {
     const firestore = useFirestore();
-    const params = useParams();
-    const pageId = isPageSpecific ? params.slug : undefined; // Or however you get the current page ID/slug
 
     const widgetAreasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        const q = query(collection(firestore, 'widget_areas'), where('name', '==', areaName));
-        if (pageId) {
-            return query(q, where('pageId', '==', pageId));
+        let q = query(collection(firestore, 'widget_areas'), where('name', '==', areaName));
+        
+        if (isPageSpecific) {
+            // This requires the pageId to be passed for page-specific areas
+            if (!pageId) return null;
+            q = query(q, where('pageId', '==', pageId));
+        } else {
+            // For theme-wide areas, ensure we don't fetch page-specific ones
+            q = query(q, where('pageId', '==', null));
         }
-        return query(q, where('pageId', '==', null));
-    }, [firestore, areaName, pageId]);
+        return q;
+    }, [firestore, areaName, isPageSpecific, pageId]);
     
     const { data: widgetAreas, isLoading: isLoadingAreas } = useCollection<WidgetArea>(widgetAreasQuery);
 

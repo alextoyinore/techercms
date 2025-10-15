@@ -73,20 +73,22 @@ function PublicFooter() {
     )
 }
 
-export default function SlugPage() {
+// Accept an optional preloadedItem prop
+export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Post }) {
   const params = useParams();
-  const slug = params.slug as string;
+  // If no preloadedItem is provided (e.g., navigating directly), use the slug from URL
+  const slug = preloadedItem ? (preloadedItem as any).slug : params.slug as string;
   const firestore = useFirestore();
 
   const postsQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
+    if (!firestore || !slug || preloadedItem) return null;
     return query(collection(firestore, 'posts'), where('slug', '==', slug), where('status', '==', 'published'));
-  }, [firestore, slug]);
+  }, [firestore, slug, preloadedItem]);
 
   const pagesQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
+    if (!firestore || !slug || preloadedItem) return null;
     return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
-  }, [firestore, slug]);
+  }, [firestore, slug, preloadedItem]);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -98,19 +100,19 @@ export default function SlugPage() {
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
 
   const item: (Post | Page) | null = useMemo(() => {
+    // Prioritize preloadedItem if it exists
+    if (preloadedItem) return preloadedItem;
     if (isLoadingPosts || isLoadingPages) return null;
     if (posts && posts.length > 0) return posts[0];
     if (pages && pages.length > 0) return pages[0];
     return null;
-  }, [posts, pages, isLoadingPosts, isLoadingPages]);
+  }, [preloadedItem, posts, pages, isLoadingPosts, isLoadingPages]);
 
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
   }
 
   if (!item) {
-    // This will be caught by the notFound() call in a real app,
-    // but for now, it shows a user-friendly message.
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center">
             <h1 className="text-4xl font-bold mb-4">404 - Not Found</h1>
@@ -126,10 +128,11 @@ export default function SlugPage() {
   }
   
   const isPost = 'tagIds' in item;
+  const pageId = !isPost ? item.id : undefined;
 
   return (
     <div className="bg-background">
-      <WidgetArea areaName="Page Header" isPageSpecific={true} />
+      <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId}/>
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
@@ -171,11 +174,11 @@ export default function SlugPage() {
             </div>
             <aside className="lg:col-span-1 space-y-8">
                 <WidgetArea areaName="Sidebar" />
-                <WidgetArea areaName="Page Sidebar" isPageSpecific={true} />
+                <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
             </aside>
         </div>
       </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={true} />
+      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicFooter />
     </div>
   );

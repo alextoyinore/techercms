@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -42,7 +42,9 @@ type Page = {
 export default function EditPagePage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const pageId = params.id as string;
+  const activeTab = searchParams.get('tab') || 'content';
   
   const firestore = useFirestore();
   const auth = useAuth();
@@ -169,7 +171,9 @@ export default function EditPagePage() {
             title: `Page Updated`,
             description: `Your page "${title}" has been successfully updated.`,
         });
-        router.push('/dashboard/pages');
+        if (status === 'published') {
+            router.push('/dashboard/pages');
+        }
     } catch (error: any) {
         toast({
             variant: "destructive",
@@ -199,6 +203,10 @@ export default function EditPagePage() {
         </div>
     )
   }
+  
+  const handleTabChange = (value: string) => {
+    router.push(`/dashboard/pages/edit/${pageId}?tab=${value}`);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -211,7 +219,7 @@ export default function EditPagePage() {
         </Button>
       </PageHeader>
       
-      <Tabs defaultValue="content">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className='flex justify-between items-end'>
           <TabsList>
             <TabsTrigger value="content">Content</TabsTrigger>
