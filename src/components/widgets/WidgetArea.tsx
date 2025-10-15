@@ -4,6 +4,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { useMemo } from 'react';
 import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
 import { CategoriesListWidget } from '@/components/widgets/CategoriesListWidget';
+import { SearchWidget } from '@/components/widgets/SearchWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -22,6 +23,7 @@ type WidgetArea = {
 const widgetComponents: Record<string, React.FC<any>> = {
     'recent-posts': RecentPostsWidget,
     'categories-list': CategoriesListWidget,
+    'search': SearchWidget,
 };
 
 export function WidgetArea({ areaName }: { areaName: string }) {
