@@ -5,12 +5,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import {
   FileText,
   ImageIcon,
   Folder,
-  Users,
   File,
 } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
@@ -18,10 +18,21 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { useMemo } from 'react';
+import { format, subMonths, startOfMonth } from 'date-fns';
 
 type ContentItem = {
   id: string;
+  categoryIds?: string[];
+  createdAt?: Timestamp;
 };
+
+type Category = {
+    id: string;
+    name: string;
+}
 
 function StatCard({
   title,
@@ -80,7 +91,56 @@ export default function Dashboard() {
   const { data: mediaItems, isLoading: isLoadingMedia } =
     useCollection<ContentItem>(mediaCollection);
   const { data: categories, isLoading: isLoadingCategories } =
-    useCollection<ContentItem>(categoriesCollection);
+    useCollection<Category>(categoriesCollection);
+
+  const postsPerCategoryChartData = useMemo(() => {
+    if (!posts || !categories) return [];
+    
+    const categoryCounts = categories.map(category => {
+      const count = posts.filter(post => post.categoryIds?.includes(category.id)).length;
+      return { name: category.name, posts: count };
+    });
+
+    return categoryCounts.filter(c => c.posts > 0);
+  }, [posts, categories]);
+
+  const contentOverTimeChartData = useMemo(() => {
+    if (!posts || !pages) return [];
+
+    const sixMonthsAgo = subMonths(new Date(), 5);
+    const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), i))).reverse();
+    
+    const data = months.map(monthDate => {
+      const monthKey = format(monthDate, 'MMM yyyy');
+      
+      const postCount = posts.filter(post => {
+        const postDate = post.createdAt?.toDate();
+        return postDate && format(postDate, 'MMM yyyy') === monthKey;
+      }).length;
+
+      const pageCount = pages.filter(page => {
+        const pageDate = page.createdAt?.toDate();
+        return pageDate && format(pageDate, 'MMM yyyy') === monthKey;
+      }).length;
+      
+      return { month: format(monthDate, 'MMM'), posts: postCount, pages: pageCount };
+    });
+
+    return data;
+  }, [posts, pages]);
+
+
+  const chartConfig = {
+      posts: {
+        label: "Posts",
+        color: "hsl(var(--primary))",
+      },
+       pages: {
+        label: "Pages",
+        color: "hsl(var(--accent))",
+      },
+  } satisfies import("@/components/ui/chart").ChartConfig;
+
 
   const stats = [
     {
@@ -131,50 +191,63 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Recent Activity</CardTitle>
+            <CardTitle className="font-headline">Posts per Category</CardTitle>
+            <CardDescription>A breakdown of your content distribution.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-4">
-              <li className="flex items-center gap-4">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <p className="text-sm">
-                  New user <span className="font-semibold">John Doe</span> signed
-                  up.
-                </p>
-                <time className="ml-auto text-xs text-muted-foreground">
-                  2 min ago
-                </time>
-              </li>
-              <li className="flex items-center gap-4">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <p className="text-sm">
-                  <span className="font-semibold">Jane Smith</span> published a
-                  new post: "The Future of AI".
-                </p>
-                <time className="ml-auto text-xs text-muted-foreground">
-                  1 hour ago
-                </time>
-              </li>
-              <li className="flex items-center gap-4">
-                <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                <p className="text-sm">
-                  3 new images uploaded to the media library.
-                </p>
-                <time className="ml-auto text-xs text-muted-foreground">
-                  4 hours ago
-                </time>
-              </li>
-            </ul>
+            {isLoadingPosts || isLoadingCategories ? (
+                <Skeleton className='w-full h-[250px]'/>
+            ) : postsPerCategoryChartData.length > 0 ? (
+                <ChartContainer config={chartConfig} className='w-full h-[250px]'>
+                    <BarChart data={postsPerCategoryChartData} accessibilityLayer>
+                        <CartesianGrid vertical={false} />
+                        <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
+                        <YAxis tickLine={false} axisLine={false} allowDecimals={false}/>
+                        <Tooltip cursor={false} content={<ChartTooltipContent />} />
+                        <Bar dataKey="posts" fill="hsl(var(--primary))" radius={4} />
+                    </BarChart>
+                </ChartContainer>
+            ) : (
+                <div className='flex items-center justify-center h-[250px] text-center text-muted-foreground'>
+                    <p>No posts with categories yet. <br/> Assign posts to categories to see this chart.</p>
+                </div>
+            )}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Quick Draft</CardTitle>
+           <CardHeader>
+            <CardTitle className="font-headline">Content Over Time</CardTitle>
+            <CardDescription>Your publishing trend for the last 6 months.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              More dashboard widgets and content coming soon.
-            </p>
+             {isLoadingPosts || isLoadingPages ? (
+                <Skeleton className='w-full h-[250px]'/>
+            ) : contentOverTimeChartData.length > 0 ? (
+                <ChartContainer config={chartConfig} className='w-full h-[250px]'>
+                    <LineChart data={contentOverTimeChartData} accessibilityLayer>
+                        <CartesianGrid vertical={false} />
+                        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+                        <YAxis tickLine={false} axisLine={false} allowDecimals={false}/>
+                        <Tooltip cursor={false} content={<ChartTooltipContent />} />
+                        <Legend content={({ payload }) => (
+                            <div className="flex justify-center gap-4 mt-4">
+                            {payload?.map((entry) => (
+                                <div key={entry.value} className="flex items-center gap-2">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                <span className="text-sm text-muted-foreground capitalize">{entry.value}</span>
+                                </div>
+                            ))}
+                            </div>
+                        )} />
+                        <Line type="monotone" dataKey="posts" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="pages" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+                    </LineChart>
+                </ChartContainer>
+            ) : (
+                 <div className='flex items-center justify-center h-[250px] text-center text-muted-foreground'>
+                    <p>Not enough data to display chart. <br/> Create some posts or pages to get started.</p>
+                </div>
+            )}
           </CardContent>
         </Card>
       </div>
