@@ -25,7 +25,12 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetFooter,
 } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 type SiteSettings = {
   activeTheme: string;
@@ -149,13 +154,72 @@ export default function ThemesPage() {
                       Customize
                     </Button>
                   </SheetTrigger>
-                  <SheetContent>
+                  <SheetContent className="w-full md:max-w-sm">
                     <SheetHeader>
-                      <SheetTitle>Customize {theme.name}</SheetTitle>
+                      <SheetTitle>Customize: {theme.name}</SheetTitle>
                       <SheetDescription>
-                        Frontend theme customization is coming soon!
+                        Modify the design tokens for your frontend theme. Changes are saved automatically.
                       </SheetDescription>
                     </SheetHeader>
+                    <Separator className="my-4" />
+                    <div className="space-y-6">
+                        <div className="space-y-4">
+                            <h3 className="font-medium text-sm">Colors</h3>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Primary</Label>
+                                    <Input type="color" defaultValue="#000000" className="p-1 h-10"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Background</Label>
+                                    <Input type="color" defaultValue="#ffffff" className="p-1 h-10"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Foreground</Label>
+                                    <Input type="color" defaultValue="#333333" className="p-1 h-10"/>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Accent</Label>
+                                    <Input type="color" defaultValue="#555555" className="p-1 h-10"/>
+                                </div>
+                            </div>
+                        </div>
+                        <Separator />
+                         <div className="space-y-4">
+                            <h3 className="font-medium text-sm">Typography</h3>
+                            <div className="space-y-2">
+                                <Label>Headline Font</Label>
+                                <Select defaultValue="poppins">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a font" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="inter">Inter</SelectItem>
+                                        <SelectItem value="poppins">Poppins</SelectItem>
+                                        <SelectItem value="georgia">Georgia</SelectItem>
+                                        <SelectItem value="monospace">Monospace</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Body Font</Label>
+                                <Select defaultValue="inter">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a font" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="inter">Inter</SelectItem>
+                                        <SelectItem value="poppins">Poppins</SelectItem>
+                                        <SelectItem value="georgia">Georgia</SelectItem>
+                                        <SelectItem value="monospace">Monospace</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                    <SheetFooter className="mt-6">
+                        <Button type="submit" className="w-full">Save Changes</Button>
+                    </SheetFooter>
                   </SheetContent>
                 </Sheet>
               </CardFooter>
