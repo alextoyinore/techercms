@@ -166,7 +166,7 @@ export function PageBuilderRenderer({ pageId }: { pageId: string }) {
                 const sectionBlocksCol1 = (blocksBySectionAndColumn[`${section.id}-1`] || []).sort((a,b) => a.order - b.order);
                 
                 return (
-                    <section key={section.id} className="container mx-auto">
+                    <section key={section.id}>
                         <div className={`grid ${getGridClasses(section.type)} gap-8`}>
                             <div className={`${getColumnClasses(section.type, 0)} space-y-6`}>
                                {sectionBlocksCol0.map(block => <RenderedBlock key={block.id} block={block} />)}
