@@ -36,29 +36,10 @@ type Page = {
   showTitle?: boolean;
 };
 
-type User = {
-    id: string;
-    name: string;
-}
-
 type SiteSettings = {
   siteName?: string;
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
-}
-
-function PostAuthor({ authorId }: { authorId: string }) {
-    const firestore = useFirestore();
-    const authorRef = useMemoFirebase(() => {
-        if (!firestore || !authorId) return null;
-        return doc(firestore, 'users', authorId);
-    }, [firestore, authorId]);
-
-    const { data: author, isLoading } = useDoc<User>(authorRef);
-
-    if (isLoading || !author) return null;
-
-    return <span className="font-semibold">{author.name}</span>;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -209,7 +190,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     {displayTitle && <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-6xl mb-4 text-cyan-300">{item.title}</h1>}
                     <div className="text-gray-400 text-sm">
                         <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}</span>
-                        {item.authorId && <> by <PostAuthor authorId={item.authorId} /></>}
                     </div>
                 </header>
                 

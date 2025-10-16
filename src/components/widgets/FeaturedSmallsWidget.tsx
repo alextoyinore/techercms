@@ -87,16 +87,16 @@ export function FeaturedSmallsWidget({
                                 />
                             </div>
                         )}
-                        <h3 className="text-2xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
-                        {showExcerpts && <p className="text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>}
+                        <h3 className="text-xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
+                        {showExcerpts && <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>}
                     </Link>
                 </div>
                 <div className="md:col-span-1 space-y-4">
                     {smallPosts.map((post, index) => (
-                        <div key={`${post.id}-${index}`} className="flex gap-4 items-center group">
+                        <div key={post.id} className="flex gap-4 items-center group">
                             {showImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="shrink-0">
-                                    <div className="relative h-16 w-24 overflow-hidden rounded-md">
+                                    <div className="relative h-12 w-20 overflow-hidden rounded-md">
                                         <Image
                                             src={post.featuredImageUrl}
                                             alt={post.title}
@@ -107,7 +107,7 @@ export function FeaturedSmallsWidget({
                                 </Link>
                             )}
                              <div>
-                                <h4 className="font-semibold text-sm leading-tight group-hover:underline">
+                                <h4 className="font-semibold text-xs leading-tight group-hover:underline">
                                     <Link href={`/${post.slug}`}>{post.title}</Link>
                                 </h4>
                             </div>
