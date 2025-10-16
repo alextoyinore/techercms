@@ -400,7 +400,7 @@
                     "contact-form"
                 ]
             },
-            "config": { "type": "object", "description": "A flexible object to store block-specific settings (e.g., post count, columns, filters)." }
+            "config": { "type": "object", "description": "A flexible object to store block-specific PRESENTATIONAL settings (e.g., columns, showExcerpts)." }
         },
         "required": ["id", "name", "type"]
     },
@@ -426,7 +426,8 @@
         "sectionId": { "type": "string", "description": "The ID of the PageSection this block belongs to." },
         "blockLayoutId": { "type": "string", "description": "The ID of the BlockLayout being used." },
         "columnIndex": { "type": "number", "description": "The zero-based index of the column this block is in." },
-        "order": { "type": "number", "description": "The vertical display order of the block within its column." }
+        "order": { "type": "number", "description": "The vertical display order of the block within its column." },
+        "config": { "type": "object", "description": "A flexible object to store instance-specific settings, such as content filters (e.g., post count, category filters)." }
       },
       "required": ["id", "sectionId", "blockLayoutId", "columnIndex", "order"]
     }

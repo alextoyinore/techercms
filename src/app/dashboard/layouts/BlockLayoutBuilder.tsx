@@ -71,11 +71,11 @@ type NewBlockType =
     | 'tabbed-posts';
 
 const initialConfig = {
-    'post-grid': { postCount: 6, columns: 3, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'post-list': { postCount: 5, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'post-carousel': { postCount: 8, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'featured-and-smalls': { smallPostCount: 4, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'tabbed-posts': { postCountPerTab: 5, showImages: true, showExcerpts: true, tabs: [{id: '1', title: 'Latest', filterType: 'latest'}, {id: '2', title: 'Featured', filterType: 'tag', tag: 'featured'}] },
+    'post-grid': { columns: 3, showImages: true, showExcerpts: false },
+    'post-list': { showImages: true, showExcerpts: true },
+    'post-carousel': { showImages: true, showExcerpts: false },
+    'featured-and-smalls': { showImages: true, showExcerpts: true },
+    'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
@@ -329,18 +329,9 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                 </div>
             )
         case 'post-grid':
-        case 'post-list':
-        case 'post-carousel':
-        case 'featured-and-smalls':
-             const postCountKey = type === 'featured-and-smalls' ? 'smallPostCount' : 'postCount';
-             const postCountLabel = type === 'featured-and-smalls' ? 'Number of Small Posts' : 'Number of Posts';
              return (
                 <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="post-count">{postCountLabel}</Label>
-                            <Input id="post-count" type="number" value={config[postCountKey] || ''} onChange={e => handleConfigChange({ [postCountKey]: Number(e.target.value) })} />
-                        </div>
                         {type === 'post-grid' && (
                              <div className="grid gap-2">
                                 <Label htmlFor="columns">Columns</Label>
@@ -357,51 +348,26 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                         <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
                         <Label htmlFor="show-excerpts">Show post excerpts</Label>
                     </div>
-
-                    <div className="grid gap-2">
-                        <Label>Content Filter</Label>
-                        <Select value={config.filterType} onValueChange={v => handleConfigChange({ filterType: v, categoryIds: [], tagIds: [] })}>
-                             <SelectTrigger><SelectValue /></SelectTrigger>
-                             <SelectContent>
-                                <SelectItem value="latest">Latest Posts</SelectItem>
-                                <SelectItem value="category">By Category</SelectItem>
-                                <SelectItem value="tag">By Tag</SelectItem>
-                            </SelectContent>
-                        </Select>
+                </div>
+            )
+        case 'post-list':
+        case 'post-carousel':
+        case 'featured-and-smalls':
+             return (
+                <div className="grid gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
+                        <Label htmlFor="show-images">Show featured images</Label>
                     </div>
-
-                    {config.filterType === 'category' && (
-                        <div className="grid gap-2">
-                            <Label>Categories</Label>
-                            <ScrollArea className="h-32 rounded-md border p-2">
-                               {isLoadingCategories ? <p>Loading...</p> : categories?.map(cat => (
-                                   <div key={cat.id} className="flex items-center space-x-2 p-1">
-                                        <Checkbox 
-                                            id={`cat-${cat.id}`}
-                                            checked={(config.categoryIds || []).includes(cat.id)}
-                                            onCheckedChange={c => handleCategoryChange(cat.id, c as boolean)}
-                                        />
-                                        <Label htmlFor={`cat-${cat.id}`} className="font-normal">{cat.name}</Label>
-                                   </div>
-                               ))}
-                            </ScrollArea>
-                        </div>
-                    )}
-                    {config.filterType === 'tag' && (
-                         <div className="grid gap-2">
-                            <Label htmlFor="tags">Tags (comma-separated)</Label>
-                            <Input id="tags" value={(config.tagIds || []).join(', ')} onChange={e => handleConfigChange({ tagIds: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} />
-                        </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
+                        <Label htmlFor="show-excerpts">Show post excerpts</Label>
+                    </div>
                 </div>
             )
         case 'tabbed-posts':
             return (
                 <div className="grid gap-4">
-                     <div className="grid gap-2">
-                        <Label>Posts per tab</Label>
-                        <Input type="number" value={config.postCountPerTab} onChange={e => handleConfigChange({ postCountPerTab: Number(e.target.value) })} />
-                    </div>
                      <div className="flex items-center space-x-2">
                         <Checkbox id="show-images-tabs" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
                         <Label htmlFor="show-images-tabs">Show featured images</Label>
@@ -410,52 +376,6 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                         <Checkbox id="show-excerpts-tabs" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
                         <Label htmlFor="show-excerpts-tabs">Show post excerpts</Label>
                     </div>
-                    <Label>Tabs</Label>
-                    <div className="grid gap-2">
-                        {(config.tabs || []).map((tab: any, index: number) => (
-                             <div key={tab.id} className="border p-4 rounded-md space-y-4">
-                                <div className='flex justify-between items-center'>
-                                     <h4 className='font-medium'>Tab #{index + 1}</h4>
-                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeTab(index)}>
-                                        <Trash2 className="h-4 w-4" />
-                                     </Button>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Tab Title</Label>
-                                    <Input value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Filter Type</Label>
-                                    <Select value={tab.filterType} onValueChange={v => handleTabChange(index, 'filterType', v)}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="latest">Latest Posts</SelectItem>
-                                            <SelectItem value="category">By Category</SelectItem>
-                                            <SelectItem value="tag">By Tag</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {tab.filterType === 'category' && (
-                                    <div className="grid gap-2">
-                                        <Label>Category</Label>
-                                        <Select value={tab.category} onValueChange={v => handleTabChange(index, 'category', v)}>
-                                            <SelectTrigger><SelectValue placeholder="Select a category..." /></SelectTrigger>
-                                            <SelectContent>
-                                                {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                                {tab.filterType === 'tag' && (
-                                     <div className="grid gap-2">
-                                        <Label>Tag</Label>
-                                        <Input value={tab.tag} onChange={e => handleTabChange(index, 'tag', e.target.value)} placeholder="Enter a single tag"/>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                     <Button variant="outline" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Tab</Button>
                 </div>
             )
         default:
