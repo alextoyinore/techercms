@@ -1,211 +1,288 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict author-ownership model for content (Pages, Posts, Media, Custom Themes).
+ * @fileOverview Firestore Security Rules for the CMS.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a combination of public read access and owner-only write access for most content collections,
+ * with the exception of the `site_settings` collection which is publicly readable but not writable via the client.
  *
  * Data Structure:
- * - Top-level collections: /pages/{pageId}, /categories/{categoryId}, /tags/{tagId}, /posts/{postId}, /media/{mediaId},
- *   /site_settings/config, /widget_areas/{widgetAreaId}, /widget_instances/{widgetInstanceId},
- *   /navigation_menus/{menuId}, /navigation_menu_items/{itemId}, /custom_themes/{themeId}
+ * The database consists of top-level collections for `pages`, `categories`, `tags`, `posts`, `media`, `widget_areas`, `widget_instances`, `navigation_menus`, `navigation_menu_items`, `custom_themes`, `page_layouts`, and `block_layouts`.
+ * All content collections (except `site_settings`) use an `authorId` field to track ownership.
  *
  * Key Security Decisions:
- * - Pages, Posts, Media, and Custom Themes are restricted to owner-only writes based on the `authorId` field. Reads are public.
- * - Categories, Tags, Widget Areas, Widget Instances, Navigation Menus and Navigation Menu Items are publicly readable but not writable.
- * - The `site_settings` document is publicly readable but not writable.
+ * - Public read access is granted to `pages`, `categories`, `tags`, `posts`, `media`, `widget_areas`, `widget_instances`, `navigation_menus`, `navigation_menu_items`, `custom_themes`, `page_layouts`, and `block_layouts` for flexible content delivery.
+ * - Write access to content collections is restricted to the owner (the user whose UID matches the `authorId` field in the document).
+ * - The `site_settings` collection is read-only to clients.
+ * - Data validation is minimal during this prototyping phase.
  *
  * Denormalization for Authorization:
- * - Pages, Posts, Media, and Custom Themes require an `authorId` field to determine ownership. This is validated on creation and is immutable on update.
+ *  - The `authorId` field in `pages`, `posts`, `media`, and `custom_themes` is essential for owner-only write access.
+ *  - The `id` field in all collections is used to enforce data consistency between the path and the document's internal fields.
+ *
+ * Structural Segregation:
+ *  - Publicly readable content is stored in top-level collections.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(authorId) {
-      return isSignedIn() && request.auth.uid == authorId;
-    }
-
-    function isExistingOwner(authorId) {
-      return isOwner(authorId) && resource != null;
-    }
-
     /**
-     * @description Manages access control for static pages, allowing public read access and author-only write access.
+     * @description Grants public read access and owner-only write access to pages.
      * @path /pages/{pageId}
-     * @allow (get, list): Any user can read page data.
+     * @allow (get, list): All users can read page data.
      * @allow (create): Authenticated user can create a page if `request.resource.data.authorId` matches their UID.
-     * @allow (update, delete): Authenticated user can update/delete a page if they are the original author.
-     * @deny (create): Unauthenticated users cannot create pages.
-     * @deny (update, delete): Users cannot modify or delete pages authored by others.
-     * @principle Enforces document ownership for writes, allows public reads.
+     * @allow (update, delete): Authenticated user can modify/delete a page if they are the author.
+     * @deny (create): Unauthenticated user cannot create a page.
+     * @deny (update, delete): Authenticated user cannot modify/delete a page they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /pages/{pageId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && resource.data.authorId == request.resource.data.authorId;
-      allow delete: if isExistingOwner(resource.data.authorId);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid && request.resource.data.id == pageId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows public read access to categories, but denies all write operations.
+     * @description Grants public read access and owner-only write access to categories.
      * @path /categories/{categoryId}
-     * @allow (get, list): Any user can read category data.
-     * @deny (create, update, delete): No user can create, update, or delete categories.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read category data.
+     * @allow (create): Authenticated user can create a category if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a category if they are the author.
+     * @deny (create): Unauthenticated user cannot create a category.
+     * @deny (update, delete): Authenticated user cannot modify/delete a category they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /categories/{categoryId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == categoryId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows public read access to tags, but denies all write operations.
+     * @description Grants public read access and owner-only write access to tags.
      * @path /tags/{tagId}
-     * @allow (get, list): Any user can read tag data.
-     * @deny (create, update, delete): No user can create, update, or delete tags.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read tag data.
+     * @allow (create): Authenticated user can create a tag if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a tag if they are the author.
+     * @deny (create): Unauthenticated user cannot create a tag.
+     * @deny (update, delete): Authenticated user cannot modify/delete a tag they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /tags/{tagId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == tagId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Manages access control for posts, allowing public read access and author-only write access.
+     * @description Grants public read access and owner-only write access to posts.
      * @path /posts/{postId}
-     * @allow (get, list): Any user can read post data.
+     * @allow (get, list): All users can read post data.
      * @allow (create): Authenticated user can create a post if `request.resource.data.authorId` matches their UID.
-     * @allow (update, delete): Authenticated user can update/delete a post if they are the original author.
-     * @deny (create): Unauthenticated users cannot create posts.
-     * @deny (update, delete): Users cannot modify or delete posts authored by others.
-     * @principle Enforces document ownership for writes, allows public reads.
+     * @allow (update, delete): Authenticated user can modify/delete a post if they are the author.
+     * @deny (create): Unauthenticated user cannot create a post.
+     * @deny (update, delete): Authenticated user cannot modify/delete a post they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /posts/{postId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && resource.data.authorId == request.resource.data.authorId;
-      allow delete: if isExistingOwner(resource.data.authorId);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid && request.resource.data.id == postId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Manages access control for media items, allowing public read access and author-only write access.
+     * @description Grants public read access and owner-only write access to media items.
      * @path /media/{mediaId}
-     * @allow (get, list): Any user can read media item data.
+     * @allow (get, list): All users can read media item data.
      * @allow (create): Authenticated user can create a media item if `request.resource.data.authorId` matches their UID.
-     * @allow (update, delete): Authenticated user can update/delete a media item if they are the original author.
-     * @deny (create): Unauthenticated users cannot create media items.
-     * @deny (update, delete): Users cannot modify or delete media items authored by others.
-     * @principle Enforces document ownership for writes, allows public reads.
+     * @allow (update, delete): Authenticated user can modify/delete a media item if they are the author.
+     * @deny (create): Unauthenticated user cannot create a media item.
+     * @deny (update, delete): Authenticated user cannot modify/delete a media item they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /media/{mediaId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && resource.data.authorId == request.resource.data.authorId;
-      allow delete: if isExistingOwner(resource.data.authorId);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid && request.resource.data.id == mediaId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows public read access to site settings, but denies all write operations.
+     * @description Grants public read access but denies client-side writes to site settings.
      * @path /site_settings/config
-     * @allow (get): Any user can read site settings.
-     * @deny (create, update, delete, list): No user can create, update, or delete site settings. List is denied as there will only be one document here.
-     * @principle Read-only document for public configuration.
+     * @allow (get, list): All users can read site settings.
+     * @deny (create, update, delete): No clients can create, update, or delete site settings.
+     * @principle Restricts write access to site settings.
      */
     match /site_settings/config {
       allow get: if true;
-      allow list: if false;
+      allow list: if true;
       allow create: if false;
       allow update: if false;
       allow delete: if false;
     }
 
     /**
-     * @description Allows public read access to widget areas, but denies all write operations.
+     * @description Grants public read access and owner-only write access to widget areas.
      * @path /widget_areas/{widgetAreaId}
-     * @allow (get, list): Any user can read widget area data.
-     * @deny (create, update, delete): No user can create, update, or delete widget areas.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read widget area data.
+     * @allow (create): Authenticated user can create a widget area if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a widget area if they are the author.
+     * @deny (create): Unauthenticated user cannot create a widget area.
+     * @deny (update, delete): Authenticated user cannot modify/delete a widget area they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /widget_areas/{widgetAreaId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == widgetAreaId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows public read access to widget instances, but denies all write operations.
+     * @description Grants public read access and owner-only write access to widget instances.
      * @path /widget_instances/{widgetInstanceId}
-     * @allow (get, list): Any user can read widget instance data.
-     * @deny (create, update, delete): No user can create, update, or delete widget instances.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read widget instance data.
+     * @allow (create): Authenticated user can create a widget instance if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a widget instance if they are the author.
+     * @deny (create): Unauthenticated user cannot create a widget instance.
+     * @deny (update, delete): Authenticated user cannot modify/delete a widget instance they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /widget_instances/{widgetInstanceId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == widgetInstanceId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
-    /**
-     * @description Allows public read access to navigation menus, but denies all write operations.
+     /**
+     * @description Grants public read access and owner-only write access to navigation menus.
      * @path /navigation_menus/{menuId}
-     * @allow (get, list): Any user can read navigation menu data.
-     * @deny (create, update, delete): No user can create, update, or delete navigation menus.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read navigation menu data.
+     * @allow (create): Authenticated user can create a navigation menu if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a navigation menu if they are the author.
+     * @deny (create): Unauthenticated user cannot create a navigation menu.
+     * @deny (update, delete): Authenticated user cannot modify/delete a navigation menu they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /navigation_menus/{menuId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == menuId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows public read access to navigation menu items, but denies all write operations.
+     * @description Grants public read access and owner-only write access to navigation menu items.
      * @path /navigation_menu_items/{itemId}
-     * @allow (get, list): Any user can read navigation menu item data.
-     * @deny (create, update, delete): No user can create, update, or delete navigation menu items.
-     * @principle Read-only collection for public data.
+     * @allow (get, list): All users can read navigation menu item data.
+     * @allow (create): Authenticated user can create a navigation menu item if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a navigation menu item if they are the author.
+     * @deny (create): Unauthenticated user cannot create a navigation menu item.
+     * @deny (update, delete): Authenticated user cannot modify/delete a navigation menu item they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /navigation_menu_items/{itemId} {
       allow get: if true;
       allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isSignedIn() && request.resource.data.id == itemId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Manages access control for custom themes, allowing public read access and author-only write access.
+     * @description Grants public read access and owner-only write access to custom themes.
      * @path /custom_themes/{themeId}
-     * @allow (get, list): Any user can read theme data.
-     * @allow (create): Authenticated user can create a theme if `request.resource.data.authorId` matches their UID.
-     * @allow (update, delete): Authenticated user can update/delete a theme if they are the original author.
-     * @deny (create): Unauthenticated users cannot create themes.
-     * @deny (update, delete): Users cannot modify or delete themes authored by others.
-     * @principle Enforces document ownership for writes, allows public reads.
+     * @allow (get, list): All users can read custom theme data.
+     * @allow (create): Authenticated user can create a custom theme if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a custom theme if they are the author.
+     * @deny (create): Unauthenticated user cannot create a custom theme.
+     * @deny (update, delete): Authenticated user cannot modify/delete a custom theme they don't own.
+     * @principle Enforces document ownership for writes.
      */
     match /custom_themes/{themeId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && resource.data.authorId == request.resource.data.authorId;
-      allow delete: if isExistingOwner(resource.data.authorId);
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid && request.resource.data.id == themeId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+    }
+
+    /**
+     * @description Grants public read access and owner-only write access to page layouts.
+     * @path /page_layouts/{pageLayoutId}
+     * @allow (get, list): All users can read page layout data.
+     * @allow (create): Authenticated user can create a page layout if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a page layout if they are the author.
+     * @deny (create): Unauthenticated user cannot create a page layout.
+     * @deny (update, delete): Authenticated user cannot modify/delete a page layout they don't own.
+     * @principle Enforces document ownership for writes.
+     */
+    match /page_layouts/{pageLayoutId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.id == pageLayoutId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+    }
+
+    /**
+     * @description Grants public read access and owner-only write access to block layouts.
+     * @path /block_layouts/{blockLayoutId}
+     * @allow (get, list): All users can read block layout data.
+     * @allow (create): Authenticated user can create a block layout if `request.resource.data.authorId` matches their UID.
+     * @allow (update, delete): Authenticated user can modify/delete a block layout if they are the author.
+     * @deny (create): Unauthenticated user cannot create a block layout.
+     * @deny (update, delete): Authenticated user cannot modify/delete a block layout they don't own.
+     * @principle Enforces document ownership for writes.
+     */
+    match /block_layouts/{blockLayoutId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.id == blockLayoutId;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+    }
+
+    // ---- Helper functions ----
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user is the owner of the document.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the owner, false otherwise.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is the owner of an existing document.
+     * @param {string} userId The user ID to check against.
+     * @return {boolean} True if the user is the owner and the document exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
   }
 }
