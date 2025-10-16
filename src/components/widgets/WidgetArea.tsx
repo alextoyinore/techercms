@@ -18,6 +18,9 @@ import { GalleryWidget } from '@/components/widgets/GalleryWidget';
 import { NavigationWidget } from '@/components/widgets/NavigationWidget';
 import { PostShowcaseWidget } from '@/components/widgets/PostShowcaseWidget';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
+import { PostCarouselWidget } from '@/components/widgets/PostCarouselWidget';
+import { FeaturedSmallsWidget } from '@/components/widgets/FeaturedSmallsWidget';
+import { TabbedPostsWidget } from '@/components/widgets/TabbedPostsWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type WidgetInstance = {
@@ -51,6 +54,9 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'navigation-menu': NavigationWidget,
     'post-showcase': PostShowcaseWidget,
     'weather': WeatherWidget,
+    'post-carousel': PostCarouselWidget,
+    'featured-and-smalls': FeaturedSmallsWidget,
+    'tabbed-posts': TabbedPostsWidget,
 };
 
 export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaName: string, isPageSpecific?: boolean, pageId?: string }) {

@@ -1,0 +1,552 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Page": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Page",
+      "type": "object",
+      "description": "Represents a static page within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Page entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the page."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the page title."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main body content of the page."
+        },
+        "featuredImageUrl": {
+          "type": "string",
+          "description": "The URL for the page's main image."
+        },
+        "status": {
+          "type": "string",
+          "description": "The publication status of the page.",
+          "enum": [
+            "draft",
+            "published"
+          ]
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who authored the page."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the page was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the page was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "slug",
+        "status",
+        "authorId"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for organizing content within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the category name."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug"
+      ]
+    },
+    "Tag": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Tag",
+      "type": "object",
+      "description": "Represents a tag for organizing content within the CMS.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Tag entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the tag."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the tag name."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug"
+      ]
+    },
+    "Post": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Post",
+      "type": "object",
+      "description": "Represents a single content entry in the CMS, like a blog post or an article.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Post entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the post."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly version of the post title."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main body content of the post."
+        },
+        "excerpt": {
+          "type": "string",
+          "description": "A short summary of the post."
+        },
+        "featuredImageUrl": {
+          "type": "string",
+          "description": "The URL for the post's main image."
+        },
+        "status": {
+          "type": "string",
+          "description": "The publication status of the post.",
+          "enum": [
+            "draft",
+            "published",
+            "archived"
+          ]
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who authored the post."
+        },
+        "categoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of Category IDs associated with the post."
+        },
+        "tagIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of Tag IDs associated with the post."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the post was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the page was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "slug",
+        "status",
+        "authorId"
+      ]
+    },
+    "MediaItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MediaItem",
+      "type": "object",
+      "description": "Represents an uploaded media file.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Media Item."
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL of the uploaded file."
+        },
+        "filename": {
+          "type": "string",
+          "description": "The original filename of the file."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The ID of the user who uploaded the file."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the file was uploaded."
+        }
+      },
+      "required": [
+        "id",
+        "url",
+        "filename",
+        "authorId",
+        "createdAt"
+      ]
+    },
+    "SiteSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SiteSettings",
+      "type": "object",
+      "description": "Stores global settings for the website.",
+      "properties": {
+        "activeTheme": {
+          "type": "string",
+          "description": "The name of the currently active frontend theme."
+        },
+        "siteName": {
+            "type": "string",
+            "description": "The public name of the website."
+        },
+        "language": {
+            "type": "string",
+            "description": "The primary language of the website."
+        },
+        "timezone": {
+            "type": "string",
+            "description": "The timezone for the website."
+        },
+        "bodyFont": {
+            "type": "string",
+            "description": "The font for the body text."
+        },
+        "headlineFont": {
+            "type": "string",
+            "description": "The font for headlines."
+        },
+        "baseFontSize": {
+            "type": "number",
+            "description": "The base font size in pixels."
+        }
+      },
+      "required": [
+        "activeTheme"
+      ]
+    },
+     "WidgetArea": {
+      "title": "Widget Area",
+      "description": "A designated area for widgets. Can be theme-wide (no pageId) or page-specific (has a pageId).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the widget area." },
+        "name": { "type": "string", "description": "A human-readable name for the area (e.g., 'Main Sidebar', 'Page Header')." },
+        "description": { "type": "string", "description": "A short description of the area's purpose." },
+        "pageId": { "type": "string", "description": "Optional. The ID of the Page this area belongs to. If null, it's a theme-wide area." },
+        "theme": { "type": "string", "description": "The theme this widget area belongs to (primarily for theme-wide areas)." }
+      },
+      "required": ["id", "name"]
+    },
+    "WidgetInstance": {
+      "title": "Widget Instance",
+      "description": "An instance of a specific widget placed within a widget area.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the widget instance." },
+        "widgetAreaId": { "type": "string", "description": "The ID of the WidgetArea this instance belongs to." },
+        "type": {
+          "type": "string",
+          "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather"]
+        },
+        "order": { "type": "number", "description": "The display order of the widget within its area." },
+        "config": {
+          "type": "object",
+          "description": "A flexible object to store widget-specific settings (e.g., title, number of posts to show)."
+        }
+      },
+      "required": ["id", "widgetAreaId", "type", "order"]
+    },
+    "NavigationMenu": {
+      "title": "Navigation Menu",
+      "description": "A reusable collection of navigation links.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the menu." },
+        "name": { "type": "string", "description": "The name of the menu (e.g., 'Main Header')." }
+      },
+      "required": ["id", "name"]
+    },
+    "NavigationMenuItem": {
+      "title": "Navigation Menu Item",
+      "description": "An individual link within a Navigation Menu.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the menu item." },
+        "menuId": { "type": "string", "description": "The ID of the NavigationMenu this item belongs to." },
+        "label": { "type": "string", "description": "The text to display for the link." },
+        "url": { "type": "string", "description": "The URL the link points to." },
+        "order": { "type": "number", "description": "The display order of the link within its menu." }
+      },
+      "required": ["id", "menuId", "label", "url", "order"]
+    },
+    "CustomTheme": {
+        "title": "Custom Theme",
+        "description": "Represents a user-saved custom theme.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the theme." },
+            "name": { "type": "string", "description": "The name of the custom theme." },
+            "previewImageUrl": { "type": "string", "description": "URL for the theme's preview image." },
+            "colors": { "type": "object", "description": "An object containing the theme's color definitions." },
+            "authorId": { "type": "string", "description": "The ID of the user who created the theme." }
+        },
+        "required": ["id", "name", "colors", "authorId"]
+    },
+    "PageLayout": {
+        "title": "Page Layout",
+        "description": "Defines a high-level page structure, like column layout.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the page layout." },
+            "name": { "type": "string", "description": "A human-readable name (e.g., 'Page with Right Sidebar')." },
+            "structure": { "type": "string", "description": "A key representing the layout (e.g., 'two-column-right')." }
+        },
+        "required": ["id", "name", "structure"]
+    },
+    "BlockLayout": {
+        "title": "Block Layout",
+        "description": "A reusable, configurable content block, like a post grid or list.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the block layout." },
+            "name": { "type": "string", "description": "A human-readable name (e.g., 'Featured Posts Grid')." },
+            "description": { "type": "string", "description": "A short explanation of what the block layout does or is for." },
+            "type": { "type": "string", "description": "The type of block to render (e.g., 'post-grid', 'post-carousel')." ,
+                "enum": [
+                    "post-grid",
+                    "post-list",
+                    "post-carousel",
+                    "featured-and-smalls",
+                    "tabbed-posts",
+                    "hero",
+                    "cta",
+                    "feature-grid",
+                    "gallery",
+                    "video",
+                    "testimonials",
+                    "contact-form"
+                ]
+            },
+            "config": { "type": "object", "description": "A flexible object to store block-specific settings (e.g., post count, columns, filters)." }
+        },
+        "required": ["id", "name", "type"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/pages/{pageId}",
+        "definition": {
+          "entityName": "Page",
+          "schema": {
+            "$ref": "#/backend/entities/Page"
+          },
+          "description": "Stores static page data. `pageId` is the unique identifier for each page.",
+          "params": [
+            {
+              "name": "pageId",
+              "description": "The unique identifier of the page."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores category data. `categoryId` is the unique identifier for each category.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier of the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/tags/{tagId}",
+        "definition": {
+          "entityName": "Tag",
+          "schema": {
+            "$ref": "#/backend/entities/Tag"
+          },
+          "description": "Stores tag data. `tagId` is the unique identifier for each tag.",
+          "params": [
+            {
+              "name": "tagId",
+              "description": "The unique identifier for the tag."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+          "entityName": "Post",
+          "schema": {
+            "$ref": "#/backend/entities/Post"
+          },
+          "description": "Stores post data. `postId` is the unique identifier for each post.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier for the post."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/media/{mediaId}",
+        "definition": {
+          "entityName": "MediaItem",
+          "schema": {
+            "$ref": "#/backend/entities/MediaItem"
+          },
+          "description": "Stores media item data. `mediaId` is the unique identifier for each item.",
+          "params": [
+            {
+              "name": "mediaId",
+              "description": "The unique identifier for the media item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/site_settings/config",
+        "definition": {
+          "entityName": "SiteSettings",
+          "schema": {
+            "$ref": "#/backend/entities/SiteSettings"
+          },
+          "description": "Stores global configuration for the site, like the active theme."
+        }
+      },
+       {
+        "path": "/widget_areas/{widgetAreaId}",
+        "definition": {
+          "entityName": "WidgetArea",
+          "schema": { "$ref": "#/backend/entities/WidgetArea" },
+          "description": "Stores defined widget areas for themes."
+        }
+      },
+      {
+        "path": "/widget_instances/{widgetInstanceId}",
+        "definition": {
+          "entityName": "WidgetInstance",
+          "schema": { "$ref": "#/backend/entities/WidgetInstance" },
+          "description": "Stores configured instances of widgets within specific areas."
+        }
+      },
+      {
+        "path": "/navigation_menus/{menuId}",
+        "definition": {
+          "entityName": "NavigationMenu",
+          "schema": { "$ref": "#/backend/entities/NavigationMenu" },
+          "description": "Stores reusable navigation menus."
+        }
+      },
+      {
+        "path": "/navigation_menu_items/{itemId}",
+        "definition": {
+          "entityName": "NavigationMenuItem",
+          "schema": { "$ref": "#/backend/entities/NavigationMenuItem" },
+          "description": "Stores individual links within a navigation menu."
+        }
+      },
+      {
+        "path": "/custom_themes/{themeId}",
+        "definition": {
+          "entityName": "CustomTheme",
+          "schema": { "$ref": "#/backend/entities/CustomTheme" },
+          "description": "Stores user-created custom themes."
+        }
+      },
+      {
+        "path": "/page_layouts/{pageLayoutId}",
+        "definition": {
+          "entityName": "PageLayout",
+          "schema": { "$ref": "#/backend/entities/PageLayout" },
+          "description": "Stores saved page-level column structures."
+        }
+      },
+      {
+        "path": "/block_layouts/{blockLayoutId}",
+        "definition": {
+          "entityName": "BlockLayout",
+          "schema": { "$ref": "#/backend/entities/BlockLayout" },
+          "description": "Stores reusable, configurable content blocks like post grids."
+        }
+      }
+    ],
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design."
+  }
+}

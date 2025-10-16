@@ -38,6 +38,9 @@ import { GalleryPreview } from './previews/GalleryPreview';
 import { VideoPreview } from './previews/VideoPreview';
 import { TestimonialsPreview } from './previews/TestimonialsPreview';
 import { ContactFormPreview } from './previews/ContactFormPreview';
+import { PostCarouselPreview } from './previews/PostCarouselPreview';
+import { FeaturedSmallsPreview } from './previews/FeaturedSmallsPreview';
+import { TabbedPostsPreview } from './previews/TabbedPostsPreview';
 import { MediaLibrary } from '@/components/media-library';
 import Image from 'next/image';
 
@@ -61,11 +64,17 @@ type NewBlockType =
     | 'gallery'
     | 'video'
     | 'testimonials'
-    | 'contact-form';
+    | 'contact-form'
+    | 'post-carousel'
+    | 'featured-and-smalls'
+    | 'tabbed-posts';
 
 const initialConfig = {
     'post-grid': { postCount: 6, columns: 3, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
     'post-list': { postCount: 5, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'post-carousel': { postCount: 8, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'featured-and-smalls': { smallPostCount: 4, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'tabbed-posts': { postCountPerTab: 5, tabs: [{id: '1', title: 'Latest', filterType: 'latest'}, {id: '2', title: 'Featured', filterType: 'tag', tag: 'featured'}] },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
@@ -78,6 +87,9 @@ const initialConfig = {
 const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
     { value: 'post-grid', label: 'Post Grid', group: 'Posts' },
     { value: 'post-list', label: 'Post List', group: 'Posts' },
+    { value: 'post-carousel', label: 'Post Carousel', group: 'Posts' },
+    { value: 'featured-and-smalls', label: 'Featured & Smalls', group: 'Posts' },
+    { value: 'tabbed-posts', label: 'Tabbed Posts', group: 'Posts' },
     { value: 'hero', label: 'Hero Section', group: 'Page Sections' },
     { value: 'cta', label: 'Call to Action', group: 'Page Sections' },
     { value: 'feature-grid', label: 'Feature Grid', group: 'Page Sections' },
@@ -137,6 +149,22 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     handleConfigChange({ testimonials: newTestimonials });
   };
 
+  const handleTabChange = (index: number, field: 'title' | 'filterType' | 'category' | 'tag', value: string) => {
+    const newTabs = [...config.tabs];
+    newTabs[index] = {...newTabs[index], [field]: value};
+    handleConfigChange({ tabs: newTabs });
+  }
+
+  const addTab = () => {
+    const newTab = {id: `${Date.now()}`, title: 'New Tab', filterType: 'latest'};
+    handleConfigChange({ tabs: [...(config.tabs || []), newTab] });
+  }
+
+  const removeTab = (index: number) => {
+    const newTabs = [...config.tabs];
+    newTabs.splice(index, 1);
+    handleConfigChange({ tabs: newTabs });
+  }
 
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
     const currentIds = config.categoryIds || [];
@@ -301,12 +329,16 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
             )
         case 'post-grid':
         case 'post-list':
+        case 'post-carousel':
+        case 'featured-and-smalls':
+             const postCountKey = type === 'featured-and-smalls' ? 'smallPostCount' : 'postCount';
+             const postCountLabel = type === 'featured-and-smalls' ? 'Number of Small Posts' : 'Number of Posts';
              return (
                 <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="post-count">Number of Posts</Label>
-                            <Input id="post-count" type="number" value={config.postCount || ''} onChange={e => handleConfigChange({ postCount: Number(e.target.value) })} />
+                            <Label htmlFor="post-count">{postCountLabel}</Label>
+                            <Input id="post-count" type="number" value={config[postCountKey] || ''} onChange={e => handleConfigChange({ [postCountKey]: Number(e.target.value) })} />
                         </div>
                         {type === 'post-grid' && (
                              <div className="grid gap-2">
@@ -315,14 +347,18 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                             </div>
                         )}
                     </div>
-                     <div className="flex items-center space-x-2">
-                        <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
-                        <Label htmlFor="show-images">Show featured images</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
-                        <Label htmlFor="show-excerpts">Show post excerpts</Label>
-                    </div>
+                     {type !== 'post-carousel' && type !== 'featured-and-smalls' && (
+                        <>
+                             <div className="flex items-center space-x-2">
+                                <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
+                                <Label htmlFor="show-images">Show featured images</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
+                                <Label htmlFor="show-excerpts">Show post excerpts</Label>
+                            </div>
+                        </>
+                     )}
 
                     <div className="grid gap-2">
                         <Label>Content Filter</Label>
@@ -359,6 +395,61 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                             <Input id="tags" value={(config.tagIds || []).join(', ')} onChange={e => handleConfigChange({ tagIds: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} />
                         </div>
                     )}
+                </div>
+            )
+        case 'tabbed-posts':
+            return (
+                <div className="grid gap-4">
+                     <div className="grid gap-2">
+                        <Label>Posts per tab</Label>
+                        <Input type="number" value={config.postCountPerTab} onChange={e => handleConfigChange({ postCountPerTab: Number(e.target.value) })} />
+                    </div>
+                    <Label>Tabs</Label>
+                    <div className="grid gap-2">
+                        {(config.tabs || []).map((tab: any, index: number) => (
+                             <div key={tab.id} className="border p-4 rounded-md space-y-4">
+                                <div className='flex justify-between items-center'>
+                                     <h4 className='font-medium'>Tab #{index + 1}</h4>
+                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeTab(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                     </Button>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Tab Title</Label>
+                                    <Input value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Filter Type</Label>
+                                    <Select value={tab.filterType} onValueChange={v => handleTabChange(index, 'filterType', v)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="latest">Latest Posts</SelectItem>
+                                            <SelectItem value="category">By Category</SelectItem>
+                                            <SelectItem value="tag">By Tag</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {tab.filterType === 'category' && (
+                                    <div className="grid gap-2">
+                                        <Label>Category</Label>
+                                        <Select value={tab.category} onValueChange={v => handleTabChange(index, 'category', v)}>
+                                            <SelectTrigger><SelectValue placeholder="Select a category..." /></SelectTrigger>
+                                            <SelectContent>
+                                                {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                                {tab.filterType === 'tag' && (
+                                     <div className="grid gap-2">
+                                        <Label>Tag</Label>
+                                        <Input value={tab.tag} onChange={e => handleTabChange(index, 'tag', e.target.value)} placeholder="Enter a single tag"/>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                     <Button variant="outline" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Tab</Button>
                 </div>
             )
         default:
@@ -413,6 +504,9 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  <h3 className="font-medium mb-4 text-center text-sm text-muted-foreground">Live Preview</h3>
                  {type === 'post-grid' && <PostGridPreview config={config} />}
                  {type === 'post-list' && <PostListPreview config={config} />}
+                 {type === 'post-carousel' && <PostCarouselPreview config={config} />}
+                 {type === 'featured-and-smalls' && <FeaturedSmallsPreview config={config} />}
+                 {type === 'tabbed-posts' && <TabbedPostsPreview config={config} />}
                  {type === 'hero' && <HeroPreview config={config} />}
                  {type === 'cta' && <CtaPreview config={config} />}
                  {type === 'feature-grid' && <FeatureGridPreview config={config} />}
