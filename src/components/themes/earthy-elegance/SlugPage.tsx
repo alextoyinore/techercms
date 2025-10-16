@@ -94,7 +94,7 @@ function PageContent({ page }: { page: Page }) {
     const { data: contentWidgets, isLoading: isLoadingWidgets } = useCollection(contentWidgetsQuery);
     
     if (isLoadingAreas || isLoadingWidgets) {
-        return <div className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none mx-auto"><p>Loading content...</p></div>
+        return <div className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none"><p>Loading content...</p></div>
     }
 
     if (contentWidgets && contentWidgets.length > 0) {
@@ -107,7 +107,7 @@ function PageContent({ page }: { page: Page }) {
     
     return (
         <div
-            className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none mx-auto"
+            className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none"
             dangerouslySetInnerHTML={{ __html: page.content }}
         />
     );
@@ -194,7 +194,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 
                 {isPost ? (
                      <div
-                        className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none mx-auto"
+                        className="prose prose-lg prose-headings:font-headline prose-headings:text-emerald-900 prose-p:text-emerald-800/90 prose-a:text-emerald-600 max-w-none"
                         dangerouslySetInnerHTML={{ __html: item.content }}
                     />
                 ) : (

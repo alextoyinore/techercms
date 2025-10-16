@@ -202,7 +202,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 
                 {isPost ? (
                      <div
-                        className="prose dark:prose-invert lg:prose-lg max-w-none mx-auto"
+                        className="prose dark:prose-invert lg:prose-lg max-w-none"
                         dangerouslySetInnerHTML={{ __html: item.content }}
                     />
                 ) : (

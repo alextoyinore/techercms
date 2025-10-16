@@ -122,7 +122,7 @@ function PageContent({ page }: { page: Page }) {
     const { data: contentWidgets, isLoading: isLoadingWidgets } = useCollection(contentWidgetsQuery);
     
     if (isLoadingAreas || isLoadingWidgets) {
-        return <div className="prose lg:prose-lg max-w-none mx-auto"><p>Loading content...</p></div>
+        return <div className="prose lg:prose-lg max-w-none"><p>Loading content...</p></div>
     }
 
     if (contentWidgets && contentWidgets.length > 0) {
@@ -135,7 +135,7 @@ function PageContent({ page }: { page: Page }) {
     
     return (
         <div
-            className="prose lg:prose-lg max-w-none mx-auto"
+            className="prose lg:prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: page.content }}
         />
     );
@@ -223,7 +223,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     
                     {isPost ? (
                         <div
-                            className="prose lg:prose-lg max-w-none mx-auto"
+                            className="prose lg:prose-lg max-w-none"
                             dangerouslySetInnerHTML={{ __html: item.content }}
                         />
                     ) : (
