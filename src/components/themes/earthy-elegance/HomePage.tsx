@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
@@ -66,8 +66,7 @@ export default function HomePage() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'posts'),
-      where('status', '==', 'published'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'published')
     );
   }, [firestore]);
 
@@ -79,7 +78,12 @@ export default function HomePage() {
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsCollection);
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
   
-  const [heroPost, ...otherPosts] = posts || [];
+  const sortedPosts = useMemo(() => {
+    if (!posts) return [];
+    return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
+  }, [posts]);
+
+  const [heroPost, ...otherPosts] = sortedPosts;
 
   const isLoading = isLoadingPosts || isLoadingSettings;
 
@@ -92,7 +96,7 @@ export default function HomePage() {
         <PublicHeader siteName={settings?.siteName} />
         <main className="container mx-auto py-8 px-4">
             
-            {!posts || posts.length === 0 ? (
+            {!sortedPosts || sortedPosts.length === 0 ? (
                 <div className="text-center py-24">
                     <h2 className="text-3xl font-bold font-headline text-emerald-800">A quiet space.</h2>
                     <p className="text-emerald-700/80 mt-4">Content is being cultivated. Please return soon.</p>
@@ -120,7 +124,7 @@ export default function HomePage() {
                                 </h1>
                                  <time className="text-sm text-emerald-700/80 mb-4 block">
                                     {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'MMMM d, yyyy') : ''}
-                                </time>
+                                 </time>
                                 <p className="text-lg text-emerald-800/90 mb-6">{heroPost.excerpt}</p>
                                 <Button asChild size="lg" variant="outline" className="border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white">
                                     <Link href={`/${heroPost.slug}`}>
