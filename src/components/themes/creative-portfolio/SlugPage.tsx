@@ -33,10 +33,13 @@ type Page = {
   status: 'draft' | 'published';
   createdAt: Timestamp;
   builderEnabled?: boolean;
+  showTitle?: boolean;
 };
 
 type SiteSettings = {
   siteName?: string;
+  hideAllPageTitles?: boolean;
+  homepagePageId?: string;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -170,6 +173,11 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const isPost = 'excerpt' in item;
   const pageId = !isPost ? item.id : undefined;
 
+  // Determine if the title should be shown
+  const isHomepage = !isPost && settings?.homepagePageId === item.id;
+  const pageShowTitle = !isPost ? (item as Page).showTitle : true;
+  const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
+
   return (
     <div className="bg-background">
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
@@ -188,7 +196,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             </div>
           )}
           <header className="mb-8 text-center">
-            <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>
+            {displayTitle && <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>}
             <time className="text-muted-foreground text-sm uppercase tracking-widest">
               {item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}
             </time>
@@ -219,3 +227,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
+
+    

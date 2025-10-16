@@ -40,6 +40,7 @@ type Page = {
     createdAt: Timestamp;
     updatedAt: Timestamp;
     builderEnabled?: boolean;
+    showTitle?: boolean;
 };
 
 const pageWidgetAreas = [
@@ -63,6 +64,7 @@ export default function EditPagePage() {
   const [content, setContent] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [builderEnabled, setBuilderEnabled] = useState(false);
+  const [showTitle, setShowTitle] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitializingWidgets, setIsInitializingWidgets] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
@@ -92,6 +94,7 @@ export default function EditPagePage() {
       setContent(page.content || '');
       setFeaturedImageUrl(page.featuredImageUrl || '');
       setBuilderEnabled(page.builderEnabled || false);
+      setShowTitle(page.showTitle === undefined ? true : page.showTitle);
     }
   }, [page]);
 
@@ -200,6 +203,7 @@ export default function EditPagePage() {
         slug,
         status,
         builderEnabled,
+        showTitle,
         authorId: auth.currentUser.uid,
         updatedAt: serverTimestamp(),
     };
@@ -310,6 +314,22 @@ export default function EditPagePage() {
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-36">
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Page Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                 <div className="flex items-center space-x-2">
+                    <Switch
+                        id="show-title"
+                        checked={showTitle}
+                        onCheckedChange={setShowTitle}
+                        disabled={isSubmitting}
+                    />
+                    <Label htmlFor="show-title">Show Page Title</Label>
+                </div>
+            </CardContent>
+        </Card>
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Featured Image</CardTitle>
@@ -463,3 +483,5 @@ export default function EditPagePage() {
     </div>
   );
 }
+
+    

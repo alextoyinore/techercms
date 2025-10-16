@@ -26,16 +26,19 @@ type Page = {
   slug: string;
   createdAt: Timestamp;
   builderEnabled?: boolean;
+  showTitle?: boolean;
 };
 
 type SiteSettings = {
   siteName?: string;
+  hideAllPageTitles?: boolean;
+  homepagePageId?: string;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-8 px-6">
-            <div className="container mx-auto flex justify-between items-center">
+            <div className="container mx-auto max-w-3xl flex justify-between items-center">
                 <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
                     {siteName || 'A Minimalist Blog'}
                 </Link>
@@ -140,6 +143,11 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   
   const isPost = item ? 'excerpt' in item : false;
   const pageId = !isPost && item ? item.id : undefined;
+  
+  // Determine if the title should be shown
+  const isHomepage = !isPost && settings?.homepagePageId === item?.id;
+  const pageShowTitle = !isPost && item ? (item as Page).showTitle : true;
+  const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
@@ -164,13 +172,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     <div className="bg-background">
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-6">
+      <main className="container mx-auto py-8 px-6 max-w-3xl">
         <article>
           <header className="mb-12 text-center">
              <time className="text-sm text-muted-foreground">
               Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}
             </time>
-            <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>
+            {displayTitle && <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>}
           </header>
           
           {isPost ? (
@@ -192,3 +200,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
+
+    

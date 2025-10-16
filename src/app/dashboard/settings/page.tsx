@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { timezones } from '@/lib/timezones';
 import { languages } from '@/lib/languages';
+import { Switch } from '@/components/ui/switch';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -38,6 +39,7 @@ type SiteSettings = {
   language?: string;
   timezone?: string;
   dashboardTheme?: string;
+  hideAllPageTitles?: boolean;
 };
 
 type Page = {
@@ -56,6 +58,7 @@ export default function SettingsPage() {
   const [homepagePageId, setHomepagePageId] = useState<string | undefined>(undefined);
   const [language, setLanguage] = useState<string>('en');
   const [timezone, setTimezone] = useState<string>('');
+  const [hideAllPageTitles, setHideAllPageTitles] = useState(false);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -76,6 +79,7 @@ export default function SettingsPage() {
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
+      setHideAllPageTitles(settings.hideAllPageTitles || false);
       if (settings.timezone) {
         setTimezone(settings.timezone);
       }
@@ -103,6 +107,7 @@ export default function SettingsPage() {
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
         language,
         timezone,
+        hideAllPageTitles,
     };
     try {
         await setDoc(doc(firestore, 'site_settings', 'config'), settingsToSave, { merge: true });
@@ -133,6 +138,14 @@ export default function SettingsPage() {
                     <Label htmlFor="siteName">Site Name</Label>
                     <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
                     <p className="text-sm text-muted-foreground">This name is displayed publicly on your site.</p>
+                </div>
+                 <div className="flex items-center space-x-2">
+                    <Switch
+                        id="hide-all-titles"
+                        checked={hideAllPageTitles}
+                        onCheckedChange={setHideAllPageTitles}
+                    />
+                    <Label htmlFor="hide-all-titles">Hide All Page Titles</Label>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
@@ -211,3 +224,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
