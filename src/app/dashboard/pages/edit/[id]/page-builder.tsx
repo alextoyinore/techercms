@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, writeBatch, doc } from 'firebase/firestore';
-import { Plus, GripVertical, Trash2 } from 'lucide-react';
+import { Plus, GripVertical, Trash2, Cog } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -33,6 +33,7 @@ type SectionBlock = {
     blockLayoutId: string;
     columnIndex: number;
     order: number;
+    config?: any;
 }
 
 const sectionTypes = [
@@ -42,7 +43,7 @@ const sectionTypes = [
     { type: 'two-column-67-33', label: 'Two Columns (67/33)' },
 ];
 
-function SectionBlockItem({ block, layouts, onDelete }: { block: SectionBlock, layouts: BlockLayout[], onDelete: (id: string) => void }) {
+function SectionBlockItem({ block, layouts, onDelete, onConfigure }: { block: SectionBlock, layouts: BlockLayout[], onDelete: (id: string) => void, onConfigure: (block: SectionBlock) => void }) {
     const layout = layouts.find(l => l.id === block.blockLayoutId);
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id, data: { type: 'block', block }});
     const style = { transform: CSS.Transform.toString(transform), transition };
@@ -53,6 +54,9 @@ function SectionBlockItem({ block, layouts, onDelete }: { block: SectionBlock, l
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm font-medium">{layout?.name || 'Unknown Block'}</span>
             </div>
+             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onConfigure(block)}>
+                <Cog className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(block.id)}>
                 <Trash2 className="h-4 w-4" />
             </Button>
@@ -60,14 +64,14 @@ function SectionBlockItem({ block, layouts, onDelete }: { block: SectionBlock, l
     );
 }
 
-function ColumnDropzone({ section, columnIndex, blocks, layouts, onAddBlock, onDeleteBlock }: { section: PageSection, columnIndex: number, blocks: SectionBlock[], layouts: BlockLayout[], onAddBlock: (sectionId: string, columnIndex: number) => void, onDeleteBlock: (id: string) => void }) {
+function ColumnDropzone({ section, columnIndex, blocks, layouts, onAddBlock, onDeleteBlock, onConfigureBlock }: { section: PageSection, columnIndex: number, blocks: SectionBlock[], layouts: BlockLayout[], onAddBlock: (sectionId: string, columnIndex: number) => void, onDeleteBlock: (id: string) => void, onConfigureBlock: (block: SectionBlock) => void }) {
     const sortedBlocks = useMemo(() => blocks.sort((a, b) => a.order - b.order), [blocks]);
     
     return (
         <SortableContext items={sortedBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
             <div className="bg-muted/50 p-4 rounded-lg min-h-[120px] flex flex-col gap-2">
                 {sortedBlocks.map(block => (
-                    <SectionBlockItem key={block.id} block={block} layouts={layouts} onDelete={onDeleteBlock} />
+                    <SectionBlockItem key={block.id} block={block} layouts={layouts} onDelete={onDeleteBlock} onConfigure={onConfigureBlock} />
                 ))}
                 <Button variant="outline" size="sm" onClick={() => onAddBlock(section.id, columnIndex)}>
                     <Plus className="mr-2 h-4 w-4" /> Add Block
@@ -78,7 +82,7 @@ function ColumnDropzone({ section, columnIndex, blocks, layouts, onAddBlock, onD
 }
 
 
-function PageSectionItem({ section, blocks, layouts, onAddBlock, onDeleteSection, onDeleteBlock }: { section: PageSection, blocks: SectionBlock[], layouts: BlockLayout[], onAddBlock: (sectionId: string, columnIndex: number) => void, onDeleteSection: (id: string) => void, onDeleteBlock: (id: string) => void }) {
+function PageSectionItem({ section, blocks, layouts, onAddBlock, onDeleteSection, onDeleteBlock, onConfigureBlock }: { section: PageSection, blocks: SectionBlock[], layouts: BlockLayout[], onAddBlock: (sectionId: string, columnIndex: number) => void, onDeleteSection: (id: string) => void, onDeleteBlock: (id: string) => void, onConfigureBlock: (block: SectionBlock) => void }) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: section.id, data: { type: 'section' }});
     const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -104,11 +108,11 @@ function PageSectionItem({ section, blocks, layouts, onAddBlock, onDeleteSection
             </div>
             <div className={`grid gap-4 ${getGridCols()}`}>
                 <div className={section.type === 'two-column-67-33' ? 'col-span-2' : 'col-span-1'}>
-                   <ColumnDropzone section={section} columnIndex={0} blocks={blocks.filter(b => b.columnIndex === 0)} layouts={layouts} onAddBlock={onAddBlock} onDeleteBlock={onDeleteBlock} />
+                   <ColumnDropzone section={section} columnIndex={0} blocks={blocks.filter(b => b.columnIndex === 0)} layouts={layouts} onAddBlock={onAddBlock} onDeleteBlock={onDeleteBlock} onConfigureBlock={onConfigureBlock} />
                 </div>
                 {section.type !== 'one-column' && (
                     <div className={section.type === 'two-column-33-67' ? 'col-span-2' : 'col-span-1'}>
-                        <ColumnDropzone section={section} columnIndex={1} blocks={blocks.filter(b => b.columnIndex === 1)} layouts={layouts} onAddBlock={onAddBlock} onDeleteBlock={onDeleteBlock}/>
+                        <ColumnDropzone section={section} columnIndex={1} blocks={blocks.filter(b => b.columnIndex === 1)} layouts={layouts} onAddBlock={onAddBlock} onDeleteBlock={onDeleteBlock} onConfigureBlock={onConfigureBlock} />
                     </div>
                 )}
             </div>
@@ -116,15 +120,17 @@ function PageSectionItem({ section, blocks, layouts, onAddBlock, onDeleteSection
     );
 }
 
-export default function PageBuilder({ pageId }: PageBuilderProps) {
+export default function PageBuilder({ pageId }: { pageId: string }) {
     const firestore = useFirestore();
     const { toast } = useToast();
 
     const [sections, setSections] = useState<PageSection[]>([]);
     const [blocks, setBlocks] = useState<SectionBlock[]>([]);
     
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isAddBlockSheetOpen, setIsAddBlockSheetOpen] = useState(false);
+    const [isConfigureSheetOpen, setIsConfigureSheetOpen] = useState(false);
     const [currentTarget, setCurrentTarget] = useState<{sectionId: string, columnIndex: number} | null>(null);
+    const [configuringBlock, setConfiguringBlock] = useState<SectionBlock | null>(null);
 
     const sectionsQuery = useMemoFirebase(() => query(collection(firestore, 'page_sections'), where('pageId', '==', pageId)), [firestore, pageId]);
     const { data: fetchedSections, isLoading: isLoadingSections } = useCollection<PageSection>(sectionsQuery);
@@ -175,7 +181,7 @@ export default function PageBuilder({ pageId }: PageBuilderProps) {
     
     const handleAddBlockClick = (sectionId: string, columnIndex: number) => {
         setCurrentTarget({sectionId, columnIndex});
-        setIsSheetOpen(true);
+        setIsAddBlockSheetOpen(true);
     }
     
     const handleSelectBlockLayout = (layout: BlockLayout) => {
@@ -188,10 +194,24 @@ export default function PageBuilder({ pageId }: PageBuilderProps) {
             blockLayoutId: layout.id,
             columnIndex: currentTarget.columnIndex,
             order: existingBlocks.length,
+            config: {},
         };
         addDocumentNonBlocking(collection(firestore, 'section_blocks'), newBlock);
-        setIsSheetOpen(false);
+        setIsAddBlockSheetOpen(false);
     }
+
+    const handleConfigureBlock = (block: SectionBlock) => {
+        setConfiguringBlock(block);
+        setIsConfigureSheetOpen(true);
+    }
+    
+    const handleSaveBlockConfig = (blockId: string, newConfig: any) => {
+        const blockRef = doc(firestore, 'section_blocks', blockId);
+        setDocumentNonBlocking(blockRef, { config: newConfig }, { merge: true });
+        toast({ title: 'Block Configuration Saved' });
+        setIsConfigureSheetOpen(false);
+    }
+
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -277,6 +297,7 @@ export default function PageBuilder({ pageId }: PageBuilderProps) {
                             onAddBlock={handleAddBlockClick}
                             onDeleteSection={deleteSection}
                             onDeleteBlock={deleteBlock}
+                            onConfigureBlock={handleConfigureBlock}
                         />
                     ))}
                 </SortableContext>
@@ -296,7 +317,7 @@ export default function PageBuilder({ pageId }: PageBuilderProps) {
                 </CardContent>
             </Card>
 
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <Sheet open={isAddBlockSheetOpen} onOpenChange={setIsAddBlockSheetOpen}>
                 <SheetContent>
                     <SheetHeader>
                         <SheetTitle>Select a Block Layout</SheetTitle>
@@ -311,6 +332,15 @@ export default function PageBuilder({ pageId }: PageBuilderProps) {
                             </div>
                         ))}
                     </div>
+                </SheetContent>
+            </Sheet>
+
+             <Sheet open={isConfigureSheetOpen} onOpenChange={setIsConfigureSheetOpen}>
+                <SheetContent>
+                    <SheetHeader>
+                        <SheetTitle>Configure Block</SheetTitle>
+                    </SheetHeader>
+                    {/* Configuration form will go here */}
                 </SheetContent>
             </Sheet>
         </div>
