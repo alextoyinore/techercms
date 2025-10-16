@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { BlockLayout } from './BlockLayoutsView';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +30,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PostGridPreview } from './PostGridPreview';
 import { Textarea } from '@/components/ui/textarea';
 import { PostListPreview } from './PostListPreview';
+import { HeroPreview } from './previews/HeroPreview';
+import { CtaPreview } from './previews/CtaPreview';
+import { FeatureGridPreview } from './previews/FeatureGridPreview';
+import { GalleryPreview } from './previews/GalleryPreview';
+import { VideoPreview } from './previews/VideoPreview';
+import { TestimonialsPreview } from './previews/TestimonialsPreview';
+import { ContactFormPreview } from './previews/ContactFormPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -42,10 +49,40 @@ type Category = {
     name: string;
 }
 
+type NewBlockType = 
+    | 'post-grid' 
+    | 'post-list'
+    | 'hero'
+    | 'cta'
+    | 'feature-grid'
+    | 'gallery'
+    | 'video'
+    | 'testimonials'
+    | 'contact-form';
+
 const initialConfig = {
     'post-grid': { postCount: 6, columns: 3, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'post-list': { postCount: 5, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] }
+    'post-list': { postCount: 5, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
+    'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
+    'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
+    'gallery': { images: [] },
+    'video': { videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    'testimonials': { testimonials: [{ id: '1', author: 'Jane Doe', quote: 'This is a fantastic service!'}, {id: '2', author: 'John Smith', quote: 'I highly recommend this to everyone.'}] },
+    'contact-form': { recipientEmail: 'you@example.com', submitButtonText: 'Send Message' }
 }
+
+const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
+    { value: 'post-grid', label: 'Post Grid', group: 'Posts' },
+    { value: 'post-list', label: 'Post List', group: 'Posts' },
+    { value: 'hero', label: 'Hero Section', group: 'Page Sections' },
+    { value: 'cta', label: 'Call to Action', group: 'Page Sections' },
+    { value: 'feature-grid', label: 'Feature Grid', group: 'Page Sections' },
+    { value: 'gallery', label: 'Image Gallery', group: 'Media' },
+    { value: 'video', label: 'Video', group: 'Media' },
+    { value: 'testimonials', label: 'Testimonials', group: 'Content' },
+    { value: 'contact-form', label: 'Contact Form', group: 'Utility' },
+];
 
 export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLayoutBuilderProps) {
   const firestore = useFirestore();
@@ -53,7 +90,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<'post-grid' | 'post-list'>('post-grid');
+  const [type, setType] = useState<NewBlockType>('post-grid');
   const [config, setConfig] = useState<any>(initialConfig['post-grid']);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -65,8 +102,8 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
         if (editingLayout) {
             setName(editingLayout.name);
             setDescription(editingLayout.description || '');
-            setType(editingLayout.type);
-            setConfig(editingLayout.config || initialConfig[editingLayout.type]);
+            setType(editingLayout.type as NewBlockType);
+            setConfig(editingLayout.config || initialConfig[editingLayout.type as NewBlockType]);
         } else {
             setName('New Block Layout');
             setDescription('');
@@ -76,7 +113,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     }
   }, [isOpen, editingLayout]);
 
-  const handleTypeChange = (newType: 'post-grid' | 'post-list') => {
+  const handleTypeChange = (newType: NewBlockType) => {
     setType(newType);
     setConfig(initialConfig[newType]);
   }
@@ -84,6 +121,19 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   const handleConfigChange = (newConfig: Partial<any>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
   };
+  
+  const handleFeatureChange = (index: number, field: 'title' | 'description' | 'icon', value: string) => {
+    const newFeatures = [...config.features];
+    newFeatures[index] = {...newFeatures[index], [field]: value};
+    handleConfigChange({ features: newFeatures });
+  };
+  
+  const handleTestimonialChange = (index: number, field: 'quote' | 'author', value: string) => {
+    const newTestimonials = [...config.testimonials];
+    newTestimonials[index] = {...newTestimonials[index], [field]: value};
+    handleConfigChange({ testimonials: newTestimonials });
+  };
+
 
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
     const currentIds = config.categoryIds || [];
@@ -114,43 +164,102 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
         setIsSaving(false);
     }
   };
-
-  return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="flex flex-col sm:max-w-4xl">
-        <SheetHeader>
-          <SheetTitle>{editingLayout ? 'Edit' : 'Create'} Block Layout</SheetTitle>
-          <SheetDescription>
-            Design a reusable content block for your pages or widget areas.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto py-4 pr-2">
-            {/* --- SETTINGS --- */}
-            <div className="grid gap-6 auto-rows-max">
-                 <div className="grid gap-2">
-                    <Label htmlFor="layout-name">Layout Name</Label>
-                    <Input id="layout-name" value={name} onChange={(e) => setName(e.target.value)} />
+  
+  const renderConfigFields = () => {
+    switch(type) {
+        case 'hero':
+        case 'cta':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Headline</Label>
+                        <Input value={config.headline || ''} onChange={e => handleConfigChange({ headline: e.target.value })} />
+                    </div>
+                     <div className="grid gap-2">
+                        <Label>Sub-headline</Label>
+                        <Textarea value={config.subheadline || ''} onChange={e => handleConfigChange({ subheadline: e.target.value })} />
+                    </div>
+                    <div className='grid grid-cols-2 gap-4'>
+                        <div className="grid gap-2">
+                            <Label>Button Text</Label>
+                            <Input value={config.buttonText || ''} onChange={e => handleConfigChange({ buttonText: e.target.value })} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Button URL</Label>
+                            <Input value={config.buttonUrl || ''} onChange={e => handleConfigChange({ buttonUrl: e.target.value })} />
+                        </div>
+                    </div>
+                    {type === 'hero' && (
+                         <div className="grid gap-2">
+                            <Label>Background Image URL</Label>
+                            <Input value={config.imageUrl || ''} onChange={e => handleConfigChange({ imageUrl: e.target.value })} />
+                        </div>
+                    )}
                 </div>
-                 <div className="grid gap-2">
-                    <Label htmlFor="layout-description">Description</Label>
-                    <Textarea id="layout-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this block for?" />
+            );
+        case 'feature-grid':
+             return (
+                <div className="grid gap-4">
+                    {(config.features || []).map((feature: any, index: number) => (
+                        <div key={feature.id} className="border p-4 rounded-md space-y-2">
+                             <div className="grid gap-2">
+                                <Label>Icon (Lucide name)</Label>
+                                <Input value={feature.icon} onChange={e => handleFeatureChange(index, 'icon', e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Title</Label>
+                                <Input value={feature.title} onChange={e => handleFeatureChange(index, 'title', e.target.value)} />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label>Description</Label>
+                                <Textarea value={feature.description} onChange={e => handleFeatureChange(index, 'description', e.target.value)} />
+                            </div>
+                        </div>
+                    ))}
                 </div>
+             )
+        case 'testimonials':
+            return (
+                <div className="grid gap-4">
+                    {(config.testimonials || []).map((testimonial: any, index: number) => (
+                         <div key={testimonial.id} className="border p-4 rounded-md space-y-2">
+                            <div className="grid gap-2">
+                                <Label>Author</Label>
+                                <Input value={testimonial.author} onChange={e => handleTestimonialChange(index, 'author', e.target.value)} />
+                            </div>
+                             <div className="grid gap-2">
+                                <Label>Quote</Label>
+                                <Textarea value={testimonial.quote} onChange={e => handleTestimonialChange(index, 'quote', e.target.value)} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )
+        case 'video':
+            return (
                 <div className="grid gap-2">
-                    <Label htmlFor="layout-type">Layout Type</Label>
-                    <Select value={type} onValueChange={(v) => handleTypeChange(v as any)}>
-                        <SelectTrigger id="layout-type">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="post-grid">Post Grid</SelectItem>
-                            <SelectItem value="post-list">Post List</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Label>Video URL</Label>
+                    <Input value={config.videoUrl || ''} onChange={e => handleConfigChange({ videoUrl: e.target.value })} />
+                    <p className='text-sm text-muted-foreground'>Enter the full URL for a YouTube or Vimeo video.</p>
                 </div>
-                
-                {/* --- CONFIG FIELDS --- */}
-                <div className="grid gap-4 border-t pt-4">
-                    <h3 className="font-medium">Configuration</h3>
+            )
+         case 'contact-form':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Recipient Email</Label>
+                        <Input type="email" value={config.recipientEmail || ''} onChange={e => handleConfigChange({ recipientEmail: e.target.value })} />
+                    </div>
+                     <div className="grid gap-2">
+                        <Label>Submit Button Text</Label>
+                        <Input value={config.submitButtonText || ''} onChange={e => handleConfigChange({ submitButtonText: e.target.value })} />
+                    </div>
+                </div>
+            )
+        case 'post-grid':
+        case 'post-list':
+             return (
+                <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="post-count">Number of Posts</Label>
@@ -207,19 +316,67 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                             <Input id="tags" value={(config.tagIds || []).join(', ')} onChange={e => handleConfigChange({ tagIds: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })} />
                         </div>
                     )}
+                </div>
+            )
+        default:
+            return <p>This block type has no configuration options.</p>
+    }
+  }
 
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent className="flex flex-col sm:max-w-4xl">
+        <SheetHeader>
+          <SheetTitle>{editingLayout ? 'Edit' : 'Create'} Block Layout</SheetTitle>
+          <SheetDescription>
+            Design a reusable content block for your pages or widget areas.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto py-4 pr-2">
+            {/* --- SETTINGS --- */}
+            <div className="grid gap-6 auto-rows-max">
+                 <div className="grid gap-2">
+                    <Label htmlFor="layout-name">Layout Name</Label>
+                    <Input id="layout-name" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="layout-description">Description</Label>
+                    <Textarea id="layout-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this block for?" />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="layout-type">Layout Type</Label>
+                    <Select value={type} onValueChange={(v) => handleTypeChange(v as any)}>
+                        <SelectTrigger id="layout-type">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                             {Object.entries(blockTypes.reduce((acc, t) => ({...acc, [t.group]: [...(acc[t.group] || []), t]}), {} as Record<string, typeof blockTypes>)).map(([group, types]) => (
+                                <React.Fragment key={group}>
+                                    <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{group}</p>
+                                    {types.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                                </React.Fragment>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                
+                <div className="grid gap-4 border-t pt-4">
+                    <h3 className="font-medium">Configuration</h3>
+                    {renderConfigFields()}
                 </div>
             </div>
             {/* --- PREVIEW --- */}
             <div className="bg-muted/50 rounded-lg p-4">
                  <h3 className="font-medium mb-4 text-center text-sm text-muted-foreground">Live Preview</h3>
-                 {type === 'post-grid' ? (
-                     <PostGridPreview config={config} />
-                 ) : type === 'post-list' ? (
-                     <PostListPreview config={config} />
-                 ) : (
-                     <p className='text-center text-sm text-muted-foreground'>No preview available for this layout type yet.</p>
-                 )}
+                 {type === 'post-grid' && <PostGridPreview config={config} />}
+                 {type === 'post-list' && <PostListPreview config={config} />}
+                 {type === 'hero' && <HeroPreview config={config} />}
+                 {type === 'cta' && <CtaPreview config={config} />}
+                 {type === 'feature-grid' && <FeatureGridPreview config={config} />}
+                 {type === 'gallery' && <GalleryPreview config={config} />}
+                 {type === 'video' && <VideoPreview config={config} />}
+                 {type === 'testimonials' && <TestimonialsPreview config={config} />}
+                 {type === 'contact-form' && <ContactFormPreview config={config} />}
             </div>
         </div>
         <SheetFooter>
@@ -232,3 +389,5 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     </Sheet>
   );
 }
+
+    
