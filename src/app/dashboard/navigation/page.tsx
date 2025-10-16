@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import {
   collection,
@@ -37,6 +37,14 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type NavigationMenu = {
   id: string;
@@ -49,6 +57,18 @@ type NavigationMenuItem = {
   label: string;
   url: string;
   order: number;
+};
+
+type Page = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
 };
 
 function MenuItemsManager({
@@ -64,10 +84,12 @@ function MenuItemsManager({
     Partial<NavigationMenuItem> | {}
   >({});
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [linkType, setLinkType] = useState<'custom' | 'page' | 'category'>(
+    'custom'
+  );
 
   const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Simplified query: Removed orderBy to avoid needing a composite index.
     return query(
       collection(firestore, 'navigation_menu_items'),
       where('menuId', '==', menu.id)
@@ -76,13 +98,43 @@ function MenuItemsManager({
 
   const { data: menuItems, isLoading } =
     useCollection<NavigationMenuItem>(menuItemsQuery);
-    
-  // Sort items on the client-side after fetching
+
+  const pagesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'pages'),
+      where('status', '==', 'published')
+    );
+  }, [firestore]);
+  const { data: pages, isLoading: isLoadingPages } =
+    useCollection<Page>(pagesQuery);
+
+  const categoriesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'categories'));
+  }, [firestore]);
+  const { data: categories, isLoading: isLoadingCategories } =
+    useCollection<Category>(categoriesQuery);
+
   const sortedMenuItems = useMemo(() => {
     if (!menuItems) return [];
     return [...menuItems].sort((a, b) => a.order - b.order);
   }, [menuItems]);
 
+  useEffect(() => {
+    if (isSheetOpen && (editingItem as NavigationMenuItem).id) {
+      const url = (editingItem as NavigationMenuItem).url;
+      if (url?.startsWith('/category/')) {
+        setLinkType('category');
+      } else if (url?.startsWith('/')) {
+        setLinkType('page');
+      } else {
+        setLinkType('custom');
+      }
+    } else {
+      setLinkType('custom');
+    }
+  }, [isSheetOpen, editingItem]);
 
   const handleEditClick = (item: NavigationMenuItem) => {
     setEditingItem(item);
@@ -109,7 +161,6 @@ function MenuItemsManager({
 
     try {
       if (itemToSave.id) {
-        // Update existing item
         const itemRef = doc(
           firestore,
           'navigation_menu_items',
@@ -118,7 +169,6 @@ function MenuItemsManager({
         await setDocumentNonBlocking(itemRef, { ...itemToSave }, { merge: true });
         toast({ title: 'Item Updated' });
       } else {
-        // Add new item
         const newDocRef = collection(firestore, 'navigation_menu_items');
         const order = sortedMenuItems ? sortedMenuItems.length : 0;
         await addDocumentNonBlocking(newDocRef, {
@@ -153,20 +203,42 @@ function MenuItemsManager({
       });
     }
   };
-  
+
   const handleDeleteMenuWithItems = async () => {
-    if(!firestore) return;
-    
+    if (!firestore) return;
+
     if (sortedMenuItems && sortedMenuItems.length > 0) {
-        const batch = writeBatch(firestore);
-        sortedMenuItems.forEach(item => {
-            const itemRef = doc(firestore, 'navigation_menu_items', item.id);
-            batch.delete(itemRef);
-        });
-        await batch.commit();
+      const batch = writeBatch(firestore);
+      sortedMenuItems.forEach(item => {
+        const itemRef = doc(firestore, 'navigation_menu_items', item.id);
+        batch.delete(itemRef);
+      });
+      await batch.commit();
     }
     onDeleteMenu(menu.id);
-  }
+  };
+
+  const handlePageSelect = (slug: string) => {
+    const selectedPage = pages?.find(p => p.slug === slug);
+    if (selectedPage) {
+      setEditingItem({
+        ...editingItem,
+        url: `/${slug}`,
+        label: selectedPage.title,
+      });
+    }
+  };
+
+  const handleCategorySelect = (slug: string) => {
+    const selectedCategory = categories?.find(c => c.slug === slug);
+    if (selectedCategory) {
+      setEditingItem({
+        ...editingItem,
+        url: `/category/${slug}`,
+        label: selectedCategory.name,
+      });
+    }
+  };
 
   return (
     <Card>
@@ -175,18 +247,22 @@ function MenuItemsManager({
           <CardTitle className="font-headline text-xl">{menu.name}</CardTitle>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleAddNewClick}>
-                <Plus className="mr-2 h-4 w-4" /> Add Item
-            </Button>
-             <Button variant="destructive" size="sm" onClick={handleDeleteMenuWithItems}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Menu
-            </Button>
+          <Button variant="outline" size="sm" onClick={handleAddNewClick}>
+            <Plus className="mr-2 h-4 w-4" /> Add Item
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDeleteMenuWithItems}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete Menu
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
         {isLoading && <p>Loading items...</p>}
         <div className="space-y-2">
-          {sortedMenuItems?.map((item) => (
+          {sortedMenuItems?.map(item => (
             <div
               key={item.id}
               className="flex items-center justify-between rounded-md border p-3"
@@ -224,42 +300,119 @@ function MenuItemsManager({
           )}
         </div>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent>
+          <SheetContent className="flex flex-col">
             <SheetHeader>
               <SheetTitle>
-                { (editingItem as NavigationMenuItem).id ? 'Edit' : 'Add' } Menu Item
+                {(editingItem as NavigationMenuItem).id ? 'Edit' : 'Add'} Menu Item
               </SheetTitle>
               <SheetDescription>
-                Manage the label and URL for this navigation link.
+                Configure the link for your navigation menu.
               </SheetDescription>
             </SheetHeader>
-            <div className="grid gap-4 py-4">
+            <div className="flex-1 grid gap-6 py-4 overflow-y-auto px-1">
+              <RadioGroup
+                value={linkType}
+                onValueChange={value =>
+                  setLinkType(value as 'custom' | 'page' | 'category')
+                }
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="custom" id="custom" />
+                  <Label htmlFor="custom">Custom URL</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="page" id="page" />
+                  <Label htmlFor="page">Page</Label>
+                </div>
+                 <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="category" id="category" />
+                  <Label htmlFor="category">Category</Label>
+                </div>
+              </RadioGroup>
+
+              {linkType === 'custom' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="url">URL</Label>
+                  <Input
+                    id="url"
+                    value={(editingItem as NavigationMenuItem).url || ''}
+                    onChange={e =>
+                      setEditingItem({ ...editingItem, url: e.target.value })
+                    }
+                  />
+                </div>
+              )}
+              {linkType === 'page' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="page-select">Select a Page</Label>
+                  <Select
+                    onValueChange={handlePageSelect}
+                    value={(editingItem as NavigationMenuItem).url?.substring(1)}
+                    disabled={isLoadingPages}
+                  >
+                    <SelectTrigger id="page-select">
+                      <SelectValue placeholder="Choose a page..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pages?.map(page => (
+                        <SelectItem key={page.id} value={page.slug}>
+                          {page.title}
+                        </SelectItem>
+                      ))}
+                      {!isLoadingPages && pages?.length === 0 && (
+                        <SelectItem value="no-pages" disabled>
+                          No published pages available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {linkType === 'category' && (
+                <div className="grid gap-2">
+                  <Label htmlFor="category-select">Select a Category</Label>
+                  <Select
+                    onValueChange={handleCategorySelect}
+                    value={(editingItem as NavigationMenuItem).url?.split('/')[2]}
+                    disabled={isLoadingCategories}
+                  >
+                    <SelectTrigger id="category-select">
+                      <SelectValue placeholder="Choose a category..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories?.map(cat => (
+                        <SelectItem key={cat.id} value={cat.slug}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                      {!isLoadingCategories && categories?.length === 0 && (
+                        <SelectItem value="no-categories" disabled>
+                          No categories available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="grid gap-2">
                 <Label htmlFor="label">Label</Label>
                 <Input
                   id="label"
                   value={(editingItem as NavigationMenuItem).label || ''}
-                  onChange={(e) =>
+                  onChange={e =>
                     setEditingItem({ ...editingItem, label: e.target.value })
                   }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="url">URL</Label>
-                <Input
-                  id="url"
-                  value={(editingItem as NavigationMenuItem).url || ''}
-                  onChange={(e) =>
-                    setEditingItem({ ...editingItem, url: e.target.value })
-                  }
+                  placeholder="The text to display"
                 />
               </div>
             </div>
             <SheetFooter>
-                <SheetClose asChild>
-                    <Button variant="outline">Cancel</Button>
-                </SheetClose>
-                 <Button onClick={handleSaveItem}>Save Changes</Button>
+              <SheetClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </SheetClose>
+              <Button onClick={handleSaveItem}>Save Changes</Button>
             </SheetFooter>
           </SheetContent>
         </Sheet>
@@ -289,7 +442,10 @@ export default function NavigationPage() {
       await addDocumentNonBlocking(collection(firestore, 'navigation_menus'), {
         name: newMenuName,
       });
-      toast({ title: 'Menu Created', description: `"${newMenuName}" has been added.` });
+      toast({
+        title: 'Menu Created',
+        description: `"${newMenuName}" has been added.`,
+      });
       setNewMenuName('');
     } catch (error: any) {
       toast({
@@ -301,10 +457,10 @@ export default function NavigationPage() {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleDeleteMenu = async (menuId: string) => {
     if (!firestore) return;
-     try {
+    try {
       await deleteDocumentNonBlocking(doc(firestore, 'navigation_menus', menuId));
       toast({ title: 'Menu Deleted' });
     } catch (error: any) {
@@ -314,7 +470,7 @@ export default function NavigationPage() {
         description: error.message,
       });
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -331,10 +487,13 @@ export default function NavigationPage() {
             <Input
               placeholder="New Menu Name (e.g., Header Navigation)"
               value={newMenuName}
-              onChange={(e) => setNewMenuName(e.target.value)}
+              onChange={e => setNewMenuName(e.target.value)}
               disabled={isSubmitting}
             />
-            <Button onClick={handleAddMenu} disabled={isSubmitting || !newMenuName.trim()}>
+            <Button
+              onClick={handleAddMenu}
+              disabled={isSubmitting || !newMenuName.trim()}
+            >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -345,19 +504,23 @@ export default function NavigationPage() {
         </Card>
 
         {isLoading && <p>Loading menus...</p>}
-        
-        <div className='space-y-4'>
-            {menus?.map((menu) => (
-                <MenuItemsManager key={menu.id} menu={menu} onDeleteMenu={handleDeleteMenu} />
-            ))}
+
+        <div className="space-y-4">
+          {menus?.map(menu => (
+            <MenuItemsManager
+              key={menu.id}
+              menu={menu}
+              onDeleteMenu={handleDeleteMenu}
+            />
+          ))}
         </div>
 
         {!isLoading && menus?.length === 0 && (
-            <Card>
-                <CardContent className="p-8 text-center text-muted-foreground">
-                    You haven't created any menus yet.
-                </CardContent>
-            </Card>
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              You haven't created any menus yet.
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
