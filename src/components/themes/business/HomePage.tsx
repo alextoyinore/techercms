@@ -39,7 +39,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
     )
 }
 
-function PublicFooter() {
+function PublicFooter({ siteName }: { siteName?: string }) {
     return (
         <footer className="py-12 px-6 border-t mt-16 bg-card">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -194,7 +194,7 @@ export default function HomePage() {
               </div>
             )}
         </main>
-        <PublicFooter />
+        <PublicFooter siteName={settings?.siteName} />
     </div>
   );
 }

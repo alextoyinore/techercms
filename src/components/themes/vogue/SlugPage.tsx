@@ -55,7 +55,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
     )
 }
 
-function PublicFooter() {
+function PublicFooter({ siteName }: { siteName?: string }) {
     return (
         <footer className="py-12 px-6 border-t mt-16 bg-background">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -193,7 +193,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
         ) : (
             <div
                 className="prose lg:prose-xl max-w-none mx-auto"
-                dangerouslySetInnerHTML={{ __html: item.content }}
+                dangerouslySetInnerHTML={{ __html: editorContent }}
             />
         )}
 
@@ -209,7 +209,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
         </article>
       </main>
       <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicFooter />
+      <PublicFooter siteName={settings?.siteName} />
     </div>
   );
 }
