@@ -25,7 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -484,7 +484,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                         </div>
                         <div className="grid gap-4">
                             <Label>Social Links</Label>
-                            {(config.socialLinks || []).map((link, index) => (
+                            {(config.socialLinks || []).map((link: SocialLink, index: number) => (
                                 <div key={link.id} className="grid gap-2 rounded-md border p-3">
                                     <div className='flex gap-2'>
                                         <div className='flex-1 grid gap-2'>
@@ -1036,4 +1036,3 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         </DndContext>
     );
 }
-
