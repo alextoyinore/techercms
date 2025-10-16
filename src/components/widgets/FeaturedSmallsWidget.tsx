@@ -92,8 +92,8 @@ export function FeaturedSmallsWidget({
                     </Link>
                 </div>
                 <div className="md:col-span-1 space-y-4">
-                    {smallPosts.map(post => (
-                        <div key={post.id} className="flex gap-4 items-center group">
+                    {smallPosts.map((post, index) => (
+                        <div key={`${post.id}-${index}`} className="flex gap-4 items-center group">
                             {showImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="shrink-0">
                                     <div className="relative h-16 w-24 overflow-hidden rounded-md">
