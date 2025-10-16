@@ -31,6 +31,22 @@ const themes = {
     HomePage: dynamic(() => import('@/components/themes/earthy-elegance/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/earthy-elegance/SlugPage')),
   },
+  'Business': {
+    HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/business/SlugPage')),
+  },
+  'Sports': {
+    HomePage: dynamic(() => import('@/components/themes/sports/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/sports/SlugPage')),
+  },
+  'NewsPro': {
+    HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/newspro/SlugPage')),
+  },
+  'Vogue': {
+    HomePage: dynamic(() => import('@/components/themes/vogue/HomePage')),
+    SlugPage: dynamic(() => import('@/components/themes/vogue/SlugPage')),
+  },
 };
 
 type SiteSettings = {

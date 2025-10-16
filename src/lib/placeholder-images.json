@@ -113,6 +113,30 @@
       "description": "Earthy tones theme preview",
       "imageUrl": "https://picsum.photos/seed/theme11/600/400",
       "imageHint": "earthy tones"
+    },
+    {
+      "id": "theme-business",
+      "description": "Business theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme-business/600/400",
+      "imageHint": "financial newspaper"
+    },
+    {
+      "id": "theme-sports",
+      "description": "Sports theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme-sports/600/400",
+      "imageHint": "sports action"
+    },
+    {
+      "id": "theme-newspro",
+      "description": "NewsPro theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme-newspro/600/400",
+      "imageHint": "modern news"
+    },
+    {
+      "id": "theme-vogue",
+      "description": "Vogue theme preview",
+      "imageUrl": "https://picsum.photos/seed/theme-vogue/600/400",
+      "imageHint": "high fashion"
     }
   ]
 }

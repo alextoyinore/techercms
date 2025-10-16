@@ -56,6 +56,26 @@ const websiteThemes = [
       description: 'An organic, natural theme for lifestyle or wellness brands.',
       imageHintId: 'theme-11'
     },
+    {
+      name: 'Business',
+      description: 'A professional, data-driven theme for financial news.',
+      imageHintId: 'theme-business'
+    },
+    {
+      name: 'Sports',
+      description: 'A dynamic, action-oriented theme for sports news.',
+      imageHintId: 'theme-sports'
+    },
+    {
+      name: 'NewsPro',
+      description: 'A serious, authoritative theme for global news.',
+      imageHintId: 'theme-newspro'
+    },
+    {
+      name: 'Vogue',
+      description: 'A chic, high-fashion theme for style and culture.',
+      imageHintId: 'theme-vogue'
+    },
 ];
 
 type SiteSettings = {
