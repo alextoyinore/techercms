@@ -115,9 +115,12 @@ export function PageLayoutsView() {
     toast({ title: 'Default Layout Updated' });
   };
   
-  const handleWidthSettingsChange = () => {
+  const handleWidthSettingsChange = (newWidth?: 'full' | 'centered', newContentWidth?: number) => {
     if (!settingsRef) return;
-    setDocumentNonBlocking(settingsRef, { pageWidth, contentWidth }, { merge: true });
+    const finalPageWidth = newWidth || pageWidth;
+    const finalContentWidth = newContentWidth || contentWidth;
+    
+    setDocumentNonBlocking(settingsRef, { pageWidth: finalPageWidth, contentWidth: finalContentWidth }, { merge: true });
     toast({ title: 'Global Layout Settings Updated' });
   }
 
@@ -169,7 +172,13 @@ export function PageLayoutsView() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
-                <RadioGroup value={pageWidth} onValueChange={(value: 'full' | 'centered') => setPageWidth(value)}>
+                <RadioGroup 
+                    value={pageWidth} 
+                    onValueChange={(value: 'full' | 'centered') => {
+                        setPageWidth(value);
+                        handleWidthSettingsChange(value);
+                    }}
+                >
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="full" id="full" />
                         <Label htmlFor="full" className="font-normal">Full Width</Label>
@@ -182,12 +191,12 @@ export function PageLayoutsView() {
 
                 {pageWidth === 'centered' && (
                     <div className='grid gap-2 max-w-sm'>
-                        <Label>Content Width ({contentWidth}rem)</Label>
+                        <Label>Content Width ({contentWidth}%)</Label>
                         <div className='flex items-center gap-4'>
                             <Slider
                                 value={[contentWidth]}
                                 onValueChange={(value) => setContentWidth(value[0])}
-                                onValueCommit={handleWidthSettingsChange}
+                                onValueCommit={(value) => handleWidthSettingsChange(undefined, value[0])}
                                 min={50}
                                 max={100}
                                 step={1}
