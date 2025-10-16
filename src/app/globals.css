@@ -111,6 +111,11 @@ body {
     --tw-prose-th-borders: hsl(var(--border));
     --tw-prose-td-borders: hsl(var(--border));
   }
+  .container {
+    max-width: var(--page-max-width, 100%);
+    margin-left: var(--page-margin-x, 0);
+    margin-right: var(--page-margin-x, 0);
+  }
 }
 
 @layer utilities {

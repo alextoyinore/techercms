@@ -7,6 +7,10 @@ import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
 
 function OneColumnIcon() {
     return (
@@ -60,6 +64,8 @@ type PageLayout = {
 
 type SiteSettings = {
   activePageLayoutId?: string;
+  pageWidth?: 'full' | 'centered';
+  contentWidth?: number;
 }
 
 export function PageLayoutsView() {
@@ -73,10 +79,15 @@ export function PageLayoutsView() {
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
   
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
+  const [pageWidth, setPageWidth] = useState<'full' | 'centered'>('full');
+  const [contentWidth, setContentWidth] = useState(75);
+
 
   useEffect(() => {
     if (settings) {
       setActiveLayoutId(settings.activePageLayoutId || null);
+      setPageWidth(settings.pageWidth || 'full');
+      setContentWidth(settings.contentWidth || 75);
     }
   }, [settings]);
 
@@ -103,45 +114,90 @@ export function PageLayoutsView() {
     setDocumentNonBlocking(settingsRef, { activePageLayoutId: layoutId }, { merge: true });
     toast({ title: 'Default Layout Updated' });
   };
+  
+  const handleWidthSettingsChange = () => {
+    if (!settingsRef) return;
+    setDocumentNonBlocking(settingsRef, { pageWidth, contentWidth }, { merge: true });
+    toast({ title: 'Global Layout Settings Updated' });
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Default Page Structure</CardTitle>
-        <CardDescription>
-          Choose the default column layout for new pages and posts. This can often be overridden by individual page or theme settings.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoadingLayouts || isLoadingSettings ? (
-          <p>Loading layouts...</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {pageLayouts?.map((layout) => {
-              const LayoutIcon = defaultPageLayouts.find(l => l.structure === layout.structure)?.icon || OneColumnIcon;
-              const isActive = layout.id === activeLayoutId;
-              return (
-                <div
-                  key={layout.id}
-                  onClick={() => handleSelectLayout(layout.id)}
-                  className={cn(
-                    "relative p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center justify-center gap-2 aspect-[4/3]",
-                    isActive ? "border-primary ring-2 ring-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"
-                  )}
-                >
-                  <LayoutIcon />
-                  <p className="font-medium text-sm text-center">{layout.name}</p>
-                  {isActive && (
-                    <div className="absolute top-2 right-2 flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground">
-                      <CheckCircle className="w-3 h-3" />
+    <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Default Page Structure</CardTitle>
+            <CardDescription>
+              Choose the default column layout for new pages and posts. This can often be overridden by individual page or theme settings.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingLayouts || isLoadingSettings ? (
+              <p>Loading layouts...</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {pageLayouts?.map((layout) => {
+                  const LayoutIcon = defaultPageLayouts.find(l => l.structure === layout.structure)?.icon || OneColumnIcon;
+                  const isActive = layout.id === activeLayoutId;
+                  return (
+                    <div
+                      key={layout.id}
+                      onClick={() => handleSelectLayout(layout.id)}
+                      className={cn(
+                        "relative p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center justify-center gap-2 aspect-[4/3]",
+                        isActive ? "border-primary ring-2 ring-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"
+                      )}
+                    >
+                      <LayoutIcon />
+                      <p className="font-medium text-sm text-center">{layout.name}</p>
+                      {isActive && (
+                        <div className="absolute top-2 right-2 flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground">
+                          <CheckCircle className="w-3 h-3" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Global Layout Settings</CardTitle>
+                <CardDescription>
+                    Control the overall width and container settings for your public website.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <RadioGroup value={pageWidth} onValueChange={(value: 'full' | 'centered') => setPageWidth(value)}>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="full" id="full" />
+                        <Label htmlFor="full" className="font-normal">Full Width</Label>
+                    </div>
+                     <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="centered" id="centered" />
+                        <Label htmlFor="centered" className="font-normal">Centered</Label>
+                    </div>
+                </RadioGroup>
+
+                {pageWidth === 'centered' && (
+                    <div className='grid gap-2 max-w-sm'>
+                        <Label>Content Width ({contentWidth}rem)</Label>
+                        <div className='flex items-center gap-4'>
+                            <Slider
+                                value={[contentWidth]}
+                                onValueChange={(value) => setContentWidth(value[0])}
+                                onValueCommit={handleWidthSettingsChange}
+                                min={50}
+                                max={100}
+                                step={1}
+                            />
+                        </div>
+                        <p className="text-sm text-muted-foreground">Set the maximum width of your content area.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    </div>
   );
 }

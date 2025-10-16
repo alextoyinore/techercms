@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TypographyProvider } from "@/components/TypographyProvider";
+import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
 export const metadata: Metadata = {
   title: "Techer CMS",
@@ -22,7 +23,9 @@ export default async function RootLayout({
         <FirebaseClientProvider>
           <ThemeProvider>
             <TypographyProvider>
-              {children}
+              <GlobalStyleProvider>
+                {children}
+              </GlobalStyleProvider>
             </TypographyProvider>
           </ThemeProvider>
         </FirebaseClientProvider>

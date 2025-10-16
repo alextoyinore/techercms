@@ -277,6 +277,15 @@
         "baseFontSize": {
             "type": "number",
             "description": "The base font size in pixels."
+        },
+        "pageWidth": {
+            "type": "string",
+            "description": "The overall page width.",
+            "enum": ["full", "centered"]
+        },
+        "contentWidth": {
+            "type": "number",
+            "description": "The percentage width of the content when in centered mode."
         }
       },
       "required": [
