@@ -80,15 +80,20 @@ export function PageLayoutsView() {
     }
   }, [settings]);
 
-  // Initialize default layouts if none exist
+  // Initialize default layouts if they don't exist
   useEffect(() => {
-    if (!isLoadingLayouts && pageLayouts?.length === 0 && firestore) {
-      const batch = writeBatch(firestore);
-      defaultPageLayouts.forEach(layoutData => {
-        const newLayoutRef = doc(collection(firestore, 'page_layouts'));
-        batch.set(newLayoutRef, { name: layoutData.name, structure: layoutData.structure });
-      });
-      batch.commit().catch(err => console.error("Failed to initialize default page layouts:", err));
+    if (!isLoadingLayouts && pageLayouts && firestore) {
+      const existingStructures = new Set(pageLayouts.map(p => p.structure));
+      const missingLayouts = defaultPageLayouts.filter(d => !existingStructures.has(d.structure));
+
+      if (missingLayouts.length > 0) {
+        const batch = writeBatch(firestore);
+        missingLayouts.forEach(layoutData => {
+          const newLayoutRef = doc(collection(firestore, 'page_layouts'));
+          batch.set(newLayoutRef, { name: layoutData.name, structure: layoutData.structure });
+        });
+        batch.commit().catch(err => console.error("Failed to initialize default page layouts:", err));
+      }
     }
   }, [isLoadingLayouts, pageLayouts, firestore]);
 
