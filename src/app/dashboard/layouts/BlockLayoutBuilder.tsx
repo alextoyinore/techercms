@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -72,9 +73,9 @@ type NewBlockType =
 const initialConfig = {
     'post-grid': { postCount: 6, columns: 3, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
     'post-list': { postCount: 5, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'post-carousel': { postCount: 8, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'featured-and-smalls': { smallPostCount: 4, filterType: 'latest', categoryIds: [], tagIds: [] },
-    'tabbed-posts': { postCountPerTab: 5, tabs: [{id: '1', title: 'Latest', filterType: 'latest'}, {id: '2', title: 'Featured', filterType: 'tag', tag: 'featured'}] },
+    'post-carousel': { postCount: 8, showImages: true, showExcerpts: false, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'featured-and-smalls': { smallPostCount: 4, showImages: true, showExcerpts: true, filterType: 'latest', categoryIds: [], tagIds: [] },
+    'tabbed-posts': { postCountPerTab: 5, showImages: true, showExcerpts: true, tabs: [{id: '1', title: 'Latest', filterType: 'latest'}, {id: '2', title: 'Featured', filterType: 'tag', tag: 'featured'}] },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
@@ -347,18 +348,15 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                             </div>
                         )}
                     </div>
-                     {type !== 'post-carousel' && type !== 'featured-and-smalls' && (
-                        <>
-                             <div className="flex items-center space-x-2">
-                                <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
-                                <Label htmlFor="show-images">Show featured images</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
-                                <Label htmlFor="show-excerpts">Show post excerpts</Label>
-                            </div>
-                        </>
-                     )}
+                    
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
+                        <Label htmlFor="show-images">Show featured images</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
+                        <Label htmlFor="show-excerpts">Show post excerpts</Label>
+                    </div>
 
                     <div className="grid gap-2">
                         <Label>Content Filter</Label>
@@ -403,6 +401,14 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                      <div className="grid gap-2">
                         <Label>Posts per tab</Label>
                         <Input type="number" value={config.postCountPerTab} onChange={e => handleConfigChange({ postCountPerTab: Number(e.target.value) })} />
+                    </div>
+                     <div className="flex items-center space-x-2">
+                        <Checkbox id="show-images-tabs" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
+                        <Label htmlFor="show-images-tabs">Show featured images</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-excerpts-tabs" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
+                        <Label htmlFor="show-excerpts-tabs">Show post excerpts</Label>
                     </div>
                     <Label>Tabs</Label>
                     <div className="grid gap-2">
