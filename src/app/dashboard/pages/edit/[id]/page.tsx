@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2 } from 'lucide-react';
 import { useFirestore, useAuth, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, serverTimestamp, Timestamp, collection, writeBatch, query, where } from 'firebase/firestore';
+import { doc, serverTimestamp, Timestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
@@ -169,6 +169,22 @@ export default function EditPagePage() {
 
     setIsSubmitting(true);
     setSubmissionStatus(status);
+    
+    // Logic to add featured image URL to media library if it's not already there
+    if (featuredImageUrl) {
+        const mediaQuery = query(collection(firestore, 'media'), where('url', '==', featuredImageUrl));
+        const querySnapshot = await getDocs(mediaQuery);
+        if (querySnapshot.empty) {
+            const filename = featuredImageUrl.split('/').pop() || 'image.jpg';
+            addDocumentNonBlocking(collection(firestore, "media"), {
+                url: featuredImageUrl,
+                filename: filename,
+                authorId: auth.currentUser.uid,
+                createdAt: serverTimestamp(),
+            });
+        }
+    }
+    
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     const updatedPage = {

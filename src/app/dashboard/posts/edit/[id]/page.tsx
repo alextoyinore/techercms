@@ -19,7 +19,7 @@ import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library } from 'lucide-react
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
@@ -192,6 +192,21 @@ export default function EditPostPage() {
 
     setIsSubmitting(true);
     setSubmissionStatus(status);
+    
+    if (featuredImageUrl) {
+        const mediaQuery = query(collection(firestore, 'media'), where('url', '==', featuredImageUrl));
+        const querySnapshot = await getDocs(mediaQuery);
+        if (querySnapshot.empty) {
+            const filename = featuredImageUrl.split('/').pop() || 'image.jpg';
+            addDocumentNonBlocking(collection(firestore, "media"), {
+                url: featuredImageUrl,
+                filename: filename,
+                authorId: auth.currentUser.uid,
+                createdAt: serverTimestamp(),
+            });
+        }
+    }
+
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     const updatedPost = {
