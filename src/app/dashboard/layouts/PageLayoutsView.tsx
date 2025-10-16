@@ -3,16 +3,53 @@ import { useState, useEffect, useMemo } from 'react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, writeBatch, setDoc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Columns, PanelLeft, PanelRight } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
+function OneColumnIcon() {
+    return (
+        <div className="h-12 w-16 flex gap-1 p-1 rounded-md bg-muted">
+            <div className="flex-1 rounded-sm bg-muted-foreground/50"></div>
+        </div>
+    )
+}
+
+function TwoColumnLeftIcon() {
+    return (
+         <div className="h-12 w-16 flex gap-1 p-1 rounded-md bg-muted">
+            <div className="w-1/3 rounded-sm bg-muted-foreground/50"></div>
+            <div className="flex-1 rounded-sm bg-muted-foreground/20"></div>
+        </div>
+    )
+}
+
+function TwoColumnRightIcon() {
+    return (
+         <div className="h-12 w-16 flex gap-1 p-1 rounded-md bg-muted">
+            <div className="flex-1 rounded-sm bg-muted-foreground/20"></div>
+            <div className="w-1/3 rounded-sm bg-muted-foreground/50"></div>
+        </div>
+    )
+}
+
+function ThreeColumnIcon() {
+    return (
+         <div className="h-12 w-16 flex gap-1 p-1 rounded-md bg-muted">
+            <div className="w-1/4 rounded-sm bg-muted-foreground/50"></div>
+            <div className="flex-1 rounded-sm bg-muted-foreground/20"></div>
+            <div className="w-1/4 rounded-sm bg-muted-foreground/50"></div>
+        </div>
+    )
+}
+
+
 const defaultPageLayouts = [
-  { name: 'Single Column', structure: 'single-column', icon: Columns },
-  { name: 'Right Sidebar', structure: 'two-column-right', icon: PanelLeft },
-  { name: 'Left Sidebar', structure: 'two-column-left', icon: PanelRight },
+  { name: 'Single Column', structure: 'single-column', icon: OneColumnIcon },
+  { name: 'Left Sidebar', structure: 'two-column-left', icon: TwoColumnLeftIcon },
+  { name: 'Right Sidebar', structure: 'two-column-right', icon: TwoColumnRightIcon },
+  { name: 'Three Columns', structure: 'three-column', icon: ThreeColumnIcon },
 ];
 
 type PageLayout = {
@@ -74,25 +111,24 @@ export function PageLayoutsView() {
         {isLoadingLayouts || isLoadingSettings ? (
           <p>Loading layouts...</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {pageLayouts?.map((layout) => {
-              const LayoutIcon = defaultPageLayouts.find(l => l.structure === layout.structure)?.icon || Columns;
+              const LayoutIcon = defaultPageLayouts.find(l => l.structure === layout.structure)?.icon || OneColumnIcon;
               const isActive = layout.id === activeLayoutId;
               return (
                 <div
                   key={layout.id}
                   onClick={() => handleSelectLayout(layout.id)}
                   className={cn(
-                    "relative p-4 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center justify-center gap-2 aspect-square",
-                    isActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    "relative p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center justify-center gap-2 aspect-[4/3]",
+                    isActive ? "border-primary ring-2 ring-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"
                   )}
                 >
-                  <LayoutIcon className="w-12 h-12 text-muted-foreground" />
-                  <p className="font-medium">{layout.name}</p>
+                  <LayoutIcon />
+                  <p className="font-medium text-sm text-center">{layout.name}</p>
                   {isActive && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 text-xs font-semibold text-primary">
-                      <CheckCircle className="w-4 h-4" />
-                      Active
+                    <div className="absolute top-2 right-2 flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground">
+                      <CheckCircle className="w-3 h-3" />
                     </div>
                   )}
                 </div>
