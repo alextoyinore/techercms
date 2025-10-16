@@ -64,8 +64,7 @@ export default function HomePage() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'posts'),
-      where('status', '==', 'published'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'published')
     );
   }, [firestore]);
 
@@ -77,7 +76,12 @@ export default function HomePage() {
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
   
-  const [mainStory, ...otherStories] = posts || [];
+  const sortedPosts = useMemo(() => {
+    if (!posts) return [];
+    return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
+  }, [posts]);
+
+  const [mainStory, ...otherStories] = sortedPosts;
   const topStories = otherStories.slice(0, 2);
   const secondaryStories = otherStories.slice(2, 6);
 
