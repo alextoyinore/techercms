@@ -84,23 +84,23 @@ export function BlockLayoutsView() {
                 </div>
             )}
             {!isLoading && blockLayouts && blockLayouts.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {blockLayouts.map(layout => (
                         <Card key={layout.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="text-lg">{layout.name}</CardTitle>
-                                <CardDescription>Type: {layout.type}</CardDescription>
+                            <CardHeader className="p-4">
+                                <CardTitle className="text-base font-semibold">{layout.name}</CardTitle>
+                                <CardDescription className="text-xs">Type: {layout.type}</CardDescription>
                             </CardHeader>
-                             <CardContent className="flex-grow">
-                                <p className="text-sm text-muted-foreground">{layout.description || 'No description.'}</p>
+                             <CardContent className="p-4 pt-0 flex-grow">
+                                <p className="text-xs text-muted-foreground line-clamp-2 h-8">{layout.description || 'No description.'}</p>
                             </CardContent>
-                            <CardFooter className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(layout)}>
+                            <CardFooter className="p-2 border-t flex justify-end gap-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(layout)}>
                                     <Edit className="h-4 w-4" />
                                 </Button>
                                  <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </AlertDialogTrigger>
