@@ -58,15 +58,27 @@ export function RecentPostsWidget({
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
+    if (isLoading) {
+        return (
+             <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">Loading posts...</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent>
-                {isLoading && <p className="text-sm text-muted-foreground">Loading posts...</p>}
                 <div className="space-y-4">
-                    {posts && posts.map(post => (
+                    {posts && posts.length > 0 ? posts.map(post => (
                         <div key={post.id} className="flex items-start gap-4">
                            {showImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="block shrink-0">
@@ -90,8 +102,7 @@ export function RecentPostsWidget({
                                 </p>
                            </div>
                         </div>
-                    ))}
-                    {!isLoading && posts?.length === 0 && (
+                    )) : (
                         <p className="text-sm text-muted-foreground">No recent posts found.</p>
                     )}
                 </div>

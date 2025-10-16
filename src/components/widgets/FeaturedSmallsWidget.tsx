@@ -30,7 +30,7 @@ export function FeaturedSmallsWidget({
     filterType = 'latest',
     sourceIds,
     tags,
-    postCount = 5,
+    postCount = 5, // This should be the total: 1 featured + 4 smalls
     showExcerpts = true,
     showImages = true,
 }: FeaturedSmallsWidgetProps) {
@@ -58,10 +58,12 @@ export function FeaturedSmallsWidget({
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
-    const [featuredPost, ...smallPosts] = useMemo(() => {
-        if (!posts) return [null, []];
-        return [posts[0] || null, posts.slice(1)];
-    }, [posts]);
+    const [featuredPost, smallPosts] = useMemo(() => {
+        if (!posts || posts.length === 0) return [null, []];
+        const featured = posts[0] || null;
+        const smalls = posts.slice(1, postCount); // Correctly slice the next N posts
+        return [featured, smalls];
+    }, [posts, postCount]);
 
     if (isLoading) {
         return <p>Loading stories...</p>;
