@@ -15,9 +15,11 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetFooter,
 } from '@/components/ui/sheet';
 import { BlockLayout } from '@/app/dashboard/layouts/BlockLayoutsView';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { BlockInstanceConfig } from './BlockInstanceConfig';
 
 type PageSection = {
     id: string;
@@ -334,15 +336,14 @@ export default function PageBuilder({ pageId }: { pageId: string }) {
                     </div>
                 </SheetContent>
             </Sheet>
-
-             <Sheet open={isConfigureSheetOpen} onOpenChange={setIsConfigureSheetOpen}>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>Configure Block</SheetTitle>
-                    </SheetHeader>
-                    {/* Configuration form will go here */}
-                </SheetContent>
-            </Sheet>
+            
+            <BlockInstanceConfig
+                isOpen={isConfigureSheetOpen}
+                setIsOpen={setIsConfigureSheetOpen}
+                block={configuringBlock}
+                layouts={blockLayouts || []}
+                onSave={handleSaveBlockConfig}
+            />
         </div>
     )
 }

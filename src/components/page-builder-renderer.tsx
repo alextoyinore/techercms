@@ -1,9 +1,8 @@
 'use client';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, doc } from 'firebase/firestore';
 import { useMemo, useEffect, useState } from 'react';
 import { WidgetArea } from './widgets/WidgetArea';
-import { PostGridWidget } from './widgets/PostGridWidget';
 
 // Dynamically import all widgets
 import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
@@ -22,23 +21,31 @@ import { GalleryWidget } from '@/components/widgets/GalleryWidget';
 import { NavigationWidget } from '@/components/widgets/NavigationWidget';
 import { PostShowcaseWidget } from '@/components/widgets/PostShowcaseWidget';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
+import { PostGridWidget } from '@/components/widgets/PostGridWidget';
 import { PostCarouselWidget } from '@/components/widgets/PostCarouselWidget';
 import { FeaturedSmallsWidget } from '@/components/widgets/FeaturedSmallsWidget';
 import { TabbedPostsWidget } from '@/components/widgets/TabbedPostsWidget';
+import { ContactFormPreview } from '../app/dashboard/layouts/previews/ContactFormPreview';
+import { CtaPreview } from '../app/dashboard/layouts/previews/CtaPreview';
+import { FeatureGridPreview } from '../app/dashboard/layouts/previews/FeatureGridPreview';
+import { HeroPreview } from '../app/dashboard/layouts/previews/HeroPreview';
+import { TestimonialsPreview } from '../app/dashboard/layouts/previews/TestimonialsPreview';
+import { VideoPreview } from '../app/dashboard/layouts/previews/VideoPreview';
+
 
 const blockLayoutWidgets: Record<string, React.FC<any>> = {
     'post-grid': PostGridWidget,
-    'post-list': RecentPostsWidget, // Assuming PostList uses RecentPostsWidget logic for now
+    'post-list': RecentPostsWidget,
     'post-carousel': PostCarouselWidget,
     'featured-and-smalls': FeaturedSmallsWidget,
     'tabbed-posts': TabbedPostsWidget,
-    'hero': CustomHtmlWidget, // Placeholder
-    'cta': CustomHtmlWidget, // Placeholder
-    'feature-grid': CustomHtmlWidget, // Placeholder
+    'hero': HeroPreview,
+    'cta': CtaPreview,
+    'feature-grid': FeatureGridPreview,
     'gallery': GalleryWidget,
-    'video': CustomHtmlWidget, // Placeholder
-    'testimonials': CustomHtmlWidget, // Placeholder
-    'contact-form': CustomHtmlWidget, // Placeholder
+    'video': VideoPreview,
+    'testimonials': TestimonialsPreview,
+    'contact-form': ContactFormPreview,
 };
 
 type PageSection = {
@@ -55,6 +62,7 @@ type SectionBlock = {
     blockLayoutId: string;
     columnIndex: number;
     order: number;
+    config?: any;
 }
 
 type BlockLayout = {
@@ -72,13 +80,18 @@ function RenderedBlock({ block }: { block: SectionBlock }) {
         return <div className="animate-pulse bg-muted h-24 rounded-md"></div>;
     }
     
+    // The component to render is determined by the *reusable* BlockLayout's type.
     const WidgetComponent = blockLayoutWidgets[layout.type];
 
     if (!WidgetComponent) {
         return <p className="text-sm text-destructive">Error: Block type "{layout.type}" not found.</p>;
     }
     
-    return <WidgetComponent {...layout.config} />;
+    // The props are a combination of the reusable layout's config and the instance-specific config.
+    // The instance config (for content filtering) overrides the layout config (for presentation).
+    const finalConfig = { ...layout.config, ...block.config };
+
+    return <WidgetComponent {...finalConfig} />;
 }
 
 export function PageBuilderRenderer({ pageId }: { pageId: string }) {
