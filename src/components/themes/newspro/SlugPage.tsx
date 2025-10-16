@@ -177,7 +177,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 <article>
                 <header className="mb-8">
                     <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>
-                    <time className="text-muted-foreground text-sm">
+                    <time className="text-muted-foreground text-sm font-semibold">
                         Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}
                     </time>
                 </header>

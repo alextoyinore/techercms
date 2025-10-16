@@ -174,7 +174,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     <div className="bg-background text-foreground font-serif">
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-4 max-w-4xl">
+      <main className="container mx-auto py-8 px-4">
         <article>
         <header className="mb-8 text-center">
             <h1 className="text-5xl font-black font-headline tracking-tight lg:text-7xl mb-4">{item.title}</h1>

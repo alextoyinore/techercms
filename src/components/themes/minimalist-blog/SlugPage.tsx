@@ -35,7 +35,7 @@ type SiteSettings = {
 function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-8 px-6">
-            <div className="container mx-auto max-w-3xl flex justify-between items-center">
+            <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
                     {siteName || 'A Minimalist Blog'}
                 </Link>
@@ -52,7 +52,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
 function PublicFooter() {
     return (
         <footer className="py-12 px-6 mt-16 border-t">
-            <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                      <p className="font-semibold font-headline text-foreground">A Minimalist Blog</p>
                      <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All rights reserved.</p>
@@ -164,7 +164,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     <div className="bg-background">
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-6 max-w-3xl">
+      <main className="container mx-auto py-8 px-6">
         <article>
           <header className="mb-12 text-center">
              <time className="text-sm text-muted-foreground">

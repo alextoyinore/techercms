@@ -175,7 +175,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6">
-        <article className="max-w-4xl mx-auto">
+        <article>
           {item.featuredImageUrl && (
             <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
               <Image
