@@ -25,7 +25,7 @@ import { fontList } from '@/lib/fonts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { defaultTheme } from '@/lib/themes';
+import { defaultTheme, type Theme, type ThemeColors } from '@/lib/themes';
 
 const globalColorKeys = [
     'background', 'foreground', 'card', 'cardForeground',
@@ -35,7 +35,7 @@ const globalColorKeys = [
     'border', 'input', 'ring'
 ] as const;
 
-type GlobalColors = Pick<Record<typeof globalColorKeys[number], string>, typeof globalColorKeys[number]>;
+type GlobalColors = Pick<ThemeColors, Exclude<keyof ThemeColors, 'sidebar'>>;
 
 type SiteSettings = {
   bodyFont?: string;
@@ -47,7 +47,7 @@ type CustomTheme = {
     id?: string;
     name: string;
     previewImageUrl?: string;
-    colors: GlobalColors;
+    colors: ThemeColors;
     authorId: string;
 };
 
@@ -58,6 +58,10 @@ type WebsiteThemeCustomizerProps = {
 
 
 function ColorInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  if (typeof value !== 'string') {
+    // Failsafe for unexpected value types
+    return null;
+  }
   const [h, s, l] = value.split(' ').map(v => v.replace('%', ''));
   const hex = hslToHex(Number(h), Number(s), Number(l));
 
@@ -89,7 +93,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
   const [open, setOpen] = useState(false);
   
   const [name, setName] = useState('');
-  const [colors, setColors] = useState<GlobalColors | null>(null);
+  const [colors, setColors] = useState<ThemeColors | null>(null);
   const [previewImageFile, setPreviewImageFile] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
   
@@ -115,7 +119,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
         setIsLoading(true);
         if (themeSource === 'new') {
             setName('My Custom Theme');
-            setColors(defaultTheme.colors as unknown as GlobalColors);
+            setColors(defaultTheme.colors);
             setPreviewImageUrl('');
             setPreviewImageFile(null);
         } else {
@@ -136,12 +140,30 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
 
   const handleColorChange = (key: keyof GlobalColors, value: string) => {
     if (!colors) return;
-    const newColors = { ...colors, [key]: value };
+    const newColors: ThemeColors = {
+      ...colors,
+      [key]: value
+    };
     setColors(newColors);
+    
     // Apply changes live
     const root = window.document.documentElement;
     const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
     root.style.setProperty(cssVar, value);
+  };
+
+  const handleSidebarColorChange = (key: keyof ThemeColors['sidebar'], value: string) => {
+    if (!colors) return;
+    const newColors: ThemeColors = { 
+        ...colors, 
+        sidebar: { ...colors.sidebar, [key]: value }
+    };
+    setColors(newColors);
+
+     // Apply changes live
+     const root = window.document.documentElement;
+     const cssVar = `--sidebar-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+     root.style.setProperty(cssVar, value);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,7 +209,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
 
 
   const handleSave = async () => {
-    if (!colors || !firestore || !auth?.currentUser) {
+    if (!colors || !firestore || !auth?.currentUser || !settingsRef) {
         toast({ variant: 'destructive', title: 'Error', description: 'Could not save changes.' });
         return;
     }
@@ -195,13 +217,17 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
     setIsSaving(true);
     
     const finalImageUrl = await uploadImage();
-    if (isUploading) return; // a toast is already shown by uploadImage on failure
+    if (isUploading) {
+        // A toast is already shown by uploadImage on failure, so we just stop the save process.
+        setIsSaving(false);
+        return;
+    }
     
     try {
         const typographyPromise = setDoc(settingsRef, { headlineFont, bodyFont, baseFontSize }, { merge: true });
 
         let themePromise;
-        const themeData: CustomTheme = {
+        const themeData: Omit<CustomTheme, 'id'> = {
             name,
             previewImageUrl: finalImageUrl,
             colors,
@@ -237,6 +263,10 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
   const isNew = themeSource === 'new';
   const title = isNew ? "Create Custom Theme" : "Edit Custom Theme";
   const description = isNew ? "Create a new theme for your public-facing website." : "Modify this custom theme.";
+
+  // Separate main colors from sidebar colors
+  const mainColorEntries = colors ? Object.entries(colors).filter(([key]) => key !== 'sidebar') : [];
+  const sidebarColorEntries = colors?.sidebar ? Object.entries(colors.sidebar) : [];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -275,13 +305,25 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
 
                     <Separator />
                     <div className='grid gap-4'>
-                        <h3 className="font-medium text-sm">Colors</h3>
-                        {colors && Object.entries(colors).map(([key, value]) => (
+                        <h3 className="font-medium text-sm">Main Colors</h3>
+                        {mainColorEntries.map(([key, value]) => (
+                            <ColorInput
+                                key={key}
+                                label={key}
+                                value={value as string}
+                                onChange={(newValue) => handleColorChange(key as keyof GlobalColors, newValue)}
+                            />
+                        ))}
+                    </div>
+                     <Separator />
+                    <div className='grid gap-4'>
+                        <h3 className="font-medium text-sm">Sidebar Colors</h3>
+                        {sidebarColorEntries.map(([key, value]) => (
                             <ColorInput
                                 key={key}
                                 label={key}
                                 value={value}
-                                onChange={(newValue) => handleColorChange(key as any, newValue)}
+                                onChange={(newValue) => handleSidebarColorChange(key as keyof ThemeColors['sidebar'], newValue)}
                             />
                         ))}
                     </div>
