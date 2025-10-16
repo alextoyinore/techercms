@@ -12,6 +12,7 @@ type Post = {
     id: string;
     title: string;
     slug: string;
+    excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
 };
@@ -19,17 +20,21 @@ type Post = {
 type PostCarouselWidgetProps = {
     title?: string;
     filterType?: 'latest' | 'category' | 'tag';
-    categoryIds?: string[];
-    tagIds?: string[];
+    sourceIds?: string[];
+    tags?: string;
     postCount?: number;
+    showExcerpts?: boolean;
+    showImages?: boolean;
 }
 
 export function PostCarouselWidget({
     title = 'Featured Posts',
     filterType = 'latest',
-    categoryIds,
-    tagIds,
-    postCount = 8
+    sourceIds,
+    tags,
+    postCount = 8,
+    showExcerpts = false,
+    showImages = true,
 }: PostCarouselWidgetProps) {
     const firestore = useFirestore();
 
@@ -41,27 +46,26 @@ export function PostCarouselWidget({
             where('status', '==', 'published')
         );
 
-        if (filterType === 'category' && categoryIds && categoryIds.length > 0) {
-            q = query(q, where('categoryIds', 'array-contains-any', categoryIds));
-        } else if (filterType === 'tag' && tagIds && tagIds.length > 0) {
-            q = query(q, where('tagIds', 'array-contains-any', tagIds));
+        if (filterType === 'category' && sourceIds && sourceIds.length > 0) {
+            q = query(q, where('categoryIds', 'array-contains-any', sourceIds));
+        } else if (filterType === 'tag' && tags && tags.trim() !== '') {
+            const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+             if(tagArray.length > 0) {
+                q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            }
         }
 
         return query(q, orderBy('createdAt', 'desc'), limit(postCount));
-    }, [firestore, filterType, categoryIds, tagIds, postCount]);
+    }, [firestore, filterType, sourceIds, tags, postCount]);
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
     if (isLoading) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-lg">{title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Loading posts...</p>
-                </CardContent>
-            </Card>
+             <div className="w-full">
+                {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
+                <p>Loading posts...</p>
+            </div>
         );
     }
     
@@ -71,11 +75,11 @@ export function PostCarouselWidget({
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>
+            {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
             <Carousel
                 opts={{
                     align: "start",
-                    loop: true,
+                    loop: posts.length > 3,
                 }}
                  className="w-full"
             >
@@ -84,18 +88,21 @@ export function PostCarouselWidget({
                         <CarouselItem key={post.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                              <div className="p-1">
                                 <Link href={`/${post.slug}`} className="block group">
-                                    <Card className="overflow-hidden">
-                                        <CardContent className="p-0">
-                                            <div className="relative aspect-video">
-                                                <Image 
-                                                    src={post.featuredImageUrl || 'https://picsum.photos/seed/carousel-post/600/400'}
-                                                    alt={post.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-semibold leading-tight line-clamp-2">{post.title}</h3>
+                                    <Card className="overflow-hidden h-full flex flex-col">
+                                        <CardContent className="p-0 flex-grow flex flex-col">
+                                            {showImages && post.featuredImageUrl && (
+                                                <div className="relative aspect-video">
+                                                    <Image 
+                                                        src={post.featuredImageUrl}
+                                                        alt={post.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="p-4 flex-grow flex flex-col">
+                                                <h3 className="font-semibold leading-tight line-clamp-2 flex-grow">{post.title}</h3>
+                                                {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{post.excerpt}</p>}
                                             </div>
                                         </CardContent>
                                     </Card>

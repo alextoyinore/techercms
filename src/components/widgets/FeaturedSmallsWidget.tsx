@@ -18,21 +18,23 @@ type Post = {
 type FeaturedSmallsWidgetProps = {
     title?: string;
     filterType?: 'latest' | 'category' | 'tag';
-    categoryIds?: string[];
-    tagIds?: string[];
-    smallPostCount?: number;
+    sourceIds?: string[];
+    tags?: string;
+    postCount?: number;
+    showExcerpts?: boolean;
+    showImages?: boolean;
 }
 
 export function FeaturedSmallsWidget({
     title = 'Top Stories',
     filterType = 'latest',
-    categoryIds,
-    tagIds,
-    smallPostCount = 4
+    sourceIds,
+    tags,
+    postCount = 5,
+    showExcerpts = true,
+    showImages = true,
 }: FeaturedSmallsWidgetProps) {
     const firestore = useFirestore();
-
-    const totalPostsToFetch = smallPostCount + 1;
 
     const postsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -42,14 +44,17 @@ export function FeaturedSmallsWidget({
             where('status', '==', 'published')
         );
 
-        if (filterType === 'category' && categoryIds && categoryIds.length > 0) {
-            q = query(q, where('categoryIds', 'array-contains-any', categoryIds));
-        } else if (filterType === 'tag' && tagIds && tagIds.length > 0) {
-            q = query(q, where('tagIds', 'array-contains-any', tagIds));
+        if (filterType === 'category' && sourceIds && sourceIds.length > 0) {
+            q = query(q, where('categoryIds', 'array-contains-any', sourceIds));
+        } else if (filterType === 'tag' && tags && tags.trim() !== '') {
+            const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+             if(tagArray.length > 0) {
+                q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            }
         }
 
-        return query(q, orderBy('createdAt', 'desc'), limit(totalPostsToFetch));
-    }, [firestore, filterType, categoryIds, tagIds, totalPostsToFetch]);
+        return query(q, orderBy('createdAt', 'desc'), limit(postCount));
+    }, [firestore, filterType, sourceIds, tags, postCount]);
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
@@ -72,7 +77,7 @@ export function FeaturedSmallsWidget({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 group">
                     <Link href={`/${featuredPost.slug}`}>
-                        {featuredPost.featuredImageUrl && (
+                        {showImages && featuredPost.featuredImageUrl && (
                             <div className="relative aspect-video w-full overflow-hidden mb-4 rounded-lg">
                                 <Image
                                     src={featuredPost.featuredImageUrl}
@@ -83,13 +88,13 @@ export function FeaturedSmallsWidget({
                             </div>
                         )}
                         <h3 className="text-3xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
-                        <p className="text-muted-foreground mt-2">{featuredPost.excerpt}</p>
+                        {showExcerpts && <p className="text-muted-foreground mt-2">{featuredPost.excerpt}</p>}
                     </Link>
                 </div>
                 <div className="md:col-span-1 space-y-4">
                     {smallPosts.map(post => (
                         <div key={post.id} className="flex gap-4 items-center group">
-                            {post.featuredImageUrl && (
+                            {showImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="shrink-0">
                                     <div className="relative h-16 w-24 overflow-hidden rounded-md">
                                         <Image

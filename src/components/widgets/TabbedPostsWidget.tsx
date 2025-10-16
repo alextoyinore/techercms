@@ -12,6 +12,7 @@ type Post = {
     id: string;
     title: string;
     slug: string;
+    excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
 };
@@ -20,17 +21,19 @@ type TabConfig = {
     id: string;
     title: string;
     filterType: 'latest' | 'category' | 'tag';
-    category?: string;
-    tag?: string;
+    category?: string; // Should be a single category ID
+    tag?: string; // Should be a single tag string
 }
 
 type TabbedPostsWidgetProps = {
     title?: string;
     tabs?: TabConfig[];
     postCountPerTab?: number;
+    showExcerpts?: boolean;
+    showImages?: boolean;
 }
 
-function TabContent({ filter, postCount }: { filter: TabConfig, postCount: number }) {
+function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: TabConfig, postCount: number, showImages?: boolean, showExcerpts?: boolean }) {
     const firestore = useFirestore();
 
      const postsQuery = useMemoFirebase(() => {
@@ -44,6 +47,8 @@ function TabContent({ filter, postCount }: { filter: TabConfig, postCount: numbe
         if (filter.filterType === 'category' && filter.category) {
             q = query(q, where('categoryIds', 'array-contains', filter.category));
         } else if (filter.filterType === 'tag' && filter.tag) {
+            // Note: Firestore doesn't support OR queries on different fields easily.
+            // This setup assumes tags are stored in an array `tagIds`.
             q = query(q, where('tagIds', 'array-contains', filter.tag));
         }
 
@@ -57,14 +62,14 @@ function TabContent({ filter, postCount }: { filter: TabConfig, postCount: numbe
     }
     
     if (!posts || posts.length === 0) {
-        return <p className="p-4 text-center text-muted-foreground">No posts found.</p>;
+        return <p className="p-4 text-center text-muted-foreground">No posts found for this tab.</p>;
     }
 
     return (
         <div className="space-y-4">
             {posts.map(post => (
                 <div key={post.id} className="flex gap-4 items-center group">
-                    {post.featuredImageUrl && (
+                    {showImages && post.featuredImageUrl && (
                         <Link href={`/${post.slug}`} className="shrink-0">
                             <div className="relative h-16 w-24 overflow-hidden rounded-md">
                                 <Image src={post.featuredImageUrl} alt={post.title} fill className="object-cover" />
@@ -75,6 +80,7 @@ function TabContent({ filter, postCount }: { filter: TabConfig, postCount: numbe
                         <h4 className="font-semibold leading-tight group-hover:underline">
                             <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h4>
+                        {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2">{post.excerpt}</p>}
                     </div>
                 </div>
             ))}
@@ -84,7 +90,9 @@ function TabContent({ filter, postCount }: { filter: TabConfig, postCount: numbe
 
 export function TabbedPostsWidget({
     tabs,
-    postCountPerTab = 5
+    postCountPerTab = 5,
+    showExcerpts = true,
+    showImages = true,
 }: TabbedPostsWidgetProps) {
     
     const defaultTab = useMemo(() => tabs?.[0]?.id, [tabs]);
@@ -110,7 +118,12 @@ export function TabbedPostsWidget({
                 <TabsContent key={tab.id} value={tab.id}>
                     <Card>
                         <CardContent className="p-4">
-                            <TabContent filter={tab} postCount={postCountPerTab} />
+                            <TabContent 
+                                filter={tab} 
+                                postCount={postCountPerTab}
+                                showImages={showImages}
+                                showExcerpts={showExcerpts}
+                            />
                         </CardContent>
                     </Card>
                 </TabsContent>

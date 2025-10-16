@@ -20,19 +20,23 @@ type Post = {
 type PostGridWidgetProps = {
     title?: string;
     filterType?: 'latest' | 'category' | 'tag';
-    categoryIds?: string[];
-    tagIds?: string[];
+    sourceIds?: string[];
+    tags?: string;
     postCount?: number;
     columns?: number;
+    showExcerpts?: boolean;
+    showImages?: boolean;
 }
 
 export function PostGridWidget({
     title,
     filterType = 'latest',
-    categoryIds,
-    tagIds,
+    sourceIds,
+    tags,
     postCount = 6,
     columns = 3,
+    showExcerpts = false,
+    showImages = true,
 }: PostGridWidgetProps) {
     const firestore = useFirestore();
 
@@ -44,14 +48,17 @@ export function PostGridWidget({
             where('status', '==', 'published')
         );
 
-        if (filterType === 'category' && categoryIds && categoryIds.length > 0) {
-            q = query(q, where('categoryIds', 'array-contains-any', categoryIds));
-        } else if (filterType === 'tag' && tagIds && tagIds.length > 0) {
-            q = query(q, where('tagIds', 'array-contains-any', tagIds));
+        if (filterType === 'category' && sourceIds && sourceIds.length > 0) {
+            q = query(q, where('categoryIds', 'array-contains-any', sourceIds));
+        } else if (filterType === 'tag' && tags && tags.trim() !== '') {
+            const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+            if(tagArray.length > 0) {
+                q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            }
         }
 
         return query(q, orderBy('createdAt', 'desc'), limit(postCount));
-    }, [firestore, filterType, categoryIds, tagIds, postCount]);
+    }, [firestore, filterType, sourceIds, tags, postCount]);
     
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
     
@@ -79,7 +86,7 @@ export function PostGridWidget({
             <div className={cn('grid grid-cols-1 gap-6', gridCols)}>
                 {posts.map(post => (
                     <div key={post.id} className="grid gap-2 group">
-                        {post.featuredImageUrl && (
+                        {showImages && post.featuredImageUrl && (
                             <Link href={`/${post.slug}`}>
                                 <div className="relative aspect-video w-full overflow-hidden rounded-md">
                                     <Image 
@@ -94,7 +101,7 @@ export function PostGridWidget({
                         <h3 className="font-semibold leading-tight text-lg group-hover:underline">
                             <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>
+                        {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>}
                          <time className="text-xs text-muted-foreground">
                             {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
                         </time>
