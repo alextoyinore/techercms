@@ -153,6 +153,12 @@ export default function ThemesPage() {
                         body: JSON.stringify({ colors: themeData.colors }),
                     });
                 }
+            } else {
+                 await fetch('/api/update-theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ colors: defaultTheme.colors }),
+                });
             }
 
             setActiveWebsiteTheme(themeName);
@@ -230,7 +236,7 @@ export default function ThemesPage() {
                             <CardHeader>
                                 <div className="relative aspect-video w-full">
                                     <Image
-                                        src={theme.previewImageUrl}
+                                        src={theme.previewImageUrl || PlaceHolderImages[0].imageUrl}
                                         alt={theme.name}
                                         fill
                                         className="rounded-md object-cover"
@@ -320,6 +326,9 @@ export default function ThemesPage() {
                                         'Activate'
                                     )}
                                 </Button>
+                                <WebsiteThemeCustomizer themeSource="new">
+                                    <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
+                                </WebsiteThemeCustomizer>
                             </div>
                         </Card>
                     )
