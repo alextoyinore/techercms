@@ -18,6 +18,7 @@ type Post = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   status: 'draft' | 'published' | 'archived';
   createdAt: Timestamp;
@@ -29,6 +30,7 @@ type Page = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   status: 'draft' | 'published';
   createdAt: Timestamp;
@@ -36,10 +38,29 @@ type Page = {
   showTitle?: boolean;
 };
 
+type User = {
+    id: string;
+    name: string;
+}
+
 type SiteSettings = {
     siteName?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
+}
+
+function PostAuthor({ authorId }: { authorId: string }) {
+    const firestore = useFirestore();
+    const authorRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+
+    const { data: author, isLoading } = useDoc<User>(authorRef);
+
+    if (isLoading || !author) return null;
+
+    return <span className="font-semibold">{author.name}</span>;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -189,12 +210,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <main className="container mx-auto py-8 px-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-3">
-                <article>
+                <article className="max-w-none">
                 <header className="mb-8">
                     {displayTitle && <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-5xl mb-4">{item.title}</h1>}
-                    <time className="text-muted-foreground text-sm">
-                    Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}
-                    </time>
+                    <div className="text-muted-foreground text-sm">
+                        <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}</span>
+                        {item.authorId && <> by <PostAuthor authorId={item.authorId} /></>}
+                    </div>
                 </header>
                 
                 {item.featuredImageUrl && (
@@ -239,5 +261,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
-
-    

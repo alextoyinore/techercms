@@ -18,6 +18,7 @@ type Post = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   status: 'draft' | 'published' | 'archived';
   createdAt: Timestamp;
@@ -29,6 +30,7 @@ type Page = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   status: 'draft' | 'published';
   createdAt: Timestamp;
@@ -36,10 +38,29 @@ type Page = {
   showTitle?: boolean;
 };
 
+type User = {
+    id: string;
+    name: string;
+}
+
 type SiteSettings = {
   siteName?: string;
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
+}
+
+function PostAuthor({ authorId }: { authorId: string }) {
+    const firestore = useFirestore();
+    const authorRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+
+    const { data: author, isLoading } = useDoc<User>(authorRef);
+
+    if (isLoading || !author) return null;
+
+    return <span className="font-semibold">{author.name}</span>;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -183,7 +204,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6">
-        <article>
+        <article className="max-w-none">
           {item.featuredImageUrl && (
             <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
               <Image
@@ -197,9 +218,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           )}
           <header className="mb-8 text-center">
             {displayTitle && <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>}
-            <time className="text-muted-foreground text-sm uppercase tracking-widest">
-              {item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}
-            </time>
+            <div className="text-muted-foreground text-sm uppercase tracking-widest">
+                <span>{item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}</span>
+                {item.authorId && <> / By <PostAuthor authorId={item.authorId} /></>}
+            </div>
           </header>
           
           {isPost ? (
@@ -227,5 +249,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
-
-    

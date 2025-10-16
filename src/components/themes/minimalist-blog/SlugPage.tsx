@@ -16,6 +16,7 @@ type Post = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   createdAt: Timestamp;
 };
 
@@ -24,15 +25,35 @@ type Page = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   createdAt: Timestamp;
   builderEnabled?: boolean;
   showTitle?: boolean;
 };
 
+type User = {
+    id: string;
+    name: string;
+}
+
 type SiteSettings = {
   siteName?: string;
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
+}
+
+function PostAuthor({ authorId }: { authorId: string }) {
+    const firestore = useFirestore();
+    const authorRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+
+    const { data: author, isLoading } = useDoc<User>(authorRef);
+
+    if (isLoading || !author) return null;
+
+    return <span className="font-semibold">{author.name}</span>;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -173,11 +194,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
       <PublicHeader siteName={settings?.siteName}/>
       <main className="container mx-auto py-8 px-6 max-w-3xl">
-        <article>
+        <article className="max-w-none">
           <header className="mb-12 text-center">
-             <time className="text-sm text-muted-foreground">
-              Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}
-            </time>
+             <div className="text-sm text-muted-foreground">
+                <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
+                {item.authorId && <> by <PostAuthor authorId={item.authorId} /></>}
+            </div>
             {displayTitle && <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>}
           </header>
           
@@ -200,5 +222,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
-
-    

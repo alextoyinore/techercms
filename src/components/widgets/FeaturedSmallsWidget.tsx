@@ -30,7 +30,7 @@ export function FeaturedSmallsWidget({
     filterType = 'latest',
     sourceIds,
     tags,
-    postCount = 5, // This should be the total: 1 featured + 4 smalls
+    postCount = 5,
     showExcerpts = true,
     showImages = true,
 }: FeaturedSmallsWidgetProps) {
@@ -58,12 +58,10 @@ export function FeaturedSmallsWidget({
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
-    const [featuredPost, smallPosts] = useMemo(() => {
+    const [featuredPost, ...smallPosts] = useMemo(() => {
         if (!posts || posts.length === 0) return [null, []];
-        const featured = posts[0] || null;
-        const smalls = posts.slice(1, postCount); // Correctly slice the next N posts
-        return [featured, smalls];
-    }, [posts, postCount]);
+        return posts;
+    }, [posts]);
 
     if (isLoading) {
         return <p>Loading stories...</p>;
@@ -89,8 +87,8 @@ export function FeaturedSmallsWidget({
                                 />
                             </div>
                         )}
-                        <h3 className="text-3xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
-                        {showExcerpts && <p className="text-muted-foreground mt-2">{featuredPost.excerpt}</p>}
+                        <h3 className="text-2xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
+                        {showExcerpts && <p className="text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>}
                     </Link>
                 </div>
                 <div className="md:col-span-1 space-y-4">
@@ -109,7 +107,7 @@ export function FeaturedSmallsWidget({
                                 </Link>
                             )}
                              <div>
-                                <h4 className="font-semibold leading-tight group-hover:underline">
+                                <h4 className="font-semibold text-sm leading-tight group-hover:underline">
                                     <Link href={`/${post.slug}`}>{post.title}</Link>
                                 </h4>
                             </div>

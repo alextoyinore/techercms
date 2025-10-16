@@ -329,7 +329,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {
@@ -450,6 +450,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, same as their Firebase Auth UID."
+            }
+          ]
+        }
+      },
       {
         "path": "/pages/{pageId}",
         "definition": {
@@ -613,7 +629,6 @@
         }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
+    "reasoning": "The data structure is designed to be simple and secure. A `users` collection is added to store public user data like names, which can be linked from posts and pages via `authorId`. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
   }
 }
-    

@@ -18,6 +18,7 @@ type Post = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   createdAt: Timestamp;
   tagIds?: string[];
@@ -28,16 +29,36 @@ type Page = {
   title: string;
   content: string;
   slug: string;
+  authorId: string;
   featuredImageUrl: string;
   createdAt: Timestamp;
   builderEnabled?: boolean;
   showTitle?: boolean;
 };
 
+type User = {
+    id: string;
+    name: string;
+}
+
 type SiteSettings = {
     siteName?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
+}
+
+function PostAuthor({ authorId }: { authorId: string }) {
+    const firestore = useFirestore();
+    const authorRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+
+    const { data: author, isLoading } = useDoc<User>(authorRef);
+
+    if (isLoading || !author) return null;
+
+    return <span className="font-semibold">{author.name}</span>;
 }
 
 function PublicHeader({ siteName }: { siteName?: string }) {
@@ -182,12 +203,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <main className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3">
-                <article>
+                <article className="max-w-none">
                 <header className="mb-8">
                     {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
-                    <time className="text-muted-foreground text-sm font-semibold">
-                        Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}
-                    </time>
+                    <div className="text-muted-foreground text-sm font-semibold">
+                        <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
+                        {item.authorId && <> by <PostAuthor authorId={item.authorId} /></>}
+                    </div>
                 </header>
                 
                 {isPost ? (
@@ -221,5 +243,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </div>
   );
 }
-
-    

@@ -16,6 +16,10 @@ import {
     Menu,
     LayoutGrid,
     CloudSun,
+    Type,
+    PanelTop,
+    PictureInPicture2,
+    MessageCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -31,12 +35,15 @@ export type Widget = {
 
 export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'recent-posts', label: 'Recent Posts', icon: FileText, defaultConfig: { title: 'Recent Posts', count: 5 } },
+    { type: 'post-carousel', label: 'Post Carousel', icon: PanelTop, defaultConfig: { title: 'Featured Posts' } },
+    { type: 'featured-and-smalls', label: 'Featured & Smalls', icon: PictureInPicture2, defaultConfig: { title: 'Top Stories' } },
+    { type: 'tabbed-posts', label: 'Tabbed Posts', icon: PanelTop, defaultConfig: { title: '' } },
     { type: 'categories-list', label: 'Categories List', icon: List, defaultConfig: { title: 'Categories' } },
     { type: 'search', label: 'Search', icon: Search, defaultConfig: { title: 'Search' } },
     { type: 'tag-cloud', label: 'Tag Cloud', icon: Cloud, defaultConfig: { title: 'Tag Cloud' } },
     { type: 'custom-html', label: 'Custom HTML', icon: Code, defaultConfig: { title: '', html: '' } },
     { type: 'image', label: 'Image', icon: ImageIcon, defaultConfig: { title: '', imageUrl: '', caption: '', linkUrl: '' } },
-    { type: 'text', label: 'Text', icon: MessageSquare, defaultConfig: { title: '', text: '' } },
+    { type: 'text', label: 'Text', icon: Type, defaultConfig: { title: '', text: '' } },
     { type: 'gallery', label: 'Gallery', icon: GalleryHorizontal, defaultConfig: { title: 'Gallery', galleryImages: [] } },
     { type: 'navigation-menu', label: 'Navigation Menu', icon: Menu, defaultConfig: { title: 'Navigation', navLinks: [] } },
     { type: 'social-follow', label: 'Social Follow', icon: Users, defaultConfig: { title: 'Follow Us', socialLinks: [] } },

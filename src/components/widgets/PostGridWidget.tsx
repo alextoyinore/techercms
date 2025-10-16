@@ -101,7 +101,7 @@ export function PostGridWidget({
                         <h3 className="font-semibold leading-tight text-lg group-hover:underline">
                             <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h3>
-                        {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt}</p>}
+                        {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>}
                          <time className="text-xs text-muted-foreground">
                             {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
                         </time>

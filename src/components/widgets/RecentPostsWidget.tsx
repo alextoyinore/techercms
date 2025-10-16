@@ -96,7 +96,7 @@ export function RecentPostsWidget({
                                 <Link href={`/${post.slug}`} className="font-medium hover:underline leading-tight block text-sm">
                                     {post.title}
                                 </Link>
-                                {showExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
+                                {showExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{post.excerpt}</p>}
                                 <p className="text-xs text-muted-foreground/80 mt-1">
                                     {post.createdAt ? format(post.createdAt.toDate(), 'MMM d, yyyy') : ''}
                                 </p>
