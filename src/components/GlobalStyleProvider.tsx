@@ -20,21 +20,48 @@ export function GlobalStyleProvider({ children }: { children: React.ReactNode })
   const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings) {
-        if (settings.pageWidth === 'centered') {
-            const width = settings.contentWidth || 75;
-            root.style.setProperty('--page-max-width', `${width}rem`);
-            root.style.setProperty('--page-margin-x', 'auto');
-        } else {
-            root.style.setProperty('--page-max-width', '100%');
-            root.style.setProperty('--page-margin-x', '0');
-        }
-    } else {
-        // Default styles if settings are not loaded
-        root.style.setProperty('--page-max-width', '100%');
-        root.style.setProperty('--page-margin-x', '0');
+    const styleId = 'global-layout-styles';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
     }
+    
+    let css = '';
+    if (settings?.pageWidth === 'centered') {
+        const width = settings.contentWidth || 80;
+        css = `
+            .container {
+                max-width: 95%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            @media (min-width: 1024px) {
+                .container {
+                    max-width: ${width}%;
+                }
+            }
+        `;
+    } else {
+         css = `
+            .container {
+                max-width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+            }
+        `;
+    }
+    styleElement.innerHTML = css;
+    
+    return () => {
+        // Clean up the style element when the component unmounts or settings change
+        const el = document.getElementById(styleId);
+        if (el) {
+            // el.remove(); // Optional: depending on desired behavior on navigation
+        }
+    };
+
   }, [settings]);
 
   return <>{children}</>;
