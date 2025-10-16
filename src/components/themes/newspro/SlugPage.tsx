@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
+import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 
 type Post = {
   id: string;
@@ -29,6 +30,7 @@ type Page = {
   slug: string;
   featuredImageUrl: string;
   createdAt: Timestamp;
+  builderEnabled?: boolean;
 };
 
 type SiteSettings = {
@@ -70,13 +72,17 @@ function PublicFooter({ siteName }: { siteName?: string }) {
     )
 }
 
-function PageContent({ pageId, editorContent }: { pageId: string, editorContent: string }) {
+function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();
+
+    if (page.builderEnabled) {
+        return <PageBuilderRenderer pageId={page.id} />;
+    }
 
     const contentAreaQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'widget_areas'), where('pageId', '==', pageId), where('name', '==', 'Page Content'));
-    }, [firestore, pageId]);
+        return query(collection(firestore, 'widget_areas'), where('pageId', '==', page.id), where('name', '==', 'Page Content'));
+    }, [firestore, page.id]);
 
     const { data: contentAreas, isLoading: isLoadingAreas } = useCollection(contentAreaQuery);
     const contentAreaId = useMemo(() => contentAreas?.[0]?.id, [contentAreas]);
@@ -95,7 +101,7 @@ function PageContent({ pageId, editorContent }: { pageId: string, editorContent:
     if (contentWidgets && contentWidgets.length > 0) {
         return (
             <div className="space-y-6">
-                <WidgetArea areaName="Page Content" isPageSpecific={true} pageId={pageId} />
+                <WidgetArea areaName="Page Content" isPageSpecific={true} pageId={page.id} />
             </div>
         );
     }
@@ -103,7 +109,7 @@ function PageContent({ pageId, editorContent }: { pageId: string, editorContent:
     return (
         <div
             className="prose lg:prose-lg max-w-none mx-auto"
-            dangerouslySetInnerHTML={{ __html: editorContent }}
+            dangerouslySetInnerHTML={{ __html: page.content }}
         />
     );
 }
@@ -176,13 +182,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     </time>
                 </header>
                 
-                {pageId ? (
-                    <PageContent pageId={pageId} editorContent={item.content} />
-                ) : (
+                {isPost ? (
                      <div
                         className="prose lg:prose-xl max-w-none mx-auto"
                         dangerouslySetInnerHTML={{ __html: item.content }}
                     />
+                ) : (
+                    <PageContent page={item as Page} />
                 )}
 
                 {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (

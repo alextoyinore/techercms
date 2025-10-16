@@ -72,6 +72,10 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the page was last updated."
+        },
+        "builderEnabled": {
+          "type": "boolean",
+          "description": "If true, the page uses the block-based builder instead of the rich text editor."
         }
       },
       "required": [
@@ -399,6 +403,32 @@
             "config": { "type": "object", "description": "A flexible object to store block-specific settings (e.g., post count, columns, filters)." }
         },
         "required": ["id", "name", "type"]
+    },
+    "PageSection": {
+      "title": "Page Section",
+      "description": "A container for content blocks on a page, defining a column layout.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the page section." },
+        "pageId": { "type": "string", "description": "The ID of the Page this section belongs to." },
+        "order": { "type": "number", "description": "The vertical display order of the section on the page." },
+        "type": { "type": "string", "description": "The column layout type (e.g., 'one-column', 'two-column-50-50')." },
+        "config": { "type": "object", "description": "Configuration for the section, like background colors or padding." }
+      },
+      "required": ["id", "pageId", "order", "type"]
+    },
+    "SectionBlock": {
+      "title": "Section Block",
+      "description": "An instance of a Block Layout placed within a Page Section's column.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the section block instance." },
+        "sectionId": { "type": "string", "description": "The ID of the PageSection this block belongs to." },
+        "blockLayoutId": { "type": "string", "description": "The ID of the BlockLayout being used." },
+        "columnIndex": { "type": "number", "description": "The zero-based index of the column this block is in." },
+        "order": { "type": "number", "description": "The vertical display order of the block within its column." }
+      },
+      "required": ["id", "sectionId", "blockLayoutId", "columnIndex", "order"]
     }
   },
   "auth": {
@@ -554,8 +584,24 @@
           "schema": { "$ref": "#/backend/entities/BlockLayout" },
           "description": "Stores reusable, configurable content blocks like post grids."
         }
+      },
+      {
+        "path": "/page_sections/{sectionId}",
+        "definition": {
+          "entityName": "PageSection",
+          "schema": { "$ref": "#/backend/entities/PageSection" },
+          "description": "Stores layout container sections for a specific page."
+        }
+      },
+       {
+        "path": "/section_blocks/{sectionBlockId}",
+        "definition": {
+          "entityName": "SectionBlock",
+          "schema": { "$ref": "#/backend/entities/SectionBlock" },
+          "description": "Stores instances of Block Layouts within page sections."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
   }
 }

@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2, Construction } from 'lucide-react';
 import { useFirestore, useAuth, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, serverTimestamp, Timestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -25,6 +25,8 @@ import { Loading } from '@/components/loading';
 import { MediaLibrary } from '@/components/media-library';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WidgetsPage from '@/app/dashboard/widgets/page';
+import { Switch } from '@/components/ui/switch';
+import PageBuilder from './page-builder';
 
 
 type Page = {
@@ -37,6 +39,7 @@ type Page = {
     authorId: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
+    builderEnabled?: boolean;
 };
 
 const pageWidgetAreas = [
@@ -51,7 +54,6 @@ export default function EditPagePage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const pageId = params.id as string;
-  const activeTab = searchParams.get('tab') || 'content';
   
   const firestore = useFirestore();
   const auth = useAuth();
@@ -60,6 +62,7 @@ export default function EditPagePage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [builderEnabled, setBuilderEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitializingWidgets, setIsInitializingWidgets] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
@@ -80,12 +83,15 @@ export default function EditPagePage() {
 
   const { data: currentPageAreas, isLoading: isLoadingAreas } = useCollection(pageAreasQuery);
   const hasInitializedWidgets = currentPageAreas && currentPageAreas.length > 0;
+  
+  const activeTab = builderEnabled ? (searchParams.get('tab') || 'builder') : 'content';
 
   useEffect(() => {
     if (page) {
       setTitle(page.title || '');
       setContent(page.content || '');
       setFeaturedImageUrl(page.featuredImageUrl || '');
+      setBuilderEnabled(page.builderEnabled || false);
     }
   }, [page]);
 
@@ -193,6 +199,7 @@ export default function EditPagePage() {
         featuredImageUrl,
         slug,
         status,
+        builderEnabled,
         authorId: auth.currentUser.uid,
         updatedAt: serverTimestamp(),
     };
@@ -203,7 +210,7 @@ export default function EditPagePage() {
             title: `Page Updated`,
             description: `Your page "${title}" has been successfully updated.`,
         });
-        if (status === 'published') {
+        if (status === 'published' && !builderEnabled) {
             router.push('/dashboard/pages');
         }
     } catch (error: any) {
@@ -266,21 +273,137 @@ export default function EditPagePage() {
     router.push(`/dashboard/pages/edit/${pageId}?tab=${value}`);
   }
 
+  const handleBuilderToggle = (checked: boolean) => {
+    setBuilderEnabled(checked);
+    if(checked) {
+        handleTabChange('builder');
+    } else {
+        handleTabChange('content');
+    }
+  }
+
+  const PageContentEditor = (
+    <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
+        <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
+        <Card>
+            <CardContent className="p-4 grid gap-4">
+                <div className="grid gap-2">
+                <Label htmlFor="title">Title</Label>
+                <Input 
+                    id="title" 
+                    placeholder="Your amazing page title" 
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isSubmitting}
+                />
+                </div>
+                <div className="grid gap-2">
+                <Label htmlFor="content">Content</Label>
+                <RichTextEditor
+                    content={content}
+                    onChange={setContent}
+                    disabled={isSubmitting}
+                />
+                </div>
+            </CardContent>
+        </Card>
+        </div>
+
+        <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-36">
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Featured Image</CardTitle>
+                <CardDescription>Set a main image for this page.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                {featuredImageUrl && (
+                    <div className="relative aspect-video w-full">
+                    <Image
+                        src={featuredImageUrl}
+                        alt="Featured image preview"
+                        fill
+                        className="rounded-md object-cover"
+                    />
+                    </div>
+                )}
+                <div className="grid gap-2">
+                    <Label htmlFor="featured-image">Image URL</Label>
+                    <Input 
+                        id="featured-image"
+                        placeholder="https://example.com/image.jpg"
+                        value={featuredImageUrl}
+                        onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                        disabled={isSubmitting || isUploading}
+                    />
+                </div>
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                    accept="image/*"
+                />
+                <div className="flex flex-col gap-2">
+                    <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={isSubmitting || isUploading}
+                    >
+                    {isUploading ? (
+                        <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading...
+                        </>
+                    ) : (
+                        <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload New
+                        </>
+                    )}
+                    </Button>
+                    <MediaLibrary onSelect={(url) => setFeaturedImageUrl(url)}>
+                        <Button variant="outline" className="w-full" disabled={isSubmitting || isUploading}>
+                            <Library className="mr-2 h-4 w-4" />
+                            Browse Library
+                        </Button>
+                    </MediaLibrary>
+                </div>
+            </CardContent>
+        </Card>
+        </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Edit Page" description="Refine your content and layout.">
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/pages">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Pages
-          </Link>
-        </Button>
+        <div className="flex items-center gap-4">
+             <div className="flex items-center space-x-2">
+                <Switch 
+                    id="builder-mode" 
+                    checked={builderEnabled}
+                    onCheckedChange={handleBuilderToggle}
+                />
+                <Label htmlFor="builder-mode" className="flex items-center gap-2">
+                    <Construction className="h-4 w-4" />
+                    Builder Mode
+                </Label>
+            </div>
+            <Button variant="outline" asChild>
+                <Link href="/dashboard/pages">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Pages
+                </Link>
+            </Button>
+        </div>
       </PageHeader>
       
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className='flex justify-between items-end'>
           <TabsList>
-            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="content" disabled={builderEnabled}>Content</TabsTrigger>
+            <TabsTrigger value="builder" disabled={!builderEnabled}>Builder</TabsTrigger>
             <TabsTrigger value="widgets"><LayoutTemplate className="mr-2 h-4 w-4" /> Page Widgets</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
@@ -308,96 +431,10 @@ export default function EditPagePage() {
         </div>
 
         <TabsContent value="content">
-          <div className="grid gap-4 lg:grid-cols-3 lg:gap-8">
-            <div className="lg:col-span-2 grid auto-rows-max items-start gap-4">
-              <Card>
-                <CardContent className="p-4 grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input 
-                        id="title" 
-                        placeholder="Your amazing page title" 
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="content">Content</Label>
-                    <RichTextEditor
-                      content={content}
-                      onChange={setContent}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-36">
-              <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline">Featured Image</CardTitle>
-                    <CardDescription>Set a main image for this page.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                    {featuredImageUrl && (
-                      <div className="relative aspect-video w-full">
-                        <Image
-                          src={featuredImageUrl}
-                          alt="Featured image preview"
-                          fill
-                          className="rounded-md object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="grid gap-2">
-                        <Label htmlFor="featured-image">Image URL</Label>
-                        <Input 
-                            id="featured-image"
-                            placeholder="https://example.com/image.jpg"
-                            value={featuredImageUrl}
-                            onChange={(e) => setFeaturedImageUrl(e.target.value)}
-                            disabled={isSubmitting || isUploading}
-                        />
-                    </div>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleImageUpload} 
-                      className="hidden" 
-                      accept="image/*"
-                    />
-                    <div className="flex flex-col gap-2">
-                        <Button 
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => fileInputRef.current?.click()} 
-                        disabled={isSubmitting || isUploading}
-                        >
-                        {isUploading ? (
-                            <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Uploading...
-                            </>
-                        ) : (
-                            <>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload New
-                            </>
-                        )}
-                        </Button>
-                        <MediaLibrary onSelect={(url) => setFeaturedImageUrl(url)}>
-                            <Button variant="outline" className="w-full" disabled={isSubmitting || isUploading}>
-                                <Library className="mr-2 h-4 w-4" />
-                                Browse Library
-                            </Button>
-                        </MediaLibrary>
-                    </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          {PageContentEditor}
+        </TabsContent>
+         <TabsContent value="builder">
+          <PageBuilder pageId={pageId}/>
         </TabsContent>
         <TabsContent value="widgets">
             {hasInitializedWidgets ? (
@@ -407,7 +444,7 @@ export default function EditPagePage() {
                 <CardHeader>
                   <CardTitle>Initialize Page Widgets</CardTitle>
                   <CardDescription>
-                    This page doesn't have its own widget areas yet. Initialize them to create a unique layout for this page.
+                    This page doesn't have its own widget areas yet. Initialize them to create a unique widget layout for this page.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
