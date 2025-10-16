@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import {
   Sheet,
   SheetContent,
@@ -16,14 +17,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { Separator } from './ui/separator';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
+import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { fontList } from '@/lib/fonts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { defaultTheme } from '@/lib/themes';
 
 const globalColorKeys = [
     'background', 'foreground', 'card', 'cardForeground',
@@ -39,6 +41,19 @@ type SiteSettings = {
   bodyFont?: string;
   headlineFont?: string;
   baseFontSize?: number;
+};
+
+type CustomTheme = {
+    id?: string;
+    name: string;
+    previewImageUrl?: string;
+    colors: GlobalColors;
+    authorId: string;
+};
+
+type WebsiteThemeCustomizerProps = {
+    children: React.ReactNode;
+    themeSource: 'new' | CustomTheme;
 };
 
 
@@ -67,19 +82,26 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
 }
 
 
-export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode }) {
+export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCustomizerProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
   const [open, setOpen] = useState(false);
   
+  const [name, setName] = useState('');
   const [colors, setColors] = useState<GlobalColors | null>(null);
+  const [previewImageFile, setPreviewImageFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
   
   const [headlineFont, setHeadlineFont] = useState('Poppins');
   const [bodyFont, setBodyFont] = useState('Inter');
   const [baseFontSize, setBaseFontSize] = useState(16);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -90,28 +112,27 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (open) {
-      setIsLoading(true);
-      // Read variables from the DOM
-      const root = window.document.documentElement;
-      const computedStyle = getComputedStyle(root);
-      const initialColors: Partial<GlobalColors> = {};
-      
-      for (const key of globalColorKeys) {
-         const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-         initialColors[key] = computedStyle.getPropertyValue(cssVar).trim();
-      }
+        setIsLoading(true);
+        if (themeSource === 'new') {
+            setName('My Custom Theme');
+            setColors(defaultTheme.colors as unknown as GlobalColors);
+            setPreviewImageUrl('');
+            setPreviewImageFile(null);
+        } else {
+            setName(themeSource.name);
+            setColors(themeSource.colors);
+            setPreviewImageUrl(themeSource.previewImageUrl || '');
+            setPreviewImageFile(null);
+        }
 
-      setColors(initialColors as GlobalColors);
-      
-      if (settings) {
-        setHeadlineFont(settings.headlineFont || 'Poppins');
-        setBodyFont(settings.bodyFont || 'Inter');
-        setBaseFontSize(settings.baseFontSize || 16);
-      }
-
-      setIsLoading(false);
+        if (settings) {
+            setHeadlineFont(settings.headlineFont || 'Poppins');
+            setBodyFont(settings.bodyFont || 'Inter');
+            setBaseFontSize(settings.baseFontSize || 16);
+        }
+        setIsLoading(false);
     }
-  }, [open, settings]);
+  }, [open, themeSource, settings]);
 
   const handleColorChange = (key: keyof GlobalColors, value: string) => {
     if (!colors) return;
@@ -123,34 +144,78 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
     root.style.setProperty(cssVar, value);
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        setPreviewImageFile(file);
+        setPreviewImageUrl(URL.createObjectURL(file));
+    }
+  };
+  
+  const uploadImage = async (): Promise<string | undefined> => {
+    if (!previewImageFile) return previewImageUrl; // Return existing URL if no new file
+    
+    setIsUploading(true);
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      toast({ variant: "destructive", title: "Cloudinary not configured" });
+      setIsUploading(false);
+      return undefined;
+    }
+
+    const formData = new FormData();
+    formData.append('file', previewImageFile);
+    formData.append('upload_preset', uploadPreset);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!response.ok) throw new Error('Upload failed');
+        const data = await response.json();
+        return data.secure_url;
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Image Upload Failed", description: error.message });
+        return undefined;
+    } finally {
+        setIsUploading(false);
+    }
+  }
+
+
   const handleSave = async () => {
-    if (!colors || !firestore) {
+    if (!colors || !firestore || !auth?.currentUser) {
         toast({ variant: 'destructive', title: 'Error', description: 'Could not save changes.' });
         return;
     }
     
     setIsSaving(true);
     
+    const finalImageUrl = await uploadImage();
+    if (isUploading) return; // a toast is already shown by uploadImage on failure
+    
     try {
-        const colorPromise = fetch('/api/update-theme', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ colors }),
-        });
+        const typographyPromise = setDoc(settingsRef, { headlineFont, bodyFont, baseFontSize }, { merge: true });
 
-        const settingsToSave: Partial<SiteSettings> = {
-            headlineFont,
-            bodyFont,
-            baseFontSize,
+        let themePromise;
+        const themeData: CustomTheme = {
+            name,
+            previewImageUrl: finalImageUrl,
+            colors,
+            authorId: auth.currentUser.uid,
         };
-        const typographyPromise = setDoc(settingsRef, settingsToSave, { merge: true });
 
-        const [colorResponse] = await Promise.all([colorPromise, typographyPromise]);
-        
-        if (!colorResponse.ok) {
-            const errorData = await colorResponse.json();
-            throw new Error(errorData.error || 'Failed to update theme file.');
+        if (themeSource !== 'new' && themeSource.id) {
+            const themeRef = doc(firestore, 'custom_themes', themeSource.id);
+            themePromise = setDocumentNonBlocking(themeRef, themeData, { merge: true });
+        } else {
+            themePromise = addDoc(collection(firestore, 'custom_themes'), themeData);
         }
+
+        await Promise.all([themePromise, typographyPromise]);
 
         toast({
             title: 'Website Theme Updated!',
@@ -169,15 +234,17 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
     }
   };
 
+  const isNew = themeSource === 'new';
+  const title = isNew ? "Create Custom Theme" : "Edit Custom Theme";
+  const description = isNew ? "Create a new theme for your public-facing website." : "Modify this custom theme.";
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="flex flex-col w-full md:max-w-md">
         <SheetHeader>
-          <SheetTitle>Customize Website Theme</SheetTitle>
-          <SheetDescription>
-            Adjust the global colors and typography for your public-facing website.
-          </SheetDescription>
+          <SheetTitle>{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <Separator />
         <ScrollArea className="flex-1 -mx-6 px-6">
@@ -187,6 +254,26 @@ export function WebsiteThemeCustomizer({ children }: { children: React.ReactNode
                 </div>
             ) : (
                 <div className="grid gap-8 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="theme-name">Theme Name</Label>
+                        <Input id="theme-name" value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Preview Image</Label>
+                        {previewImageUrl && (
+                             <div className="relative aspect-video w-full">
+                                <Image src={previewImageUrl} alt="Theme preview" fill className="rounded-md object-cover" />
+                            </div>
+                        )}
+                        <input type="file" ref={fileInputRef} onChange={handleImageSelect} className="hidden" accept="image/*" />
+                        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            {isUploading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Upload className='mr-2 h-4 w-4' />}
+                            Upload Image
+                        </Button>
+                    </div>
+
+                    <Separator />
                     <div className='grid gap-4'>
                         <h3 className="font-medium text-sm">Colors</h3>
                         {colors && Object.entries(colors).map(([key, value]) => (

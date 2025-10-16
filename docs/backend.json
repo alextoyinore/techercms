@@ -338,6 +338,19 @@
         "order": { "type": "number", "description": "The display order of the link within its menu." }
       },
       "required": ["id", "menuId", "label", "url", "order"]
+    },
+    "CustomTheme": {
+        "title": "Custom Theme",
+        "description": "Represents a user-saved custom theme.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the theme." },
+            "name": { "type": "string", "description": "The name of the custom theme." },
+            "previewImageUrl": { "type": "string", "description": "URL for the theme's preview image." },
+            "colors": { "type": "object", "description": "An object containing the theme's color definitions." },
+            "authorId": { "type": "string", "description": "The ID of the user who created the theme." }
+        },
+        "required": ["id", "name", "colors", "authorId"]
     }
   },
   "auth": {
@@ -469,8 +482,16 @@
           "schema": { "$ref": "#/backend/entities/NavigationMenuItem" },
           "description": "Stores individual links within a navigation menu."
         }
+      },
+      {
+        "path": "/custom_themes/{themeId}",
+        "definition": {
+          "entityName": "CustomTheme",
+          "schema": { "$ref": "#/backend/entities/CustomTheme" },
+          "description": "Stores user-created custom themes."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`."
   }
 }

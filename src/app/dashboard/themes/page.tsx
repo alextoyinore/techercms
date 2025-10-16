@@ -8,13 +8,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useAuth } from '@/firebase';
+import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, Palette, Upload } from 'lucide-react';
+import { CheckCircle, Loader2, Palette, Upload, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTheme } from '@/components/theme-provider';
@@ -24,8 +24,15 @@ import { defaultTheme, type Theme } from '@/lib/themes';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-const websiteThemes = [
+const builtInWebsiteThemes = [
     {
       name: 'Magazine Pro',
       description: 'A classic, content-focused theme perfect for blogs and news sites.',
@@ -83,9 +90,18 @@ type SiteSettings = {
   dashboardTheme?: string;
 };
 
+type CustomTheme = {
+  id: string;
+  name: string;
+  previewImageUrl: string;
+  colors: any;
+  authorId: string;
+};
+
 export default function ThemesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
+    const auth = useAuth();
     const [isActivatingWebsiteTheme, setIsActivatingWebsiteTheme] = useState<string | null>(null);
 
     const { 
@@ -102,8 +118,15 @@ export default function ThemesPage() {
         if (!firestore) return null;
         return doc(firestore, 'site_settings', 'config');
     }, [firestore]);
+
+    const customThemesQuery = useMemoFirebase(() => {
+        if (!firestore || !auth?.currentUser) return null;
+        return query(collection(firestore, 'custom_themes'), where('authorId', '==', auth.currentUser.uid));
+    }, [firestore, auth?.currentUser]);
     
     const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
+    const { data: customThemes, isLoading: isLoadingCustomThemes } = useCollection<CustomTheme>(customThemesQuery);
+
     const [activeWebsiteTheme, setActiveWebsiteTheme] = useState<string | undefined>(undefined);
     
     useEffect(() => {
@@ -112,7 +135,7 @@ export default function ThemesPage() {
         }
     }, [settings]);
 
-    const handleActivateWebsiteTheme = async (themeName: string) => {
+    const handleActivateWebsiteTheme = async (themeName: string, isCustom: boolean) => {
         if (!firestore) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not connect to the database.' });
             return;
@@ -120,12 +143,44 @@ export default function ThemesPage() {
         setIsActivatingWebsiteTheme(themeName);
         try {
             await setDoc(doc(firestore, 'site_settings', 'config'), { activeTheme: themeName }, { merge: true });
+
+            if (isCustom) {
+                const themeData = customThemes?.find(t => t.name === themeName);
+                if (themeData) {
+                    await fetch('/api/update-theme', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ colors: themeData.colors }),
+                    });
+                }
+            }
+
             setActiveWebsiteTheme(themeName);
             toast({ title: 'Theme Activated!', description: `"${themeName}" is now your active website theme.` });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not activate theme.' });
         } finally {
             setIsActivatingWebsiteTheme(null);
+        }
+    }
+
+    const handleDeleteCustomTheme = (theme: CustomTheme) => {
+        if (!firestore) return;
+        try {
+            deleteDocumentNonBlocking(doc(firestore, "custom_themes", theme.id));
+            toast({
+                title: "Custom Theme Deleted",
+                description: `"${theme.name}" has been deleted.`,
+            });
+            if (activeWebsiteTheme === theme.name) {
+                handleActivateWebsiteTheme('Magazine Pro', false);
+            }
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Error Deleting Theme",
+                description: error.message || "Could not delete custom theme.",
+            });
         }
     }
     
@@ -151,10 +206,12 @@ export default function ThemesPage() {
         title="Appearance"
         description="Manage your website's themes and visual customization."
       >
-        <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Theme
-        </Button>
+        <WebsiteThemeCustomizer themeSource="new">
+          <Button variant="outline">
+              <Upload className="mr-2 h-4 w-4" />
+              Create Custom Theme
+          </Button>
+        </WebsiteThemeCustomizer>
       </PageHeader>
       <div className="grid gap-6">
         <Card>
@@ -163,8 +220,67 @@ export default function ThemesPage() {
                 <CardDescription>Choose a theme to change the look and feel of your public-facing website.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {websiteThemes.map((theme) => {
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {(customThemes || []).map((theme) => {
+                    const isActive = theme.name === activeWebsiteTheme;
+                    const isProcessing = isActivatingWebsiteTheme === theme.name;
+
+                    return (
+                        <Card key={theme.id} className="flex flex-col">
+                            <CardHeader>
+                                <div className="relative aspect-video w-full">
+                                    <Image
+                                        src={theme.previewImageUrl}
+                                        alt={theme.name}
+                                        fill
+                                        className="rounded-md object-cover"
+                                    />
+                                    {isActive && (
+                                        <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                            <CheckCircle className="h-10 w-10 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
+                                <CardDescription className="mt-2">A custom user theme.</CardDescription>
+                            </CardContent>
+                            <div className="p-4 pt-0 flex gap-2">
+                                <Button
+                                    className="w-full"
+                                    onClick={() => handleActivateWebsiteTheme(theme.name, true)}
+                                    disabled={isActive || !!isActivatingWebsiteTheme}
+                                >
+                                    {isProcessing ? (
+                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
+                                    ) : isActive ? (
+                                        'Active'
+                                    ) : (
+                                        'Activate'
+                                    )}
+                                </Button>
+                                 <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <WebsiteThemeCustomizer themeSource={theme}>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                Edit
+                                            </DropdownMenuItem>
+                                        </WebsiteThemeCustomizer>
+                                        <DropdownMenuItem onClick={() => handleDeleteCustomTheme(theme)} className='text-destructive'>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </Card>
+                    )
+                })}
+                {builtInWebsiteThemes.map((theme) => {
                     const image = PlaceHolderImages.find(img => img.id === theme.imageHintId) || PlaceHolderImages[0];
                     const isActive = theme.name === activeWebsiteTheme;
                     const isProcessing = isActivatingWebsiteTheme === theme.name;
@@ -193,7 +309,7 @@ export default function ThemesPage() {
                             <div className="p-4 pt-0 flex gap-2">
                                 <Button
                                     className="w-full"
-                                    onClick={() => handleActivateWebsiteTheme(theme.name)}
+                                    onClick={() => handleActivateWebsiteTheme(theme.name, false)}
                                     disabled={isActive || !!isActivatingWebsiteTheme}
                                 >
                                     {isProcessing ? (
@@ -204,9 +320,6 @@ export default function ThemesPage() {
                                         'Activate'
                                     )}
                                 </Button>
-                                <WebsiteThemeCustomizer>
-                                    <Button variant="outline"><Palette className='h-4 w-4' /></Button>
-                                </WebsiteThemeCustomizer>
                             </div>
                         </Card>
                     )
