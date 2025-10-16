@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import {
   collection,
@@ -67,15 +67,22 @@ function MenuItemsManager({
 
   const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // Simplified query: Removed orderBy to avoid needing a composite index.
     return query(
       collection(firestore, 'navigation_menu_items'),
-      where('menuId', '==', menu.id),
-      orderBy('order', 'asc')
+      where('menuId', '==', menu.id)
     );
   }, [firestore, menu.id]);
 
   const { data: menuItems, isLoading } =
     useCollection<NavigationMenuItem>(menuItemsQuery);
+    
+  // Sort items on the client-side after fetching
+  const sortedMenuItems = useMemo(() => {
+    if (!menuItems) return [];
+    return [...menuItems].sort((a, b) => a.order - b.order);
+  }, [menuItems]);
+
 
   const handleEditClick = (item: NavigationMenuItem) => {
     setEditingItem(item);
@@ -113,7 +120,7 @@ function MenuItemsManager({
       } else {
         // Add new item
         const newDocRef = collection(firestore, 'navigation_menu_items');
-        const order = menuItems ? menuItems.length : 0;
+        const order = sortedMenuItems ? sortedMenuItems.length : 0;
         await addDocumentNonBlocking(newDocRef, {
           ...itemToSave,
           menuId: menu.id,
@@ -150,9 +157,9 @@ function MenuItemsManager({
   const handleDeleteMenuWithItems = async () => {
     if(!firestore) return;
     
-    if (menuItems && menuItems.length > 0) {
+    if (sortedMenuItems && sortedMenuItems.length > 0) {
         const batch = writeBatch(firestore);
-        menuItems.forEach(item => {
+        sortedMenuItems.forEach(item => {
             const itemRef = doc(firestore, 'navigation_menu_items', item.id);
             batch.delete(itemRef);
         });
@@ -179,7 +186,7 @@ function MenuItemsManager({
       <CardContent>
         {isLoading && <p>Loading items...</p>}
         <div className="space-y-2">
-          {menuItems?.map((item) => (
+          {sortedMenuItems?.map((item) => (
             <div
               key={item.id}
               className="flex items-center justify-between rounded-md border p-3"
@@ -210,7 +217,7 @@ function MenuItemsManager({
               </div>
             </div>
           ))}
-          {!isLoading && menuItems?.length === 0 && (
+          {!isLoading && sortedMenuItems?.length === 0 && (
             <p className="text-sm text-muted-foreground p-3 text-center">
               No items in this menu yet.
             </p>
