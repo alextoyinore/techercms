@@ -38,6 +38,8 @@ import { GalleryPreview } from './previews/GalleryPreview';
 import { VideoPreview } from './previews/VideoPreview';
 import { TestimonialsPreview } from './previews/TestimonialsPreview';
 import { ContactFormPreview } from './previews/ContactFormPreview';
+import { MediaLibrary } from '@/components/media-library';
+import Image from 'next/image';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -67,7 +69,7 @@ const initialConfig = {
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
-    'gallery': { images: [] },
+    'gallery': { images: [] as { id: string; url: string }[] },
     'video': { videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
     'testimonials': { testimonials: [{ id: '1', author: 'Jane Doe', quote: 'This is a fantastic service!'}, {id: '2', author: 'John Smith', quote: 'I highly recommend this to everyone.'}] },
     'contact-form': { recipientEmail: 'you@example.com', submitButtonText: 'Send Message' }
@@ -143,6 +145,18 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
         : currentIds.filter((id: string) => id !== categoryId);
     handleConfigChange({ categoryIds: newIds });
   };
+  
+  const handleAddGalleryImage = (url: string) => {
+    const newImage = { id: `img-${Date.now()}`, url };
+    const newImages = [...(config.images || []), newImage];
+    handleConfigChange({ images: newImages });
+  };
+
+  const handleRemoveGalleryImage = (id: string) => {
+    const newImages = (config.images || []).filter((img: { id: string }) => img.id !== id);
+    handleConfigChange({ images: newImages });
+  };
+
 
   const handleSave = async () => {
     if (!firestore) return;
@@ -219,6 +233,34 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                     ))}
                 </div>
              )
+        case 'gallery':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Images</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {(config.images || []).map((image: { id: string; url: string }) => (
+                                <div key={image.id} className="relative group">
+                                    <Image src={image.url} alt="" width={100} height={100} className="rounded-md object-cover aspect-square" />
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100"
+                                        onClick={() => handleRemoveGalleryImage(image.id)}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <MediaLibrary onSelect={handleAddGalleryImage}>
+                        <Button variant="outline">
+                            <Plus className="mr-2 h-4 w-4" /> Add from Library
+                        </Button>
+                    </MediaLibrary>
+                </div>
+            )
         case 'testimonials':
             return (
                 <div className="grid gap-4">
@@ -390,5 +432,3 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     </Sheet>
   );
 }
-
-    
