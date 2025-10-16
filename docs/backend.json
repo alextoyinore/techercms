@@ -370,6 +370,7 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the block layout." },
             "name": { "type": "string", "description": "A human-readable name (e.g., 'Featured Posts Grid')." },
+            "description": { "type": "string", "description": "A short explanation of what the block layout does or is for." },
             "type": { "type": "string", "description": "The type of block to render (e.g., 'post-grid')." },
             "config": { "type": "object", "description": "A flexible object to store block-specific settings (e.g., post count, columns, filters)." }
         },

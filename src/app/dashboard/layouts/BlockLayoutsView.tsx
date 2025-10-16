@@ -30,6 +30,7 @@ import {
 export type BlockLayout = {
   id: string;
   name: string;
+  description?: string;
   type: 'post-list' | 'post-grid';
   config: any;
 };
@@ -85,11 +86,14 @@ export function BlockLayoutsView() {
             {!isLoading && blockLayouts && blockLayouts.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {blockLayouts.map(layout => (
-                        <Card key={layout.id}>
+                        <Card key={layout.id} className="flex flex-col">
                             <CardHeader>
                                 <CardTitle className="text-lg">{layout.name}</CardTitle>
                                 <CardDescription>Type: {layout.type}</CardDescription>
                             </CardHeader>
+                             <CardContent className="flex-grow">
+                                <p className="text-sm text-muted-foreground">{layout.description || 'No description.'}</p>
+                            </CardContent>
                             <CardFooter className="flex justify-end gap-2">
                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(layout)}>
                                     <Edit className="h-4 w-4" />

@@ -28,6 +28,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PostGridPreview } from './PostGridPreview';
+import { Textarea } from '@/components/ui/textarea';
+import { PostListPreview } from './PostListPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -50,6 +52,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   const { toast } = useToast();
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [type, setType] = useState<'post-grid' | 'post-list'>('post-grid');
   const [config, setConfig] = useState<any>(initialConfig['post-grid']);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,10 +64,12 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     if (isOpen) {
         if (editingLayout) {
             setName(editingLayout.name);
+            setDescription(editingLayout.description || '');
             setType(editingLayout.type);
             setConfig(editingLayout.config || initialConfig[editingLayout.type]);
         } else {
             setName('New Block Layout');
+            setDescription('');
             setType('post-grid');
             setConfig(initialConfig['post-grid']);
         }
@@ -92,7 +97,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     if (!firestore) return;
     setIsSaving(true);
     
-    const layoutData = { name, type, config };
+    const layoutData = { name, description, type, config };
 
     try {
         if (editingLayout) {
@@ -125,6 +130,10 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  <div className="grid gap-2">
                     <Label htmlFor="layout-name">Layout Name</Label>
                     <Input id="layout-name" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="layout-description">Description</Label>
+                    <Textarea id="layout-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this block for?" />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="layout-type">Layout Type</Label>
@@ -206,6 +215,8 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  <h3 className="font-medium mb-4 text-center text-sm text-muted-foreground">Live Preview</h3>
                  {type === 'post-grid' ? (
                      <PostGridPreview config={config} />
+                 ) : type === 'post-list' ? (
+                     <PostListPreview config={config} />
                  ) : (
                      <p className='text-center text-sm text-muted-foreground'>No preview available for this layout type yet.</p>
                  )}
