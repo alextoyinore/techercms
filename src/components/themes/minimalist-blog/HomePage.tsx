@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
@@ -29,6 +30,7 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right">
+                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
                                 <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                             </div>

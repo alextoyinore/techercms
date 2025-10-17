@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { Separator } from '@/components/ui/separator';
 import { SearchForm } from '../SearchForm';
@@ -81,6 +82,7 @@ const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
                                 <Button variant="ghost" size="icon"><MenuIcon /></Button>
                             </SheetTrigger>
                              <SheetContent side="right">
+                                <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="py-6">
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />

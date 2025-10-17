@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -10,7 +11,7 @@ import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
 import { Menu } from '@/components/Menu';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { SearchForm } from '../SearchForm';
@@ -43,6 +44,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="right">
+                        <SheetTitle className="sr-only">Main Menu</SheetTitle>
                         <div className="py-6">
                            <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                            <div className="mt-6 pt-6 border-t">

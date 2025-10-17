@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { TrendingUp, ArrowRight, MenuIcon } from 'lucide-react';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
@@ -47,6 +48,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right">
+                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
                              <div className="py-6">
                                <Menu locationId="business-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                                 <div className="mt-6 pt-6 border-t">

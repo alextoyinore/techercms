@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -10,7 +11,7 @@ import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ChevronRight, MenuIcon } from 'lucide-react';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 
@@ -48,6 +49,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
+                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
                                <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
                                 <div className="mt-6 border-t border-white/20 pt-6">
