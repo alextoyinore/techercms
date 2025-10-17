@@ -6,46 +6,86 @@ import { Loading } from '@/components/loading';
 // Dynamically import theme components
 import dynamic from 'next/dynamic';
 
-const themes = {
+const themes: Record<string, Record<string, any>> = {
   'Magazine Pro': {
     HomePage: dynamic(() => import('@/components/themes/magazine-pro/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/magazine-pro/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/magazine-pro/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/magazine-pro/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/magazine-pro/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/magazine-pro/SearchPage')),
   },
   'Minimalist Blog': {
     HomePage: dynamic(() => import('@/components/themes/minimalist-blog/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/minimalist-blog/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/minimalist-blog/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/minimalist-blog/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/minimalist-blog/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/minimalist-blog/SearchPage')),
   },
   'Creative Portfolio': {
     HomePage: dynamic(() => import('@/components/themes/creative-portfolio/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/creative-portfolio/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/creative-portfolio/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/creative-portfolio/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/creative-portfolio/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/creative-portfolio/SearchPage')),
   },
   'Newspaper': {
     HomePage: dynamic(() => import('@/components/themes/newspaper/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/newspaper/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/newspaper/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/newspaper/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/newspaper/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/newspaper/SearchPage')),
   },
   'Tech Today': {
     HomePage: dynamic(() => import('@/components/themes/tech-today/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/tech-today/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/tech-today/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/tech-today/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/tech-today/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/tech-today/SearchPage')),
   },
   'Earthy Elegance': {
     HomePage: dynamic(() => import('@/components/themes/earthy-elegance/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/earthy-elegance/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/earthy-elegance/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/earthy-elegance/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/earthy-elegance/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/earthy-elegance/SearchPage')),
   },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/business/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/business/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/business/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/business/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/business/SearchPage')),
   },
   'Sports': {
     HomePage: dynamic(() => import('@/components/themes/sports/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/sports/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/sports/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/sports/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/sports/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/sports/SearchPage')),
   },
   'NewsPro': {
     HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/newspro/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/newspro/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/newspro/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/newspro/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/newspro/SearchPage')),
   },
   'Vogue': {
     HomePage: dynamic(() => import('@/components/themes/vogue/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/vogue/SlugPage')),
+    CategoryPage: dynamic(() => import('@/components/themes/vogue/CategoryPage')),
+    TagPage: dynamic(() => import('@/components/themes/vogue/TagPage')),
+    AuthorPage: dynamic(() => import('@/components/themes/vogue/AuthorPage')),
+    SearchPage: dynamic(() => import('@/components/themes/vogue/SearchPage')),
   },
 };
 
@@ -56,7 +96,7 @@ type SiteSettings = {
 };
 
 type ThemeRendererProps = {
-  pageType: 'home' | 'slug';
+  pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search';
 };
 
 export function ThemeRenderer({ pageType }: ThemeRendererProps) {
@@ -77,12 +117,32 @@ export function ThemeRenderer({ pageType }: ThemeRendererProps) {
   const theme = themes[activeThemeName] || themes['Magazine Pro'];
 
   if (pageType === 'home' && settings?.homepageType === 'static' && settings.homepagePageId) {
-    // If homepage is a static page, we render the SlugPage component with the correct slug.
-    // To do this, we need to fetch the page to get its slug.
     return <StaticHomepageRenderer pageId={settings.homepagePageId} theme={theme} />;
   }
   
-  const PageComponent = pageType === 'home' ? theme.HomePage : theme.SlugPage;
+  let PageComponent;
+  switch (pageType) {
+    case 'home':
+      PageComponent = theme.HomePage;
+      break;
+    case 'slug':
+      PageComponent = theme.SlugPage;
+      break;
+    case 'category':
+      PageComponent = theme.CategoryPage;
+      break;
+    case 'tag':
+      PageComponent = theme.TagPage;
+      break;
+    case 'author':
+      PageComponent = theme.AuthorPage;
+      break;
+    case 'search':
+      PageComponent = theme.SearchPage;
+      break;
+    default:
+      PageComponent = theme.HomePage;
+  }
 
   return <PageComponent />;
 }
@@ -107,22 +167,7 @@ function StaticHomepageRenderer({ pageId, theme }: { pageId: string, theme: any}
         const HomePageComponent = theme.HomePage;
         return <HomePageComponent />
     }
-
-    // We can't just pass the slug to the SlugPage, because the URL in the browser
-    // will still be '/', not '/[slug]'. The useParams() hook in SlugPage will not work.
-    // Instead, we will need to replicate the logic of SlugPage here for the homepage context.
-    // For now, we will render the SlugPage component but we will need to adjust it
-    // to accept an optional page object prop instead of relying on useParams.
-    // This is a bigger refactor, so for now we'll just show a placeholder.
     
     const SlugPageComponent = theme.SlugPage;
-    // This is a conceptual example. The SlugPage would need to be modified
-    // to accept a 'page' prop instead of fetching based on a slug from the URL.
-    // Since we cannot modify it right now, this will effectively re-fetch inside SlugPage,
-    // which is inefficient but will work for demonstration. A proper implementation
-    // would involve passing the fetched `page` data down as a prop.
-    
-    // To make this work, we need to temporarily override the browser's URL perception for useParams
-    // A clean way is to pass data directly. Let's assume SlugPage can take an item prop.
     return <SlugPageComponent preloadedItem={page} />;
 }
