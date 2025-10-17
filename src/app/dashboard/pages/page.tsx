@@ -26,7 +26,7 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
 import { collection, doc, Timestamp } from "firebase/firestore";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
@@ -38,6 +38,10 @@ type Page = {
     createdAt: Timestamp;
 };
 
+type SiteSettings = {
+  homepagePageId?: string;
+};
+
 export default function PagesPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -46,8 +50,14 @@ export default function PagesPage() {
         if (!firestore) return null;
         return collection(firestore, 'pages');
     }, [firestore]);
+    
+    const settingsRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'site_settings', 'config');
+    }, [firestore]);
 
-    const { data: pages, isLoading } = useCollection<Page>(pagesCollection);
+    const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesCollection);
+    const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
     
     // Sort pages by creation date, newest first
     const sortedPages = useMemo(() => {
@@ -59,6 +69,7 @@ export default function PagesPage() {
       });
     }, [pages]);
 
+    const isLoading = isLoadingPages || isLoadingSettings;
 
     const handleDelete = (pageId: string, pageTitle: string) => {
         if (!firestore) return;
@@ -115,38 +126,44 @@ export default function PagesPage() {
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && sortedPages.map((page) => (
-                <TableRow key={page.id}>
-                  <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell>
-                    <Badge variant={page.status === "published" ? "default" : "secondary"}>
-                      {page.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {page.createdAt ? format(page.createdAt.toDate(), 'PP') : 'N/A'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/pages/edit/${page.id}`}>Edit</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(page.id, page.title)} className="text-destructive">
-                            Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {!isLoading && sortedPages.map((page) => {
+                const isHomepage = page.id === settings?.homepagePageId;
+                return (
+                    <TableRow key={page.id}>
+                        <TableCell className="font-medium">
+                            {page.title}
+                            {isHomepage && <span className="text-muted-foreground ml-2">— Homepage</span>}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant={page.status === "published" ? "default" : "secondary"}>
+                            {page.status}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            {page.createdAt ? format(page.createdAt.toDate(), 'PP') : 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/dashboard/pages/edit/${page.id}`}>Edit</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(page.id, page.title)} className="text-destructive">
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
