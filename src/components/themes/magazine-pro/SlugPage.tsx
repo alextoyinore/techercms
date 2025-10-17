@@ -13,6 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -43,6 +44,35 @@ type SiteSettings = {
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
 }
+
+const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
+    <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+        <div className="container mx-auto flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold font-headline text-primary">
+                {siteName || 'My Awesome Site'}
+            </Link>
+            <Menu locationId="magazine-pro-header" className="hidden md:flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
+        </div>
+    </header>
+);
+
+const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
+     <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
+        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-2">
+                <p className="font-bold font-headline text-primary text-lg">{siteName || 'My Awesome Site'}</p>
+                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                <Menu locationId="magazine-pro-footer" className="mt-4 flex flex-col space-y-2" linkClassName="text-sm text-muted-foreground hover:text-primary" />
+            </div>
+            <div className="space-y-4">
+                <WidgetArea areaName="Footer Column 1" />
+            </div>
+            <div className="space-y-4">
+                <WidgetArea areaName="Footer Column 2" />
+            </div>
+        </div>
+    </footer>
+);
 
 function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();
@@ -149,7 +179,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   return (
-    <ThemeLayout pageId={pageId}>
+    <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-3">
                 <article className="max-w-none">

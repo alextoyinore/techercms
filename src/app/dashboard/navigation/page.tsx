@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import {
   collection,
   doc,
@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  setDoc,
 } from 'firebase/firestore';
 import {
   addDocumentNonBlocking,
@@ -45,6 +46,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { menuLocations } from '@/lib/menu-locations';
+import { Separator } from '@/components/ui/separator';
 
 type NavigationMenu = {
   id: string;
@@ -69,6 +72,10 @@ type Category = {
   id: string;
   name: string;
   slug: string;
+};
+
+type SiteSettings = {
+    menuAssignments?: Record<string, string>;
 };
 
 function MenuItemsManager({
@@ -432,7 +439,21 @@ export default function NavigationPage() {
     return query(collection(firestore, 'navigation_menus'), orderBy('name'));
   }, [firestore]);
 
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
   const { data: menus, isLoading } = useCollection<NavigationMenu>(menusQuery);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
+  
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (settings?.menuAssignments) {
+        setAssignments(settings.menuAssignments);
+    }
+  }, [settings]);
 
   const handleAddMenu = async () => {
     if (!newMenuName.trim() || !firestore) return;
@@ -472,36 +493,84 @@ export default function NavigationPage() {
     }
   };
 
+  const handleAssignmentChange = async (locationId: string, menuId: string) => {
+    if (!settingsRef) return;
+    const newAssignments = { ...assignments, [locationId]: menuId };
+    setAssignments(newAssignments); // Optimistic update
+    try {
+      await setDoc(settingsRef, { menuAssignments: newAssignments }, { merge: true });
+       toast({ title: 'Menu Location Updated' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error Saving', description: error.message });
+        setAssignments(settings?.menuAssignments || {}); // Revert on error
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Navigation"
-        description="Manage your site's reusable navigation menus."
+        description="Manage your site's reusable navigation menus and their locations."
       />
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Menu</CardTitle>
-          </CardHeader>
-          <CardContent className="flex gap-2">
-            <Input
-              placeholder="New Menu Name (e.g., Header Navigation)"
-              value={newMenuName}
-              onChange={e => setNewMenuName(e.target.value)}
-              disabled={isSubmitting}
-            />
-            <Button
-              onClick={handleAddMenu}
-              disabled={isSubmitting || !newMenuName.trim()}
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Create Menu'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Menu Locations</CardTitle>
+                    <CardDescription>Assign menus to specific locations in your theme.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {menuLocations.map(location => (
+                        <div key={location.id} className="grid grid-cols-2 items-center gap-4">
+                            <div>
+                                <Label htmlFor={`location-${location.id}`} className="font-medium">{location.name}</Label>
+                                <p className="text-xs text-muted-foreground">Theme: {location.theme}</p>
+                            </div>
+                            <Select
+                                value={assignments[location.id] || ''}
+                                onValueChange={(menuId) => handleAssignmentChange(location.id, menuId)}
+                                disabled={isLoading || isLoadingSettings}
+                            >
+                                <SelectTrigger id={`location-${location.id}`}>
+                                    <SelectValue placeholder="Select a menu..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">-- None --</SelectItem>
+                                    <Separator />
+                                    {menus?.map(menu => (
+                                        <SelectItem key={menu.id} value={menu.id}>{menu.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Create New Menu</CardTitle>
+                </CardHeader>
+                <CardContent className="flex gap-2">
+                    <Input
+                    placeholder="New Menu Name"
+                    value={newMenuName}
+                    onChange={e => setNewMenuName(e.target.value)}
+                    disabled={isSubmitting}
+                    />
+                    <Button
+                    onClick={handleAddMenu}
+                    disabled={isSubmitting || !newMenuName.trim()}
+                    >
+                    {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        'Create'
+                    )}
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+
 
         {isLoading && <p>Loading menus...</p>}
 

@@ -279,6 +279,13 @@
           "type": "boolean",
           "description": "If true, all page titles will be hidden site-wide.",
           "default": false
+        },
+        "menuAssignments": {
+            "type": "object",
+            "description": "A map of theme menu location IDs to NavigationMenu IDs.",
+            "additionalProperties": {
+                "type": "string"
+            }
         }
       },
       "required": [

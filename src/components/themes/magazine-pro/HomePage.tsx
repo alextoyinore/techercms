@@ -9,6 +9,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
+import { Menu } from '@/components/Menu';
+
+
+const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
+    <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+        <div className="container mx-auto flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold font-headline text-primary">
+                {siteName || 'My Awesome Site'}
+            </Link>
+            <Menu locationId="magazine-pro-header" className="hidden md:flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
+        </div>
+    </header>
+);
+
+const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
+     <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
+        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-2">
+                <p className="font-bold font-headline text-primary text-lg">{siteName || 'My Awesome Site'}</p>
+                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                <Menu locationId="magazine-pro-footer" className="mt-4 flex flex-col space-y-2" linkClassName="text-sm text-muted-foreground hover:text-primary" />
+            </div>
+            <div className="space-y-4">
+                <WidgetArea areaName="Footer Column 1" />
+            </div>
+            <div className="space-y-4">
+                <WidgetArea areaName="Footer Column 2" />
+            </div>
+        </div>
+    </footer>
+);
 
 type Post = {
   id: string;
@@ -49,7 +80,7 @@ export default function HomePage() {
   }
 
   return (
-    <ThemeLayout>
+    <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter}>
         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold font-headline tracking-tight lg:text-5xl">Our Blog</h1>
             <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and stories.</p>

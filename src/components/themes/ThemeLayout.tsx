@@ -3,6 +3,7 @@ import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import Link from 'next/link';
 import { doc } from 'firebase/firestore';
+import { Menu } from '@/components/Menu';
 
 type SiteSettings = {
     siteName?: string;
