@@ -33,6 +33,7 @@ import { TestimonialsPreview } from '../app/dashboard/layouts/previews/Testimoni
 import { VideoPreview } from '../app/dashboard/layouts/previews/VideoPreview';
 import { FeaturedTopAndGridWidget } from './widgets/FeaturedTopAndGridWidget';
 import { FeaturedAndListWidget } from './widgets/FeaturedAndListWidget';
+import { BigFeaturedWidget } from './widgets/BigFeaturedWidget';
 
 
 const blockLayoutWidgets: Record<string, React.FC<any>> = {
@@ -43,6 +44,7 @@ const blockLayoutWidgets: Record<string, React.FC<any>> = {
     'featured-top-and-grid': FeaturedTopAndGridWidget,
     'featured-and-list': FeaturedAndListWidget,
     'tabbed-posts': TabbedPostsWidget,
+    'big-featured': BigFeaturedWidget,
     'hero': HeroPreview,
     'cta': CtaPreview,
     'feature-grid': FeatureGridPreview,
@@ -188,5 +190,3 @@ export function PageBuilderRenderer({ pageId }: { pageId: string }) {
     )
 
 }
-
-    

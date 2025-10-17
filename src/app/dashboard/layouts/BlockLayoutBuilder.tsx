@@ -47,6 +47,7 @@ import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FeaturedTopAndGridPreview } from './previews/FeaturedTopAndGridPreview';
 import { FeaturedAndListPreview } from './previews/FeaturedAndListPreview';
+import { BigFeaturedPreview } from './previews/BigFeaturedPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -62,18 +63,19 @@ type Category = {
 type NewBlockType = 
     | 'post-grid' 
     | 'post-list'
+    | 'post-carousel'
+    | 'featured-and-smalls'
+    | 'featured-top-and-grid'
+    | 'featured-and-list'
+    | 'tabbed-posts'
+    | 'big-featured'
     | 'hero'
     | 'cta'
     | 'feature-grid'
     | 'gallery'
     | 'video'
     | 'testimonials'
-    | 'contact-form'
-    | 'post-carousel'
-    | 'featured-and-smalls'
-    | 'featured-top-and-grid'
-    | 'featured-and-list'
-    | 'tabbed-posts';
+    | 'contact-form';
 
 const initialConfig = {
     'post-grid': { columns: 3, showImages: true, showExcerpts: false },
@@ -82,6 +84,7 @@ const initialConfig = {
     'featured-and-smalls': { featuredWidth: 50, showSmallImages: true, showSmallExcerpts: false, featuredPosition: 'left' },
     'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false },
     'featured-and-list': { showSmallImages: true, showSmallExcerpts: true },
+    'big-featured': { imagePosition: 'left', showExcerpt: true, buttonText: 'Read More' },
     'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
@@ -100,6 +103,7 @@ const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
     { value: 'featured-top-and-grid', label: 'Featured & Grid', group: 'Posts' },
     { value: 'featured-and-list', label: 'Featured & List', group: 'Posts' },
     { value: 'tabbed-posts', label: 'Tabbed Posts', group: 'Posts' },
+    { value: 'big-featured', label: 'Big Featured', group: 'Posts' },
     { value: 'hero', label: 'Hero Section', group: 'Page Sections' },
     { value: 'cta', label: 'Call to Action', group: 'Page Sections' },
     { value: 'feature-grid', label: 'Feature Grid', group: 'Page Sections' },
@@ -220,6 +224,36 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   
   const renderConfigFields = () => {
     switch(type) {
+        case 'big-featured':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Image Position</Label>
+                        <RadioGroup
+                            value={config.imagePosition || 'left'}
+                            onValueChange={(value) => handleConfigChange({ imagePosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="left" id="pos-left-big" />
+                                <Label htmlFor="pos-left-big">Left</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="right" id="pos-right-big" />
+                                <Label htmlFor="pos-right-big">Right</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-excerpt-big" checked={config.showExcerpt} onCheckedChange={c => handleConfigChange({ showExcerpt: c })} />
+                        <Label htmlFor="show-excerpt-big">Show post excerpt</Label>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Button Text</Label>
+                        <Input value={config.buttonText || ''} onChange={e => handleConfigChange({ buttonText: e.target.value })} placeholder="e.g., Read More"/>
+                    </div>
+                </div>
+            )
         case 'hero':
         case 'cta':
             return (
@@ -513,6 +547,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  {type === 'featured-top-and-grid' && <FeaturedTopAndGridPreview config={config} />}
                  {type === 'featured-and-list' && <FeaturedAndListPreview config={config} />}
                  {type === 'tabbed-posts' && <TabbedPostsPreview config={config} />}
+                 {type === 'big-featured' && <BigFeaturedPreview config={config} />}
                  {type === 'hero' && <HeroPreview config={config} />}
                  {type === 'cta' && <CtaPreview config={config} />}
                  {type === 'feature-grid' && <FeatureGridPreview config={config} />}
@@ -532,5 +567,3 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     </Sheet>
   );
 }
-
-    

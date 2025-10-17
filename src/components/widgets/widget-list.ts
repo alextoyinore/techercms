@@ -22,6 +22,7 @@ import {
     MessageCircle,
     Copy,
     Rows,
+    RectangleHorizontal,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'featured-and-smalls', label: 'Featured & Smalls', icon: PictureInPicture2, defaultConfig: { title: 'Top Stories' } },
     { type: 'featured-top-and-grid', label: 'Featured & Grid', icon: Copy, defaultConfig: { title: 'Highlights' } },
     { type: 'featured-and-list', label: 'Featured & List', icon: Rows, defaultConfig: { title: 'Latest' } },
+    { type: 'big-featured', label: 'Big Featured', icon: RectangleHorizontal, defaultConfig: { title: 'Featured Story' } },
     { type: 'tabbed-posts', label: 'Tabbed Posts', icon: PanelTop, defaultConfig: { title: '' } },
     { type: 'categories-list', label: 'Categories List', icon: List, defaultConfig: { title: 'Categories' } },
     { type: 'search', label: 'Search', icon: Search, defaultConfig: { title: 'Search' } },
@@ -58,5 +60,3 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'sporting-tables', label: 'Sporting Tables', icon: BarChart, defaultConfig: { title: 'League Standings' } },
     { type: 'weather', label: 'Weather', icon: CloudSun, defaultConfig: { title: 'Weather', location: 'New York, NY' } },
 ];
-
-    
