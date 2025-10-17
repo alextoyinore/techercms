@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -11,7 +12,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
@@ -48,6 +59,13 @@ export default function NewPostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // State for new category dialog
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -188,6 +206,25 @@ export default function NewPostPage() {
         setSubmissionStatus(null);
     }
   };
+  
+  const handleAddNewCategory = async () => {
+    if (!newCategoryName || !newCategorySlug || !firestore) {
+        toast({ variant: 'destructive', title: 'Missing fields', description: 'Please provide both a name and a slug.'});
+        return;
+    }
+    setIsSavingCategory(true);
+    try {
+        await addDocumentNonBlocking(collection(firestore, 'categories'), { name: newCategoryName, slug: newCategorySlug });
+        toast({ title: 'Category Added!', description: `"${newCategoryName}" has been successfully added.`});
+        setNewCategoryName('');
+        setNewCategorySlug('');
+        setIsCategoryDialogOpen(false);
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not save the category.'});
+    } finally {
+        setIsSavingCategory(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -334,20 +371,54 @@ export default function NewPostPage() {
             <CardHeader>
               <CardTitle className="font-headline">Categories</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-row flex-wrap gap-x-4 gap-y-2">
-              {isLoadingCategories && <p>Loading categories...</p>}
-              {categories?.map((category) => (
-                <div key={category.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={category.id} 
-                    onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
-                    disabled={isSubmitting}
-                  />
-                  <Label htmlFor={category.id} className="font-normal">
-                    {category.name}
-                  </Label>
+            <CardContent className="grid gap-2">
+                <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 max-h-32 overflow-y-auto">
+                    {isLoadingCategories && <p>Loading categories...</p>}
+                    {categories?.map((category) => (
+                        <div key={category.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                            id={category.id} 
+                            onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
+                            disabled={isSubmitting}
+                        />
+                        <Label htmlFor={category.id} className="font-normal">
+                            {category.name}
+                        </Label>
+                        </div>
+                    ))}
                 </div>
-              ))}
+                 <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="mt-2">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add New Category
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Category</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="new-category-name">Name</Label>
+                                <Input id="new-category-name" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} disabled={isSavingCategory}/>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="new-category-slug">Slug</Label>
+                                <Input id="new-category-slug" value={newCategorySlug} onChange={(e) => setNewCategorySlug(e.target.value)} disabled={isSavingCategory}/>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" disabled={isSavingCategory}>Cancel</Button>
+                            </DialogClose>
+                            <Button onClick={handleAddNewCategory} disabled={isSavingCategory}>
+                                {isSavingCategory ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Save Category
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </CardContent>
           </Card>
 
@@ -390,3 +461,5 @@ export default function NewPostPage() {
     </div>
   );
 }
+
+    
