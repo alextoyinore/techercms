@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -36,12 +36,18 @@ type SiteSettings = {
 }
 
 export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
+    const [currentDate, setCurrentDate] = useState('');
+
+    useEffect(() => {
+        setCurrentDate(format(new Date(), 'eeee, MMMM d, yyyy'));
+    }, []);
+
     return (
         <header className="border-b-2 border-foreground sticky top-0 bg-background z-20">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center py-4 border-b">
                     <div className="text-sm font-medium hidden sm:block">
-                       {format(new Date(), 'eeee, MMMM d, yyyy')}
+                       {currentDate}
                     </div>
                     <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || 'The Daily Chronicle'}
@@ -191,7 +197,6 @@ export default function HomePage() {
 
                     {/* Sidebar */}
                     <aside className="lg:col-span-1 space-y-8">
-                        <WidgetArea areaName="Sidebar" />
                     </aside>
                 </div>
             )}
