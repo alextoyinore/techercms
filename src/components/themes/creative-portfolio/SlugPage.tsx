@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
-import { ThemeLayout } from '../ThemeLayout';
+import { CreativeHeader, CreativeFooter } from './HomePage';
 
 type Post = {
   id: string;
@@ -43,38 +43,6 @@ type SiteSettings = {
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
 }
-
-const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
-    <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
-        <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
-                 {siteName || 'Portfolio'}
-            </Link>
-            <nav>
-                <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
-                    Admin Login
-                </Link>
-            </nav>
-        </div>
-    </header>
-);
-
-const CreativeFooter: React.FC = () => (
-    <footer className="py-12 px-6 border-t mt-16 bg-foreground text-background">
-        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">A Creative Portfolio</p>
-                <p className="text-sm text-background/60 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
-            </div>
-             <div className="space-y-4">
-                <WidgetArea areaName="Footer Column 1" />
-            </div>
-            <div className="space-y-4">
-                <WidgetArea areaName="Footer Column 2" />
-            </div>
-        </div>
-    </footer>
-);
 
 function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();
@@ -177,7 +145,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   return (
-    <ThemeLayout HeaderComponent={CreativeHeader} FooterComponent={CreativeFooter} pageId={pageId} className="bg-background">
+    <div className="bg-background">
+      <CreativeHeader />
+      <main className="container mx-auto px-6 py-8">
         <article className="max-w-none">
           {item.featuredImageUrl && (
             <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
@@ -199,27 +169,35 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             </div>
           </header>
           
-          {isPost ? (
-             <div
-                className="prose dark:prose-invert lg:prose-xl max-w-none"
-                dangerouslySetInnerHTML={{ __html: item.content }}
-            />
-          ) : (
-              <PageContent page={item as Page} />
-          )}
+          <div className="max-w-3xl mx-auto">
+            {isPost ? (
+              <div
+                  className="prose dark:prose-invert lg:prose-xl max-w-none"
+                  dangerouslySetInnerHTML={{ __html: item.content }}
+              />
+            ) : (
+                <PageContent page={item as Page} />
+            )}
 
-          {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-            <footer className="mt-12 text-center">
-                <div className="flex flex-wrap gap-2 justify-center">
-                    {(item as Post).tagIds!.map(tag => (
-                        <Link key={tag} href={`/tag/${tag}`}>
-                            <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
-                        </Link>
-                    ))}
-                </div>
-            </footer>
-          )}
+            {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+              <footer className="mt-12 text-center">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                      {(item as Post).tagIds!.map(tag => (
+                          <Link key={tag} href={`/tag/${tag}`}>
+                              <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                          </Link>
+                      ))}
+                  </div>
+              </footer>
+            )}
+          </div>
         </article>
-    </ThemeLayout>
+        <aside className="mt-12 space-y-8 max-w-5xl mx-auto">
+          <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
+        </aside>
+      </main>
+      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
+      <CreativeFooter />
+    </div>
   );
 }

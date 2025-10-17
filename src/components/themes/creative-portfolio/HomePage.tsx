@@ -17,7 +17,7 @@ type Post = {
   createdAt: Timestamp;
 };
 
-const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
+export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
         <div className="container mx-auto flex justify-between items-center">
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
@@ -32,7 +32,7 @@ const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     </header>
 );
 
-const CreativeFooter: React.FC = () => (
+export const CreativeFooter: React.FC = () => (
     <footer className="py-12 px-6 border-t mt-16 bg-foreground text-background">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
