@@ -9,10 +9,14 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Menu } from '@/components/Menu';
+import { Separator } from '@/components/ui/separator';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -52,34 +56,36 @@ type SiteSettings = {
 }
 
 const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
-    const firestore = useFirestore();
-    const categoriesQuery = useMemoFirebase(() => {
-        if(!firestore) return null;
-        return query(collection(firestore, 'categories'), orderBy('name', 'asc'), limit(6));
-    }, [firestore]);
-    const {data: categories} = useCollection<Category>(categoriesQuery);
-
     return (
         <header className="border-b-2 border-foreground sticky top-0 bg-background z-20">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center py-4 border-b">
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium hidden sm:block">
                        {format(new Date(), 'eeee, MMMM d, yyyy')}
                     </div>
-                    <Link href="/" className="text-4xl font-black font-headline text-center">
+                    <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || 'The Daily Chronicle'}
                     </Link>
-                    <div className="text-sm">
-                        <Link href="/login" className="font-medium hover:underline">Admin Login</Link>
+                    <div className="text-sm hidden sm:flex items-center gap-2">
+                        <SearchForm />
+                    </div>
+                    <div className="sm:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon"><MenuIcon /></Button>
+                            </SheetTrigger>
+                             <SheetContent side="right">
+                                <div className="py-6">
+                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                    <Separator className="my-4" />
+                                    <SearchForm />
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 </div>
-                <nav className="flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider">
-                    {categories?.map(category => (
-                        <Link key={category.id} href={`/category/${category.slug}`} className="hover:text-primary transition-colors">
-                            {category.name}
-                        </Link>
-                    ))}
-                     <Link href="#" className="hover:text-primary transition-colors">More...</Link>
+                <nav className="hidden sm:flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider">
+                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 text-sm font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </nav>
             </div>
         </header>
@@ -206,57 +212,59 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   return (
     <ThemeLayout HeaderComponent={NewspaperHeader} FooterComponent={NewspaperFooter} pageId={pageId} className="bg-background">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-            <div className="lg:col-span-3">
-                <article className="max-w-none">
-                    <header className="mb-8 border-b pb-8">
-                        {displayTitle && <h1 className="text-5xl font-black font-headline tracking-tight lg:text-7xl mb-4">{item.title}</h1>}
-                        <div className="text-muted-foreground text-sm">
-                            <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
-                                <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
-                            </Link>
-                        </div>
-                    </header>
-                    
-                    {item.featuredImageUrl && (
-                        <div className="relative aspect-video w-full mb-8 rounded-md overflow-hidden shadow-lg">
-                        <Image
-                            src={item.featuredImageUrl}
-                            alt={item.title}
-                            fill
-                            className="object-cover"
-                        />
-                        </div>
-                    )}
-                    
-                    {isPost ? (
-                        <div
-                            className="prose lg:prose-lg max-w-none"
-                            dangerouslySetInnerHTML={{ __html: item.content }}
-                        />
-                    ) : (
-                        <PageContent page={item as Page} />
-                    )}
-
-                    {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                        <footer className="mt-12 pt-8 border-t">
-                            <h3 className="font-semibold mb-2">Tags</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {(item as Post).tagIds!.map(tag => (
-                                    <Link key={tag} href={`/tag/${tag}`}>
-                                        <Badge variant="secondary" className="hover:bg-primary/10">{tag}</Badge>
-                                    </Link>
-                                ))}
+        <main className="container mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                <div className="lg:col-span-3">
+                    <article className="max-w-none">
+                        <header className="mb-8 border-b pb-8">
+                            {displayTitle && <h1 className="text-5xl font-black font-headline tracking-tight lg:text-7xl mb-4">{item.title}</h1>}
+                            <div className="text-muted-foreground text-sm">
+                                <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                                    <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
+                                </Link>
                             </div>
-                        </footer>
-                    )}
-                </article>
+                        </header>
+                        
+                        {item.featuredImageUrl && (
+                            <div className="relative aspect-video w-full mb-8 rounded-md overflow-hidden shadow-lg">
+                            <Image
+                                src={item.featuredImageUrl}
+                                alt={item.title}
+                                fill
+                                className="object-cover"
+                            />
+                            </div>
+                        )}
+                        
+                        {isPost ? (
+                            <div
+                                className="prose lg:prose-lg max-w-none"
+                                dangerouslySetInnerHTML={{ __html: item.content }}
+                            />
+                        ) : (
+                            <PageContent page={item as Page} />
+                        )}
+
+                        {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                            <footer className="mt-12 pt-8 border-t">
+                                <h3 className="font-semibold mb-2">Tags</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {(item as Post).tagIds!.map(tag => (
+                                        <Link key={tag} href={`/tag/${tag}`}>
+                                            <Badge variant="secondary" className="hover:bg-primary/10">{tag}</Badge>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </footer>
+                        )}
+                    </article>
+                </div>
+                <aside className="lg:col-span-1 space-y-8">
+                    <WidgetArea areaName="Sidebar" />
+                    <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
+                </aside>
             </div>
-            <aside className="lg:col-span-1 space-y-8">
-                <WidgetArea areaName="Sidebar" />
-                <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
-            </aside>
-        </div>
+        </main>
     </ThemeLayout>
   );
 }

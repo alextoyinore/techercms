@@ -9,9 +9,12 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -49,11 +52,34 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
                     {siteName || 'ESPN'}
                 </Link>
-                <nav>
-                    <Link href="/login" className="text-sm font-semibold uppercase hover:underline">
-                        Login
-                    </Link>
-                </nav>
+                 <div className="hidden md:flex items-center gap-4">
+                    <nav>
+                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
+                    </nav>
+                    <SearchForm />
+                </div>
+                 <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="hover:bg-white/20">
+                                <MenuIcon />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
+                            <div className="py-6">
+                               <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
+                                <div className="mt-6 border-t border-white/20 pt-6">
+                                    <Link href="/login" className="text-lg font-semibold uppercase hover:underline">
+                                        Login
+                                    </Link>
+                                    <div className="mt-4">
+                                        <SearchForm />
+                                    </div>
+                                </div>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
         </header>
     )

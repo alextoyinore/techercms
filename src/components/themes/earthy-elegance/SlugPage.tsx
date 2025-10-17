@@ -11,6 +11,10 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
+import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { MenuIcon } from 'lucide-react';
 
 type Post = {
   id: string;
@@ -47,11 +51,29 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-2xl font-bold font-headline text-emerald-900">
                     {siteName || 'Earthy Elegance'}
                 </Link>
-                <nav>
-                    <Link href="/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-600">
-                        Admin Login
-                    </Link>
-                </nav>
+                <div className="hidden md:flex items-center gap-4">
+                    <nav>
+                        <Menu locationId="earthy-elegance-header" className="flex items-center gap-6 text-sm" linkClassName="text-emerald-800 hover:text-emerald-600 transition-colors"/>
+                    </nav>
+                    <SearchForm />
+                </div>
+                <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MenuIcon className="text-emerald-900" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="bg-emerald-50">
+                             <div className="py-6">
+                                <Menu locationId="earthy-elegance-header" className="flex flex-col space-y-4 text-lg" linkClassName="text-emerald-800 hover:text-emerald-600" />
+                                <div className="mt-6 pt-6 border-t border-emerald-200">
+                                    <SearchForm />
+                                </div>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
         </header>
     )

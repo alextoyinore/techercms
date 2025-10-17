@@ -7,10 +7,13 @@ import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -35,19 +38,37 @@ type Page = {
 type SiteSettings = {
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
+  siteName?: string;
 }
 
 const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     <header className="py-8 px-6">
-        <div className="container mx-auto max-w-3xl flex justify-between items-center">
-            <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
-                {siteName || 'A Minimalist Blog'}
-            </Link>
-            <nav>
-                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                    Login
+        <div className="container mx-auto max-w-3xl">
+            <div className="flex justify-between items-center">
+                <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
+                    {siteName || 'A Minimalist Blog'}
                 </Link>
+                <div className="md:hidden">
+                     <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MenuIcon />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right">
+                            <div className="py-6">
+                                <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+            </div>
+             <nav className="hidden md:flex justify-center mt-6">
+                <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
             </nav>
+            <div className="mt-6 flex justify-center">
+                <SearchForm />
+            </div>
         </div>
     </header>
 );

@@ -144,64 +144,66 @@ export default function HomePage() {
 
   return (
     <ThemeLayout HeaderComponent={NewspaperHeader} FooterComponent={NewspaperFooter} className="bg-background min-h-screen">
-        {!posts || posts.length === 0 ? (
-            <div className="text-center py-24">
-                <h2 className="text-2xl font-semibold">Extra! Extra! Read all about it!</h2>
-                <p className="text-muted-foreground mt-4">Nothing has been published yet. Check back soon for the latest stories.</p>
-            </div>
-        ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-2">
-                    {heroPost && (
-                         <div className="border-b pb-8 mb-8">
-                            <Link href={`/${heroPost.slug}`} className="block overflow-hidden">
-                                <Image
-                                    src={heroPost.featuredImageUrl || 'https://picsum.photos/seed/hero/1200/800'}
-                                    alt={heroPost.title}
-                                    width={1200}
-                                    height={800}
-                                    className="object-cover w-full hover:scale-105 transition-transform duration-300"
-                                    priority
-                                />
-                            </Link>
-                            <div className="py-4">
-                                <h1 className="font-black font-headline text-5xl leading-tight">
-                                    <Link href={`/${heroPost.slug}`} className="hover:underline">{heroPost.title}</Link>
-                                </h1>
-                                <p className="text-lg text-muted-foreground mt-4">{heroPost.excerpt}</p>
-                                <Link href={`/archive/${format(heroPost.createdAt.toDate(), 'yyyy/MM')}`}>
-                                    <time className="text-sm text-muted-foreground/80 mt-2 block hover:underline">
-                                        {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'PPp') : ''}
-                                    </time>
+       <main className="container mx-auto">
+            {!posts || posts.length === 0 ? (
+                <div className="text-center py-24">
+                    <h2 className="text-2xl font-semibold">Extra! Extra! Read all about it!</h2>
+                    <p className="text-muted-foreground mt-4">Nothing has been published yet. Check back soon for the latest stories.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content */}
+                    <div className="lg:col-span-2">
+                        {heroPost && (
+                            <div className="border-b pb-8 mb-8">
+                                <Link href={`/${heroPost.slug}`} className="block overflow-hidden">
+                                    <Image
+                                        src={heroPost.featuredImageUrl || 'https://picsum.photos/seed/hero/1200/800'}
+                                        alt={heroPost.title}
+                                        width={1200}
+                                        height={800}
+                                        className="object-cover w-full hover:scale-105 transition-transform duration-300"
+                                        priority
+                                    />
                                 </Link>
+                                <div className="py-4">
+                                    <h1 className="font-black font-headline text-5xl leading-tight">
+                                        <Link href={`/${heroPost.slug}`} className="hover:underline">{heroPost.title}</Link>
+                                    </h1>
+                                    <p className="text-lg text-muted-foreground mt-4">{heroPost.excerpt}</p>
+                                    <Link href={`/archive/${format(heroPost.createdAt.toDate(), 'yyyy/MM')}`}>
+                                        <time className="text-sm text-muted-foreground/80 mt-2 block hover:underline">
+                                            {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'PPp') : ''}
+                                        </time>
+                                    </Link>
+                                </div>
                             </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {topPosts.map(post => <PostCard key={post.id} post={post} />)}
                         </div>
-                    )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {topPosts.map(post => <PostCard key={post.id} post={post} />)}
+                        <div className="mt-8 space-y-8">
+                            <WidgetArea areaName="Homepage Content" />
+                        </div>
                     </div>
 
-                     <div className="mt-8 space-y-8">
-                        <WidgetArea areaName="Homepage Content" />
+                    {/* Sidebar */}
+                    <aside className="lg:col-span-1 space-y-8">
+                        <WidgetArea areaName="Sidebar" />
+                    </aside>
+                </div>
+            )}
+            {nextPosts.length > 0 && (
+                <>
+                    <Separator className="my-12" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                        {nextPosts.map(post => <PostCard key={post.id} post={post} />)}
                     </div>
-                </div>
-
-                {/* Sidebar */}
-                <aside className="lg:col-span-1 space-y-8">
-                    <WidgetArea areaName="Sidebar" />
-                </aside>
-            </div>
-        )}
-         {nextPosts.length > 0 && (
-            <>
-                <Separator className="my-12" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                     {nextPosts.map(post => <PostCard key={post.id} post={post} />)}
-                </div>
-            </>
-         )}
+                </>
+            )}
+       </main>
     </ThemeLayout>
   );
 }
