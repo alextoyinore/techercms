@@ -20,8 +20,8 @@ export function BigFeaturedPreview({ config }: BigFeaturedPreviewProps) {
     const contentOrder = imagePosition === 'right' ? 'md:order-1' : 'md:order-2';
     
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            <div className={cn("relative aspect-[4/3] w-full", imageOrder)}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            <div className={cn("relative min-h-[250px]", imageOrder)}>
                  <Skeleton className="w-full h-full" />
             </div>
             <div className={cn("flex flex-col justify-center space-y-3", contentOrder)}>
@@ -30,9 +30,9 @@ export function BigFeaturedPreview({ config }: BigFeaturedPreviewProps) {
                 <Skeleton className="w-1/3 h-4 mt-1" />
                  {showExcerpt && (
                     <div className="space-y-1.5 pt-2">
-                        <Skeleton className="w-full h-3" />
-                        <Skeleton className="w-full h-3" />
-                        <Skeleton className="w-5/6 h-3" />
+                        <Skeleton className="w-full h-2.5" />
+                        <Skeleton className="w-full h-2.5" />
+                        <Skeleton className="w-5/6 h-2.5" />
                     </div>
                 )}
                  <Skeleton className="w-24 h-8 mt-3" />
