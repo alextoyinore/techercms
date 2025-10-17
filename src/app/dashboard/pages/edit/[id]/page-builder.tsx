@@ -20,6 +20,7 @@ import {
 import { BlockLayout } from '@/app/dashboard/layouts/BlockLayoutsView';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BlockInstanceConfig } from './BlockInstanceConfig';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type PageSection = {
     id: string;
@@ -29,7 +30,7 @@ type PageSection = {
     config?: any;
 }
 
-type SectionBlock = {
+export type SectionBlock = {
     id: string;
     sectionId: string;
     blockLayoutId: string;
@@ -320,20 +321,25 @@ export default function PageBuilder({ pageId }: { pageId: string }) {
             </Card>
 
             <Sheet open={isAddBlockSheetOpen} onOpenChange={setIsAddBlockSheetOpen}>
-                <SheetContent>
+                <SheetContent className="flex flex-col">
                     <SheetHeader>
                         <SheetTitle>Select a Block Layout</SheetTitle>
                         <SheetDescription>Choose a reusable content block to add to this section.</SheetDescription>
                     </SheetHeader>
-                    <div className="py-4 space-y-2">
-                        {isLoadingLayouts && <p>Loading layouts...</p>}
-                        {blockLayouts?.map(layout => (
-                            <div key={layout.id} className="p-3 border rounded-md hover:bg-accent cursor-pointer" onClick={() => handleSelectBlockLayout(layout)}>
-                               <p className="font-semibold">{layout.name}</p>
-                               <p className="text-sm text-muted-foreground">{layout.description || `Type: ${layout.type}`}</p>
-                            </div>
-                        ))}
-                    </div>
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <div className="py-4 space-y-2">
+                            {isLoadingLayouts && <p>Loading layouts...</p>}
+                            {blockLayouts?.map(layout => (
+                                <div key={layout.id} className="p-3 border rounded-md hover:bg-accent cursor-pointer" onClick={() => handleSelectBlockLayout(layout)}>
+                                   <p className="font-semibold">{layout.name}</p>
+                                   <p className="text-sm text-muted-foreground">{layout.description || `Type: ${layout.type}`}</p>
+                                </div>
+                            ))}
+                            {!isLoadingLayouts && blockLayouts?.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center pt-8">No block layouts found. Create one in the Layouts tab.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
                 </SheetContent>
             </Sheet>
             
