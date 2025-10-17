@@ -87,7 +87,7 @@ export function PostGridWidget({
     return (
         <div className="w-full">
             {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
-            <div className={cn('grid grid-cols-1 gap-6', gridCols)}>
+            <div className={cn('grid grid-cols-2 gap-6', gridCols)}>
                 {posts.map(post => (
                     <div key={post.id} className={cn("grid gap-2 group", isImageAfter && "flex flex-col-reverse justify-end")}>
                         {showImages && post.featuredImageUrl && (
