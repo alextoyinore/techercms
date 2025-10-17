@@ -16,6 +16,13 @@ type Post = {
   slug: string;
   featuredImageUrl: string;
   createdAt: Timestamp;
+  categoryIds?: string[];
+};
+
+type Category = {
+    id: string;
+    name: string;
+    slug: string;
 };
 
 type SiteSettings = {
@@ -59,6 +66,24 @@ function PublicFooter({ siteName }: { siteName?: string }) {
         </footer>
     )
 }
+
+const PostCategory: React.FC<{ categoryId: string }> = ({ categoryId }) => {
+    const firestore = useFirestore();
+    const categoryRef = useMemoFirebase(() => {
+        if (!firestore || !categoryId) return null;
+        return doc(firestore, 'categories', categoryId);
+    }, [firestore, categoryId]);
+
+    const { data: category } = useDoc<Category>(categoryRef);
+
+    if (!category) return null;
+
+    return (
+        <Link href={`/category/${category.slug}`} className="text-xs font-semibold uppercase tracking-widest text-primary hover:underline">
+            {category.name}
+        </Link>
+    );
+};
 
 export default function HomePage() {
   const firestore = useFirestore();
@@ -110,7 +135,8 @@ export default function HomePage() {
                                 <Image src={mainPost.featuredImageUrl} alt={mainPost.title} fill className="object-cover" priority />
                             </div>
                             <div className="text-center">
-                                <h1 className="text-5xl lg:text-7xl font-bold font-headline leading-none">
+                                {mainPost.categoryIds?.[0] && <PostCategory categoryId={mainPost.categoryIds[0]} />}
+                                <h1 className="text-5xl lg:text-7xl font-bold font-headline leading-none mt-2">
                                     <Link href={`/${mainPost.slug}`} className="hover:underline">{mainPost.title}</Link>
                                 </h1>
                                 <p className="text-lg text-muted-foreground mt-4">{mainPost.excerpt}</p>
@@ -124,7 +150,8 @@ export default function HomePage() {
                                 <div className="relative aspect-square bg-muted mb-3">
                                     <Image src={secondPost.featuredImageUrl} alt={secondPost.title} fill className="object-cover"/>
                                 </div>
-                                <h2 className="text-3xl font-bold font-headline leading-tight group-hover:underline">
+                                {secondPost.categoryIds?.[0] && <PostCategory categoryId={secondPost.categoryIds[0]} />}
+                                <h2 className="text-3xl font-bold font-headline leading-tight group-hover:underline mt-1">
                                     <Link href={`/${secondPost.slug}`}>{secondPost.title}</Link>
                                 </h2>
                                 <p className="text-muted-foreground mt-1">{secondPost.excerpt}</p>
@@ -135,7 +162,8 @@ export default function HomePage() {
                                 <div className="relative aspect-square bg-muted mb-3">
                                     <Image src={thirdPost.featuredImageUrl} alt={thirdPost.title} fill className="object-cover"/>
                                 </div>
-                                <h2 className="text-3xl font-bold font-headline leading-tight group-hover:underline">
+                                {thirdPost.categoryIds?.[0] && <PostCategory categoryId={thirdPost.categoryIds[0]} />}
+                                <h2 className="text-3xl font-bold font-headline leading-tight group-hover:underline mt-1">
                                     <Link href={`/${thirdPost.slug}`}>{thirdPost.title}</Link>
                                 </h2>
                                 <p className="text-muted-foreground mt-1">{thirdPost.excerpt}</p>
@@ -153,7 +181,8 @@ export default function HomePage() {
                                     <div className="relative aspect-[3/4] bg-muted mb-3">
                                         <Image src={post.featuredImageUrl} alt={post.title} fill className="object-cover"/>
                                     </div>
-                                    <h4 className="font-semibold text-lg leading-tight group-hover:underline">
+                                    {post.categoryIds?.[0] && <PostCategory categoryId={post.categoryIds[0]} />}
+                                    <h4 className="font-semibold text-lg leading-tight group-hover:underline mt-1">
                                         <Link href={`/${post.slug}`}>{post.title}</Link>
                                     </h4>
                                 </div>

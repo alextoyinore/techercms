@@ -210,7 +210,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             <footer className="mt-12 text-center">
                 <div className="flex flex-wrap gap-2 justify-center">
                     {(item as Post).tagIds!.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                        <Link key={tag} href={`/tag/${tag}`}>
+                            <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                        </Link>
                     ))}
                 </div>
             </footer>
