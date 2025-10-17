@@ -31,7 +31,6 @@ import { timezones } from '@/lib/timezones';
 import { languages } from '@/lib/languages';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -42,9 +41,6 @@ type SiteSettings = {
   timezone?: string;
   dashboardTheme?: string;
   hideAllPageTitles?: boolean;
-  pageWidth?: 'full' | 'centered';
-  contentWidth?: number;
-  mediumContentWidth?: number;
 };
 
 type Page = {
@@ -64,9 +60,6 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState<string>('en');
   const [timezone, setTimezone] = useState<string>('');
   const [hideAllPageTitles, setHideAllPageTitles] = useState(false);
-  const [pageWidth, setPageWidth] = useState<'full' | 'centered'>('full');
-  const [contentWidth, setContentWidth] = useState(75);
-  const [mediumContentWidth, setMediumContentWidth] = useState(90);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -88,9 +81,6 @@ export default function SettingsPage() {
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
       setHideAllPageTitles(settings.hideAllPageTitles || false);
-      setPageWidth(settings.pageWidth || 'full');
-      setContentWidth(settings.contentWidth || 75);
-      setMediumContentWidth(settings.mediumContentWidth || 90);
       if (settings.timezone) {
         setTimezone(settings.timezone);
       }
@@ -119,9 +109,6 @@ export default function SettingsPage() {
         language,
         timezone,
         hideAllPageTitles,
-        pageWidth,
-        contentWidth,
-        mediumContentWidth,
     };
     try {
         await setDoc(doc(firestore, 'site_settings', 'config'), settingsToSave, { merge: true });
@@ -225,56 +212,6 @@ export default function SettingsPage() {
                         </div>
                     </RadioGroup>
                 </div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Global Layout Settings</CardTitle>
-                <CardDescription>
-                    Control the overall width and container settings for your public website.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-                <RadioGroup 
-                    value={pageWidth} 
-                    onValueChange={(value: 'full' | 'centered') => setPageWidth(value)}
-                >
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="full" id="full" />
-                        <Label htmlFor="full" className="font-normal">Full Width</Label>
-                    </div>
-                     <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="centered" id="centered" />
-                        <Label htmlFor="centered" className="font-normal">Centered</Label>
-                    </div>
-                </RadioGroup>
-
-                {pageWidth === 'centered' && (
-                    <div className='grid gap-8'>
-                        <div className='grid gap-2 max-w-sm'>
-                            <Label>Large Screen Content Width ({contentWidth}%)</Label>
-                            <Slider
-                                value={[contentWidth]}
-                                onValueChange={(value) => setContentWidth(value[0])}
-                                min={50}
-                                max={100}
-                                step={1}
-                            />
-                            <p className="text-sm text-muted-foreground">Max width for screens over 1600px.</p>
-                        </div>
-                         <div className='grid gap-2 max-w-sm'>
-                            <Label>Medium Screen Content Width ({mediumContentWidth}%)</Label>
-                            <Slider
-                                value={[mediumContentWidth]}
-                                onValueChange={(value) => setMediumContentWidth(value[0])}
-                                min={50}
-                                max={100}
-                                step={1}
-                            />
-                            <p className="text-sm text-muted-foreground">Max width for screens up to 1600px.</p>
-                        </div>
-                    </div>
-                )}
             </CardContent>
         </Card>
       </div>

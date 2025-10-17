@@ -10,7 +10,6 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
 
 function OneColumnIcon() {
     return (
@@ -66,6 +65,7 @@ type SiteSettings = {
   activePageLayoutId?: string;
   pageWidth?: 'full' | 'centered';
   contentWidth?: number;
+  mediumContentWidth?: number;
 }
 
 export function PageLayoutsView() {
@@ -81,6 +81,7 @@ export function PageLayoutsView() {
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
   const [pageWidth, setPageWidth] = useState<'full' | 'centered'>('full');
   const [contentWidth, setContentWidth] = useState(75);
+  const [mediumContentWidth, setMediumContentWidth] = useState(90);
 
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export function PageLayoutsView() {
       setActiveLayoutId(settings.activePageLayoutId || null);
       setPageWidth(settings.pageWidth || 'full');
       setContentWidth(settings.contentWidth || 75);
+      setMediumContentWidth(settings.mediumContentWidth || 90);
     }
   }, [settings]);
 
@@ -115,12 +117,13 @@ export function PageLayoutsView() {
     toast({ title: 'Default Layout Updated' });
   };
   
-  const handleWidthSettingsChange = (newWidth?: 'full' | 'centered', newContentWidth?: number) => {
+  const handleWidthSettingsChange = (newWidth?: 'full' | 'centered', newContentWidth?: number, newMediumContentWidth?: number) => {
     if (!settingsRef) return;
     const finalPageWidth = newWidth || pageWidth;
-    const finalContentWidth = newContentWidth || contentWidth;
+    const finalContentWidth = newContentWidth ?? contentWidth;
+    const finalMediumContentWidth = newMediumContentWidth ?? mediumContentWidth;
     
-    setDocumentNonBlocking(settingsRef, { pageWidth: finalPageWidth, contentWidth: finalContentWidth }, { merge: true });
+    setDocumentNonBlocking(settingsRef, { pageWidth: finalPageWidth, contentWidth: finalContentWidth, mediumContentWidth: finalMediumContentWidth }, { merge: true });
     toast({ title: 'Global Layout Settings Updated' });
   }
 
@@ -190,19 +193,31 @@ export function PageLayoutsView() {
                 </RadioGroup>
 
                 {pageWidth === 'centered' && (
-                    <div className='grid gap-2 max-w-sm'>
-                        <Label>Content Width ({contentWidth}%)</Label>
-                        <div className='flex items-center gap-4'>
+                    <div className='grid gap-8'>
+                        <div className='grid gap-2 max-w-sm'>
+                            <Label>Large Screen Content Width ({contentWidth}%)</Label>
                             <Slider
                                 value={[contentWidth]}
                                 onValueChange={(value) => setContentWidth(value[0])}
-                                onValueCommit={(value) => handleWidthSettingsChange(undefined, value[0])}
+                                onValueCommit={(value) => handleWidthSettingsChange(undefined, value[0], undefined)}
                                 min={50}
                                 max={100}
                                 step={1}
                             />
+                            <p className="text-sm text-muted-foreground">Max width for screens over 1600px.</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">Set the maximum width of your content area.</p>
+                         <div className='grid gap-2 max-w-sm'>
+                            <Label>Medium Screen Content Width ({mediumContentWidth}%)</Label>
+                            <Slider
+                                value={[mediumContentWidth]}
+                                onValueChange={(value) => setMediumContentWidth(value[0])}
+                                onValueCommit={(value) => handleWidthSettingsChange(undefined, undefined, value[0])}
+                                min={50}
+                                max={100}
+                                step={1}
+                            />
+                            <p className="text-sm text-muted-foreground">Max width for screens up to 1600px.</p>
+                        </div>
                     </div>
                 )}
             </CardContent>
