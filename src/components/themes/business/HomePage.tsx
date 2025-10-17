@@ -59,6 +59,8 @@ function PublicFooter({ siteName }: { siteName?: string }) {
 }
 
 function PostCard({ post }: { post: Post }) {
+    const date = post.createdAt.toDate();
+    const dateLink = `/archive/${format(date, 'yyyy/MM/dd')}`;
     return (
         <div className="group">
              {post.featuredImageUrl && (
@@ -77,9 +79,11 @@ function PostCard({ post }: { post: Post }) {
                 <Link href={`/${post.slug}`}>{post.title}</Link>
             </h3>
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
-            <time className="text-xs text-muted-foreground/70 mt-1 block">
-                {format(post.createdAt.toDate(), 'MMM d, yyyy')}
-            </time>
+            <Link href={dateLink}>
+                <time className="text-xs text-muted-foreground/70 mt-1 block hover:underline">
+                    {format(date, 'MMM d, yyyy')}
+                </time>
+            </Link>
         </div>
     )
 }
@@ -166,9 +170,11 @@ export default function HomePage() {
                                   <h4 className="font-semibold hover:underline leading-tight">
                                       <Link href={`/${post.slug}`}>{post.title}</Link>
                                   </h4>
-                                   <time className="text-xs text-muted-foreground/70 mt-1 block">
-                                      {format(post.createdAt.toDate(), 'h:mm a')}
-                                  </time>
+                                   <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM/dd')}`}>
+                                        <time className="text-xs text-muted-foreground/70 mt-1 block hover:underline">
+                                            {format(post.createdAt.toDate(), 'h:mm a')}
+                                        </time>
+                                   </Link>
                               </li>
                           ))}
                       </ul>

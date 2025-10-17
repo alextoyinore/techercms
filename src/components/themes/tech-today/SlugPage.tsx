@@ -189,7 +189,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 <header className="mb-8">
                     {displayTitle && <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-6xl mb-4 text-cyan-300">{item.title}</h1>}
                     <div className="text-gray-400 text-sm">
-                        <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}</span>
+                        <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                            <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}</span>
+                        </Link>
                     </div>
                 </header>
                 
@@ -218,7 +220,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                         <div className="flex flex-wrap gap-2">
                             {(item as Post).tagIds!.map(tag => (
                                 <Link key={tag} href={`/tag/${tag}`}>
-                                    <Badge variant="outline" className="border-cyan-400/50 text-cyan-400">{tag}</Badge>
+                                    <Badge variant="outline" className="border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/10">{tag}</Badge>
                                 </Link>
                             ))}
                         </div>

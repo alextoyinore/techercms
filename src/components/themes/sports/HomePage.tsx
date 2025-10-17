@@ -79,9 +79,11 @@ function PostCard({ post, className, titleSize = 'text-xl' }: { post: Post, clas
                     <Link href={`/${post.slug}`}>{post.title}</Link>
                 </h3>
                 <p className="text-sm text-muted-foreground mt-2 line-clamp-2 flex-grow">{post.excerpt}</p>
-                <time className="text-xs text-muted-foreground/80 mt-2 block">
-                    {format(post.createdAt.toDate(), 'MMM d, yyyy')}
-                </time>
+                <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                    <time className="text-xs text-muted-foreground/80 mt-2 block hover:underline">
+                        {format(post.createdAt.toDate(), 'MMM d, yyyy')}
+                    </time>
+                </Link>
             </div>
         </div>
     )

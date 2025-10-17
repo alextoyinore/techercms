@@ -122,9 +122,11 @@ export default function HomePage() {
                                 <h1 className="text-4xl lg:text-6xl font-bold font-headline leading-tight mb-4">
                                     <Link href={`/${heroPost.slug}`} className="hover:text-emerald-600 transition-colors">{heroPost.title}</Link>
                                 </h1>
-                                 <time className="text-sm text-emerald-700/80 mb-4 block">
-                                    {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'MMMM d, yyyy') : ''}
-                                 </time>
+                                 <Link href={`/archive/${format(heroPost.createdAt.toDate(), 'yyyy/MM')}`}>
+                                    <time className="text-sm text-emerald-700/80 mb-4 block hover:underline">
+                                        {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'MMMM d, yyyy') : ''}
+                                    </time>
+                                 </Link>
                                 <p className="text-lg text-emerald-800/90 mb-6">{heroPost.excerpt}</p>
                                 <Button asChild size="lg" variant="outline" className="border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white">
                                     <Link href={`/${heroPost.slug}`}>
@@ -157,9 +159,11 @@ export default function HomePage() {
                                         <Link href={`/${post.slug}`} className="group-hover:text-emerald-600 transition-colors">{post.title}</Link>
                                     </h3>
                                     <p className="text-sm text-emerald-800/80 mt-2 flex-grow line-clamp-3">{post.excerpt}</p>
-                                    <time className="text-xs text-emerald-600/70 mt-4 block">
-                                        {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
-                                    </time>
+                                    <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                                        <time className="text-xs text-emerald-600/70 mt-4 block hover:underline">
+                                            {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
+                                        </time>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

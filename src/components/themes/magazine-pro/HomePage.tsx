@@ -87,7 +87,9 @@ export default function HomePage() {
                         <p className="text-muted-foreground line-clamp-3">{post.excerpt}</p>
                     </CardContent>
                     <div className="p-4 pt-0 text-xs text-muted-foreground">
-                        <span>{post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}</span>
+                        <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                            <span className="hover:underline">{post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}</span>
+                        </Link>
                     </div>
                 </Card>
             ))}

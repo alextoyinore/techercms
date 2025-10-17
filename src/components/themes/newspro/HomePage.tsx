@@ -139,9 +139,11 @@ export default function HomePage() {
                                 <h4 className="font-semibold text-lg leading-tight group-hover:underline">
                                     <Link href={`/${post.slug}`}>{post.title}</Link>
                                 </h4>
-                                <time className="text-xs text-muted-foreground mt-1 block">
-                                    {format(post.createdAt.toDate(), 'MMM d')}
-                                </time>
+                                <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                                    <time className="text-xs text-muted-foreground mt-1 block hover:underline">
+                                        {format(post.createdAt.toDate(), 'MMM d')}
+                                    </time>
+                                </Link>
                             </div>
                          ))}
                         <WidgetArea areaName="Sidebar" />

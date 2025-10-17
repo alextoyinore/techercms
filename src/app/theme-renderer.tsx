@@ -14,6 +14,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/magazine-pro/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/magazine-pro/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/magazine-pro/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/magazine-pro/DatePage')),
   },
   'Minimalist Blog': {
     HomePage: dynamic(() => import('@/components/themes/minimalist-blog/HomePage')),
@@ -22,6 +23,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/minimalist-blog/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/minimalist-blog/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/minimalist-blog/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/minimalist-blog/DatePage')),
   },
   'Creative Portfolio': {
     HomePage: dynamic(() => import('@/components/themes/creative-portfolio/HomePage')),
@@ -30,6 +32,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/creative-portfolio/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/creative-portfolio/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/creative-portfolio/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/creative-portfolio/DatePage')),
   },
   'Newspaper': {
     HomePage: dynamic(() => import('@/components/themes/newspaper/HomePage')),
@@ -38,6 +41,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/newspaper/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/newspaper/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/newspaper/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/newspaper/DatePage')),
   },
   'Tech Today': {
     HomePage: dynamic(() => import('@/components/themes/tech-today/HomePage')),
@@ -46,6 +50,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/tech-today/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/tech-today/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/tech-today/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/tech-today/DatePage')),
   },
   'Earthy Elegance': {
     HomePage: dynamic(() => import('@/components/themes/earthy-elegance/HomePage')),
@@ -54,6 +59,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/earthy-elegance/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/earthy-elegance/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/earthy-elegance/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/earthy-elegance/DatePage')),
   },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
@@ -62,6 +68,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/business/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/business/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/business/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/business/DatePage')),
   },
   'Sports': {
     HomePage: dynamic(() => import('@/components/themes/sports/HomePage')),
@@ -70,6 +77,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/sports/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/sports/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/sports/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/sports/DatePage')),
   },
   'NewsPro': {
     HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
@@ -78,6 +86,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/newspro/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/newspro/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/newspro/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/newspro/DatePage')),
   },
   'Vogue': {
     HomePage: dynamic(() => import('@/components/themes/vogue/HomePage')),
@@ -86,6 +95,7 @@ const themes: Record<string, Record<string, any>> = {
     TagPage: dynamic(() => import('@/components/themes/vogue/TagPage')),
     AuthorPage: dynamic(() => import('@/components/themes/vogue/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/vogue/SearchPage')),
+    DatePage: dynamic(() => import('@/components/themes/vogue/DatePage')),
   },
 };
 
@@ -96,7 +106,7 @@ type SiteSettings = {
 };
 
 type ThemeRendererProps = {
-  pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search';
+  pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search' | 'date';
 };
 
 export function ThemeRenderer({ pageType }: ThemeRendererProps) {
@@ -139,6 +149,9 @@ export function ThemeRenderer({ pageType }: ThemeRendererProps) {
       break;
     case 'search':
       PageComponent = theme.SearchPage;
+      break;
+    case 'date':
+      PageComponent = theme.DatePage;
       break;
     default:
       PageComponent = theme.HomePage;

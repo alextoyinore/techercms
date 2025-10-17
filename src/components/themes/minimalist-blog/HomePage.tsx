@@ -87,9 +87,11 @@ export default function HomePage() {
             {sortedPosts.map((post) => (
                 <article key={post.id}>
                     <header>
-                         <time className="text-sm text-muted-foreground">
-                            {post.createdAt ? format(post.createdAt.toDate(), 'MMMM d, yyyy') : 'N/A'}
-                        </time>
+                         <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                            <time className="text-sm text-muted-foreground hover:underline">
+                                {post.createdAt ? format(post.createdAt.toDate(), 'MMMM d, yyyy') : 'N/A'}
+                            </time>
+                        </Link>
                         <h2 className="text-3xl font-bold font-headline mt-1">
                             <Link href={`/${post.slug}`} className='hover:text-primary transition-colors'>{post.title}</Link>
                         </h2>

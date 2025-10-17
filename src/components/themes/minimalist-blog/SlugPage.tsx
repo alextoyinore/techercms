@@ -172,7 +172,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             <article className="max-w-none">
             <header className="mb-12 text-center">
                  <div className="text-sm text-muted-foreground">
-                    <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
+                    <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                        <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
+                    </Link>
                 </div>
                 {displayTitle && <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>}
             </header>

@@ -158,9 +158,11 @@ export default function HomePage() {
                                         <Link href={`/${post.slug}`} className="group-hover:text-cyan-400 transition-colors">{post.title}</Link>
                                     </h3>
                                     <p className="text-sm text-gray-400 mt-2 flex-grow line-clamp-3">{post.excerpt}</p>
-                                    <time className="text-xs text-gray-500 mt-4 block">
-                                        {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
-                                    </time>
+                                    <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                                        <time className="text-xs text-gray-500 mt-4 block hover:underline">
+                                            {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
+                                        </time>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

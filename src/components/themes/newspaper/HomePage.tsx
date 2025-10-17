@@ -99,9 +99,11 @@ function PostCard({ post, className, imageClassName }: { post: Post, className?:
                     <Link href={`/${post.slug}`} className="hover:underline">{post.title}</Link>
                 </h3>
                 <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{post.excerpt}</p>
-                <time className="text-xs text-muted-foreground/80 mt-2 block">
-                    {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
-                </time>
+                <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                    <time className="text-xs text-muted-foreground/80 mt-2 block hover:underline">
+                        {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
+                    </time>
+                </Link>
             </div>
         </div>
     )
@@ -161,9 +163,11 @@ export default function HomePage() {
                                     <Link href={`/${heroPost.slug}`} className="hover:underline">{heroPost.title}</Link>
                                 </h1>
                                 <p className="text-lg text-muted-foreground mt-4">{heroPost.excerpt}</p>
-                                <time className="text-sm text-muted-foreground/80 mt-2 block">
-                                    {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'PPp') : ''}
-                                </time>
+                                <Link href={`/archive/${format(heroPost.createdAt.toDate(), 'yyyy/MM')}`}>
+                                    <time className="text-sm text-muted-foreground/80 mt-2 block hover:underline">
+                                        {heroPost.createdAt ? format(heroPost.createdAt.toDate(), 'PPp') : ''}
+                                    </time>
+                                </Link>
                             </div>
                         </div>
                     )}
