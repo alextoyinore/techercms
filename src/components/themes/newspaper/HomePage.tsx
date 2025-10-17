@@ -30,7 +30,7 @@ type SiteSettings = {
   siteName?: string;
 }
 
-const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
+export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
     const firestore = useFirestore();
     const categoriesQuery = useMemoFirebase(() => {
         if(!firestore) return null;
@@ -65,7 +65,7 @@ const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
     )
 };
 
-const NewspaperFooter: React.FC = () => (
+export const NewspaperFooter: React.FC = () => (
     <footer className="py-12 px-6 border-t mt-16 bg-muted/20">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
