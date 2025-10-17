@@ -37,7 +37,12 @@ export function GlobalStyleProvider({ children }: { children: React.ReactNode })
                 margin-left: auto;
                 margin-right: auto;
             }
-            @media (min-width: 1024px) {
+            @media (min-width: 768px) {
+                .container {
+                    max-width: 90%;
+                }
+            }
+            @media (min-width: 1600px) {
                 .container {
                     max-width: ${width}%;
                 }
