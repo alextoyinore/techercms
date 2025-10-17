@@ -195,13 +195,15 @@ export default function NewPostPage() {
     
     const postRef = doc(collection(firestore, "posts"));
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
 
     const newPost = {
         title,
+        slug,
+        titleKeywords,
         content,
         excerpt,
         featuredImageUrl,
-        slug,
         status,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,

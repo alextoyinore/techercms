@@ -258,13 +258,15 @@ export default function EditPostPage() {
     }
 
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
 
     const updatedPost = {
         title,
+        slug,
+        titleKeywords,
         content,
         excerpt,
         featuredImageUrl,
-        slug,
         status,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
