@@ -94,6 +94,11 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
     if (!layoutType || !postTypes.includes(layoutType)) {
         return <p className="text-sm text-muted-foreground">This block type has no content filtering options.</p>;
     }
+    
+    let postCountDefault = 6;
+    if (layoutType === 'featured-and-smalls') postCountDefault = 5;
+    if (layoutType === 'big-featured') postCountDefault = 1;
+
 
     return (
         <div className="grid gap-4 border-t pt-4">
@@ -149,7 +154,7 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
                     id="post-count"
                     type="number"
                     min="1"
-                    value={config.postCount || (layoutType === 'featured-and-smalls' ? 5 : 6)}
+                    value={config.postCount || postCountDefault}
                     onChange={e => handleConfigChange({ postCount: Number(e.target.value) })}
                 />
             </div>
