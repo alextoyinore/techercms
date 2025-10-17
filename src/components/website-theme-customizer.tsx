@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { defaultTheme, type Theme, type ThemeColors } from '@/lib/themes';
+import { Textarea } from './ui/textarea';
 
 const globalColorKeys = [
     'background', 'foreground', 'card', 'cardForeground',
@@ -46,6 +47,7 @@ type SiteSettings = {
 type CustomTheme = {
     id?: string;
     name: string;
+    description?: string;
     previewImageUrl?: string;
     colors: ThemeColors;
     authorId: string;
@@ -93,6 +95,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
   const [open, setOpen] = useState(false);
   
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [colors, setColors] = useState<ThemeColors | null>(null);
   const [previewImageFile, setPreviewImageFile] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
@@ -119,11 +122,13 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
         setIsLoading(true);
         if (themeSource === 'new') {
             setName('My Custom Theme');
+            setDescription('');
             setColors(defaultTheme.colors);
             setPreviewImageUrl('');
             setPreviewImageFile(null);
         } else {
             setName(themeSource.name);
+            setDescription(themeSource.description || '');
             setColors(themeSource.colors);
             setPreviewImageUrl(themeSource.previewImageUrl || '');
             setPreviewImageFile(null);
@@ -229,6 +234,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
         let themePromise;
         const themeData: Omit<CustomTheme, 'id'> = {
             name,
+            description,
             previewImageUrl: finalImageUrl,
             colors,
             authorId: auth.currentUser.uid,
@@ -262,7 +268,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
 
   const isNew = themeSource === 'new';
   const title = isNew ? "Create Custom Theme" : "Edit Custom Theme";
-  const description = isNew ? "Create a new theme for your public-facing website." : "Modify this custom theme.";
+  const descriptionText = isNew ? "Create a new theme for your public-facing website." : "Modify this custom theme.";
 
   // Separate main colors from sidebar colors
   const mainColorEntries = colors ? Object.entries(colors).filter(([key]) => key !== 'sidebar') : [];
@@ -274,7 +280,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
       <SheetContent className="flex flex-col w-full md:max-w-md">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>{description}</SheetDescription>
+          <SheetDescription>{descriptionText}</SheetDescription>
         </SheetHeader>
         <Separator />
         <ScrollArea className="flex-1 -mx-6 px-6">
@@ -284,9 +290,15 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
                 </div>
             ) : (
                 <div className="grid gap-8 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="theme-name">Theme Name</Label>
-                        <Input id="theme-name" value={name} onChange={(e) => setName(e.target.value)} />
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="theme-name">Theme Name</Label>
+                            <Input id="theme-name" value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="theme-description">Description</Label>
+                            <Textarea id="theme-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                        </div>
                     </div>
 
                     <div className="grid gap-2">
@@ -422,3 +434,5 @@ function hexToHsl(hex: string): { h: number, s: number, l: number } | null {
   
     return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
+
+    

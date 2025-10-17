@@ -93,6 +93,7 @@ type SiteSettings = {
 type CustomTheme = {
   id: string;
   name: string;
+  description?: string;
   previewImageUrl: string;
   colors: any;
   authorId: string;
@@ -250,7 +251,7 @@ export default function ThemesPage() {
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
-                                <CardDescription className="mt-2">A custom user theme.</CardDescription>
+                                <CardDescription className="mt-2">{theme.description || 'A custom user theme.'}</CardDescription>
                             </CardContent>
                             <div className="p-4 pt-0 flex gap-2">
                                 <Button
@@ -420,3 +421,5 @@ export default function ThemesPage() {
     </div>
   );
 }
+
+    
