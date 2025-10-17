@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
@@ -21,25 +21,29 @@ type Post = {
 
 function PostCard({ post }: { post: Post }) {
     return (
-        <div className="bg-gray-800/50 rounded-lg overflow-hidden flex flex-col group border border-gray-700/50 hover:border-cyan-400/50 transition-colors">
-            <Link href={`/${post.slug}`} className="block">
-                <div className="relative aspect-video">
-                    <Image
-                        src={post.featuredImageUrl || 'https://picsum.photos/seed/tech-post/600/338'}
-                        alt={post.title}
-                        fill
-                        className="object-cover"
-                    />
-                </div>
-            </Link>
-            <div className="p-6 flex-grow flex flex-col">
-                <h3 className="font-bold font-headline text-xl leading-tight">
-                    <Link href={`/${post.slug}`} className="group-hover:text-cyan-400 transition-colors">{post.title}</Link>
+        <div className="flex flex-col sm:flex-row gap-4 border-b border-gray-700 pb-4">
+            {post.featuredImageUrl && (
+                <Link href={`/${post.slug}`} className="block sm:w-1/4 shrink-0">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-md bg-gray-800">
+                        <Image
+                            src={post.featuredImageUrl}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                </Link>
+            )}
+            <div>
+                <h3 className="font-semibold text-lg leading-tight">
+                    <Link href={`/${post.slug}`} className="hover:text-cyan-400 transition-colors">{post.title}</Link>
                 </h3>
-                <p className="text-sm text-gray-400 mt-2 flex-grow line-clamp-3">{post.excerpt}</p>
-                <time className="text-xs text-gray-500 mt-4 block">
-                    {post.createdAt ? format(post.createdAt.toDate(), 'PP') : ''}
-                </time>
+                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{post.excerpt}</p>
+                 <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                    <time className="text-xs text-gray-500 mt-1 block hover:underline">
+                        {format(post.createdAt.toDate(), 'PP')}
+                    </time>
+                </Link>
             </div>
         </div>
     );
@@ -49,23 +53,23 @@ function SearchResults() {
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || '';
-  const lowercaseQuery = q.toLowerCase();
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !q) return null;
+    const lowercaseQuery = q.toLowerCase();
     return query(
       collection(firestore, 'posts'),
       where('status', '==', 'published'),
-      where('title', '>=', q),
-      where('title', '<=', q + '\uf8ff')
+      where('titleKeywords', 'array-contains', lowercaseQuery)
     );
   }, [firestore, q]);
 
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
 
-  if (isLoadingPosts) {
-    return <p className="text-center text-gray-400">Searching...</p>;
-  }
+  const sortedPosts = useMemo(() => {
+    if (!posts) return [];
+    return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
+  }, [posts]);
   
   return (
     <>
@@ -73,14 +77,16 @@ function SearchResults() {
           <h1 className="text-4xl font-extrabold font-headline tracking-tight text-cyan-300">Search Results for: "{q}"</h1>
       </div>
 
-      {!isLoadingPosts && (!posts || posts.length === 0) && (
+      {isLoadingPosts && <p className="text-center text-gray-400">Searching...</p>}
+
+      {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (
           <div className="text-center py-16">
               <p className="text-gray-500">No articles matched your search term.</p>
           </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts?.map((post) => (
+      <div className="space-y-6">
+        {sortedPosts.map((post) => (
             <PostCard key={post.id} post={post} />
         ))}
       </div>
