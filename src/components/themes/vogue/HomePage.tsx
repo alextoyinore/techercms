@@ -8,6 +8,10 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { MenuIcon } from 'lucide-react';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -33,17 +37,33 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-6 px-4 sticky top-0 bg-background/90 backdrop-blur-md z-20 border-b">
             <div className="container mx-auto flex justify-between items-center">
-                 <div className="flex-1">
-                    {/* Placeholder */}
+                 <div className="flex-1 hidden md:flex">
+                     <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </div>
-                <Link href="/" className="text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
+                <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
                     {siteName || 'VOGUE'}
                 </Link>
-                <nav className="flex-1 text-right">
-                    <Link href="/login" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                <div className="flex-1 text-right">
+                    <div className="md:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <MenuIcon />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right">
+                                <div className="py-6">
+                                   <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                                    <Separator className="my-4" />
+                                     <Link href="/login" className="text-lg font-medium hover:text-primary">Admin Login</Link>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
+                     <Link href="/login" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hidden md:inline-block">
                         Login
                     </Link>
-                </nav>
+                </div>
             </div>
         </header>
     )

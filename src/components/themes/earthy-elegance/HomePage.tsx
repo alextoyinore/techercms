@@ -8,6 +8,9 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { MenuIcon } from 'lucide-react';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -22,24 +25,36 @@ type SiteSettings = {
   siteName?: string;
 }
 
-function PublicHeader({ siteName }: { siteName?: string }) {
+export function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-6 px-6 sticky top-0 bg-emerald-50/80 backdrop-blur-md z-20">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold font-headline text-emerald-900">
                     {siteName || 'Earthy Elegance'}
                 </Link>
-                <nav>
-                    <Link href="/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-600">
-                        Admin Login
-                    </Link>
-                </nav>
+                <div className="hidden md:flex">
+                    <Menu locationId="earthy-elegance-header" className="flex items-center gap-6 text-sm" linkClassName="text-emerald-800 hover:text-emerald-600 transition-colors"/>
+                </div>
+                <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MenuIcon className="text-emerald-900" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="bg-emerald-50">
+                             <div className="py-6">
+                                <Menu locationId="earthy-elegance-header" className="flex flex-col space-y-4 text-lg" linkClassName="text-emerald-800 hover:text-emerald-600" />
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
         </header>
     )
 }
 
-function PublicFooter() {
+export function PublicFooter() {
     return (
         <footer className="py-12 px-6 border-t border-emerald-200 mt-16 bg-white">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">

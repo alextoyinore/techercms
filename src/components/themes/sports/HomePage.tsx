@@ -9,7 +9,9 @@ import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, MenuIcon } from 'lucide-react';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -29,13 +31,30 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
         <header className="py-4 px-4 sticky top-0 bg-primary text-primary-foreground z-20 shadow-lg">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
-                    {siteName || 'ESPN'}
+                    {siteName || 'Sports Now'}
                 </Link>
-                <nav>
-                    <Link href="/login" className="text-sm font-semibold uppercase hover:underline">
-                        Login
-                    </Link>
-                </nav>
+                <div className="hidden md:flex">
+                     <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
+                </div>
+                 <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="hover:bg-white/20">
+                                <MenuIcon />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
+                            <div className="py-6">
+                               <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
+                                <div className="mt-6 border-t border-white/20 pt-6">
+                                    <Link href="/login" className="text-lg font-semibold uppercase hover:underline">
+                                        Login
+                                    </Link>
+                                </div>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
             </div>
         </header>
     )

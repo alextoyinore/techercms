@@ -9,6 +9,10 @@ import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Separator } from '@/components/ui/separator';
 import { ThemeLayout } from '../ThemeLayout';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { MenuIcon } from 'lucide-react';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -31,45 +35,47 @@ type SiteSettings = {
 }
 
 export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
-    const firestore = useFirestore();
-    const categoriesQuery = useMemoFirebase(() => {
-        if(!firestore) return null;
-        return query(collection(firestore, 'categories'), orderBy('name', 'asc'), limit(6));
-    }, [firestore]);
-    const {data: categories} = useCollection<Category>(categoriesQuery);
-
     return (
         <header className="border-b-2 border-foreground sticky top-0 bg-background z-20">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center py-4 border-b">
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium hidden sm:block">
                        {format(new Date(), 'eeee, MMMM d, yyyy')}
                     </div>
-                    <Link href="/" className="text-4xl font-black font-headline text-center">
+                    <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || 'The Daily Chronicle'}
                     </Link>
-                    <div className="text-sm">
+                    <div className="text-sm hidden sm:block">
                         <Link href="/login" className="font-medium hover:underline">Admin Login</Link>
                     </div>
+                    <div className="sm:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon"><MenuIcon /></Button>
+                            </SheetTrigger>
+                             <SheetContent side="right">
+                                <div className="py-6">
+                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                    <Separator className="my-4" />
+                                     <Link href="/login" className="text-lg font-medium hover:text-primary">Admin Login</Link>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
                 </div>
-                <nav className="flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider">
-                    {categories?.map(category => (
-                        <Link key={category.id} href={`/category/${category.slug}`} className="hover:text-primary transition-colors">
-                            {category.name}
-                        </Link>
-                    ))}
-                     <Link href="#" className="hover:text-primary transition-colors">More...</Link>
-                </nav>
+                <div className="hidden sm:block">
+                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                </div>
             </div>
         </header>
     )
 };
 
-export const NewspaperFooter: React.FC = () => (
+export const NewspaperFooter: React.FC<{siteName?: string}> = ({siteName}) => (
     <footer className="py-12 px-6 border-t mt-16 bg-muted/20">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">The Daily Chronicle</p>
+                <p className="font-bold font-headline text-primary text-lg">{siteName || 'The Daily Chronicle'}</p>
                 <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
             </div>
              <div className="space-y-4">

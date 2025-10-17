@@ -10,6 +10,9 @@ import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
 import { Menu } from '@/components/Menu';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { MenuIcon } from 'lucide-react';
 
 
 export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
@@ -18,7 +21,23 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
             <Link href="/" className="text-2xl font-bold font-headline text-primary">
                 {siteName || 'My Awesome Site'}
             </Link>
-            <Menu locationId="magazine-pro-header" className="hidden md:flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
+            <div className="hidden md:flex">
+                <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
+            </div>
+            <div className="md:hidden">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MenuIcon />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right">
+                        <div className="py-6">
+                           <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
         </div>
     </header>
 );

@@ -7,6 +7,10 @@ import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { MenuIcon } from 'lucide-react';
+import { Menu } from '@/components/Menu';
 
 type Post = {
   id: string;
@@ -23,21 +27,36 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
                 {siteName || 'Portfolio'}
             </Link>
-            <nav>
-                <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
-                    Admin Login
-                </Link>
-            </nav>
+            <div className="hidden md:flex">
+                 <Menu locationId="creative-portfolio-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
+            </div>
+             <div className="md:hidden">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MenuIcon />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right">
+                         <div className="py-6">
+                           <Menu locationId="creative-portfolio-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
         </div>
     </header>
 );
 
-export const CreativeFooter: React.FC = () => (
+export const CreativeFooter: React.FC<{siteName?: string}> = ({ siteName }) => (
     <footer className="py-12 px-6 border-t mt-16 bg-foreground text-background">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">A Creative Portfolio</p>
+                <p className="font-bold font-headline text-primary text-lg">{siteName || 'A Creative Portfolio'}</p>
                 <p className="text-sm text-background/60 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                <div className="mt-4">
+                     <Menu locationId="creative-portfolio-social" className="flex items-center gap-4" linkClassName="text-background/60 hover:text-white" />
+                </div>
             </div>
              <div className="space-y-4">
                 <WidgetArea areaName="Footer Column 1" />

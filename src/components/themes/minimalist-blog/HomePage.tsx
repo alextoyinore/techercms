@@ -7,14 +7,11 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { MenuIcon } from 'lucide-react';
+import { Menu } from '@/components/Menu';
 
-type Post = {
-  id: string;
-  title: string;
-  excerpt: string;
-  slug: string;
-  createdAt: Timestamp;
-};
 
 export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     <header className="py-8 px-6">
@@ -22,11 +19,23 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
             <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
                 {siteName || 'A Minimalist Blog'}
             </Link>
-            <nav>
-                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                    Login
-                </Link>
-            </nav>
+            <div className="hidden md:flex">
+                <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
+            </div>
+            <div className="md:hidden">
+                 <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <MenuIcon />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right">
+                        <div className="py-6">
+                            <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                        </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
         </div>
     </header>
 );
@@ -44,6 +53,15 @@ export const MinimalistFooter: React.FC = () => (
         </div>
     </footer>
 );
+
+type Post = {
+  id: string;
+  title: string;
+  excerpt: string;
+  slug: string;
+  createdAt: Timestamp;
+};
+
 
 export default function HomePage() {
   const firestore = useFirestore();
