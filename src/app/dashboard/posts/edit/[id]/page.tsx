@@ -30,18 +30,25 @@ import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library } from 'lucide-react
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, Timestamp, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { Loading } from '@/components/loading';
 import { MediaLibrary } from '@/components/media-library';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type Category = {
   id: string;
   name: string;
   slug: string;
+};
+
+type Tag = {
+    id: string;
+    name: string;
+    slug: string;
 };
 
 type Post = {
@@ -100,6 +107,20 @@ export default function EditPostPage() {
   }, [firestore]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCollection);
 
+  const tagsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'tags');
+  }, [firestore]);
+  const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
+
+  const filteredTags = useMemo(() => {
+    if (!newTag || !allTags) return [];
+    return allTags.filter(tag => 
+        tag.name.toLowerCase().includes(newTag.toLowerCase()) && !tags.includes(tag.name)
+    );
+  }, [newTag, allTags, tags]);
+
+
   useEffect(() => {
     if (post) {
       setTitle(post.title || '');
@@ -118,7 +139,8 @@ export default function EditPostPage() {
     );
   };
 
-  const handleAddTag = () => {
+  const handleAddTag = (tag: string) => {
+    const newTag = tag.trim();
     if (newTag && !tags.includes(newTag)) {
       setTags([...tags, newTag]);
       setNewTag('');
@@ -210,6 +232,17 @@ export default function EditPostPage() {
     setIsSubmitting(true);
     setSubmissionStatus(status);
     
+    // Sync tags with the main tags collection
+    const batch = writeBatch(firestore);
+    const existingTags = allTags?.map(t => t.name.toLowerCase()) || [];
+    tags.forEach(tag => {
+        if (!existingTags.includes(tag.toLowerCase())) {
+            const newTagRef = doc(collection(firestore, 'tags'));
+            const slug = tag.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+            batch.set(newTagRef, { name: tag, slug });
+        }
+    });
+    
     if (featuredImageUrl) {
         const mediaQuery = query(collection(firestore, 'media'), where('url', '==', featuredImageUrl));
         const querySnapshot = await getDocs(mediaQuery);
@@ -240,7 +273,9 @@ export default function EditPostPage() {
     };
 
     try {
-        await setDocumentNonBlocking(postRef, updatedPost, { merge: true });
+        batch.set(postRef, updatedPost, { merge: true });
+        await batch.commit();
+        
         toast({
             title: `Post Updated`,
             description: `Your post "${title}" has been successfully updated.`,
@@ -509,19 +544,36 @@ export default function EditPostPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Add Tags</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    id="tags" 
-                    placeholder="New tag" 
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                    disabled={isSubmitting}
-                  />
-                  <Button variant="outline" size="icon" onClick={handleAddTag} disabled={isSubmitting}>
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+                 <Popover open={newTag.length > 0 && filteredTags.length > 0} >
+                    <PopoverTrigger asChild>
+                        <div className="flex gap-2">
+                            <Input
+                                id="tags"
+                                placeholder="New tag"
+                                value={newTag}
+                                onChange={(e) => setNewTag(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
+                                disabled={isSubmitting}
+                            />
+                            <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <ul className='max-h-48 overflow-y-auto'>
+                            {filteredTags.map(tag => (
+                                <li 
+                                    key={tag.id}
+                                    className="p-2 text-sm hover:bg-accent cursor-pointer"
+                                    onClick={() => handleAddTag(tag.name)}
+                                >
+                                    {tag.name}
+                                </li>
+                            ))}
+                        </ul>
+                    </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>
@@ -530,5 +582,3 @@ export default function EditPostPage() {
     </div>
   );
 }
-
-    

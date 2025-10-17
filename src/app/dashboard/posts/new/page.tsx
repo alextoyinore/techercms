@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,17 +30,24 @@ import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library } from 'lucide-react
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type Category = {
   id: string;
   name: string;
   slug: string;
+};
+
+type Tag = {
+    id: string;
+    name: string;
+    slug: string;
 };
 
 export default function NewPostPage() {
@@ -75,13 +82,27 @@ export default function NewPostPage() {
   }, [firestore]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCollection);
 
+  const tagsCollection = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'tags');
+  }, [firestore]);
+  const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
+
+  const filteredTags = useMemo(() => {
+    if (!newTag || !allTags) return [];
+    return allTags.filter(tag => 
+        tag.name.toLowerCase().includes(newTag.toLowerCase()) && !tags.includes(tag.name)
+    );
+  }, [newTag, allTags, tags]);
+
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
     setSelectedCategories(prev =>
       checked ? [...prev, categoryId] : prev.filter(id => id !== categoryId)
     );
   };
 
-  const handleAddTag = () => {
+  const handleAddTag = (tag: string) => {
+    const newTag = tag.trim();
     if (newTag && !tags.includes(newTag)) {
       setTags([...tags, newTag]);
       setNewTag('');
@@ -171,6 +192,7 @@ export default function NewPostPage() {
 
     setIsSubmitting(true);
     setSubmissionStatus(status);
+    
     const postRef = doc(collection(firestore, "posts"));
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
@@ -189,7 +211,23 @@ export default function NewPostPage() {
     };
 
     try {
-        await setDocumentNonBlocking(postRef, newPost, { merge: false });
+        const batch = writeBatch(firestore);
+
+        // 1. Create the post
+        batch.set(postRef, newPost);
+        
+        // 2. Sync tags with the main tags collection
+        const existingTags = allTags?.map(t => t.name.toLowerCase()) || [];
+        tags.forEach(tag => {
+            if (!existingTags.includes(tag.toLowerCase())) {
+                const newTagRef = doc(collection(firestore, 'tags'));
+                const tagSlug = tag.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+                batch.set(newTagRef, { name: tag, slug: tagSlug });
+            }
+        });
+
+        await batch.commit();
+
         toast({
             title: `Post ${status === 'published' ? 'Published' : 'Saved'}`,
             description: `Your post "${title}" has been successfully saved.`,
@@ -439,19 +477,36 @@ export default function NewPostPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="tags">Add Tags</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    id="tags" 
-                    placeholder="New tag" 
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                    disabled={isSubmitting}
-                  />
-                  <Button variant="outline" size="icon" onClick={handleAddTag} disabled={isSubmitting}>
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Popover open={newTag.length > 0 && filteredTags.length > 0} >
+                    <PopoverTrigger asChild>
+                        <div className="flex gap-2">
+                            <Input
+                                id="tags"
+                                placeholder="New tag"
+                                value={newTag}
+                                onChange={(e) => setNewTag(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
+                                disabled={isSubmitting}
+                            />
+                            <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <ul className='max-h-48 overflow-y-auto'>
+                            {filteredTags.map(tag => (
+                                <li 
+                                    key={tag.id}
+                                    className="p-2 text-sm hover:bg-accent cursor-pointer"
+                                    onClick={() => handleAddTag(tag.name)}
+                                >
+                                    {tag.name}
+                                </li>
+                            ))}
+                        </ul>
+                    </PopoverContent>
+                </Popover>
               </div>
             </CardContent>
           </Card>
@@ -461,5 +516,3 @@ export default function NewPostPage() {
     </div>
   );
 }
-
-    
