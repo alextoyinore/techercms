@@ -94,12 +94,7 @@ export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaN
     }, [widgetInstances]);
 
     if (isLoadingAreas || isLoadingInstances) {
-        return (
-            <div className='space-y-4'>
-                <div className="p-4 border rounded-lg animate-pulse bg-muted/50 h-24"></div>
-                <div className="p-4 border rounded-lg animate-pulse bg-muted/50 h-32"></div>
-            </div>
-        )
+        return null;
     }
 
     if (!sortedInstances || sortedInstances.length === 0) {
