@@ -23,9 +23,6 @@ export const menuLocations: MenuLocation[] = [
     // Tech Today
     { id: 'tech-today-header', name: 'Header Navigation', description: 'The main navigation bar in the header.', theme: 'Tech Today' },
 
-    // Earthy Elegance
-    { id: 'earthy-elegance-header', name: 'Header Navigation', description: 'The main navigation links in the header.', theme: 'Earthy Elegance' },
-
     // Business
     { id: 'business-header', name: 'Header Navigation', description: 'The main navigation links in the header.', theme: 'Business' },
 

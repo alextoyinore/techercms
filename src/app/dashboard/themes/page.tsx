@@ -59,11 +59,6 @@ const builtInWebsiteThemes = [
       imageHintId: 'theme-10'
     },
     {
-      name: 'Earthy Elegance',
-      description: 'An organic, natural theme for lifestyle or wellness brands.',
-      imageHintId: 'theme-11'
-    },
-    {
       name: 'Business',
       description: 'A professional, data-driven theme for financial news.',
       imageHintId: 'theme-business'

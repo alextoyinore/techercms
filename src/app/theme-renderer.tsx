@@ -53,15 +53,6 @@ const themes: Record<string, Record<string, any>> = {
     SearchPage: dynamic(() => import('@/components/themes/tech-today/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/tech-today/DatePage')),
   },
-  'Earthy Elegance': {
-    HomePage: dynamic(() => import('@/components/themes/earthy-elegance/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/earthy-elegance/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/earthy-elegance/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/earthy-elegance/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/earthy-elegance/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/earthy-elegance/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/earthy-elegance/DatePage')),
-  },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/business/SlugPage')),

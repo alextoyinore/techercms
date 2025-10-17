@@ -109,12 +109,6 @@
       "imageHint": "tech blog"
     },
     {
-      "id": "theme-11",
-      "description": "Earthy tones theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme11/600/400",
-      "imageHint": "earthy tones"
-    },
-    {
       "id": "theme-business",
       "description": "Business theme preview",
       "imageUrl": "https://picsum.photos/seed/theme-business/600/400",
