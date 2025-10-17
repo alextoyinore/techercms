@@ -42,7 +42,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                      <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </div>
                 <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
-                    {siteName || 'VOGUE'}
+                    {siteName || ''}
                 </Link>
                 <div className="flex-1 text-right flex justify-end items-center gap-4">
                     <div className="hidden md:block">
@@ -77,7 +77,7 @@ export function PublicFooter({ siteName }: { siteName?: string }) {
         <footer className="py-12 px-6 border-t mt-16 bg-background">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-4 text-center">
-                    <p className="font-bold font-headline text-lg">© {new Date().getFullYear()} {siteName || 'VOGUE'}</p>
+                    <p className="font-bold font-headline text-lg">© {new Date().getFullYear()} {siteName || ''}</p>
                 </div>
                  <div className="lg:col-span-2 space-y-4">
                     <WidgetArea areaName="Footer Column 1" />

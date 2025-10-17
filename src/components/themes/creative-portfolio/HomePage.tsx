@@ -26,7 +26,7 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
         <div className="container mx-auto flex justify-between items-center">
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
-                {siteName || 'Portfolio'}
+                {siteName || ''}
             </Link>
              <div className="hidden md:flex items-center gap-4">
                 <nav>
@@ -59,7 +59,7 @@ export const CreativeFooter: React.FC<{siteName?: string}> = ({ siteName }) => (
     <footer className="py-12 px-6 border-t mt-16 bg-foreground text-background">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">{siteName || 'A Creative Portfolio'}</p>
+                <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
                 <p className="text-sm text-background/60 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
                 <div className="mt-4">
                      <Menu locationId="creative-portfolio-social" className="flex items-center gap-4" linkClassName="text-background/60 hover:text-white" />

@@ -32,7 +32,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
         <header className="py-4 px-4 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b-4 border-primary">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-4xl font-black font-headline tracking-tighter">
-                    {siteName || 'NewsPro'}
+                    {siteName || ''}
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
                      <nav>
@@ -67,7 +67,7 @@ export function PublicFooter({ siteName }: { siteName?: string }) {
         <footer className="py-12 px-6 border-t mt-16 bg-card">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-lg">© {new Date().getFullYear()} {siteName || 'NewsPro'}</p>
+                    <p className="font-bold font-headline text-lg">© {new Date().getFullYear()} {siteName || ''}</p>
                 </div>
                  <div className="space-y-4">
                     <WidgetArea areaName="Footer Column 1" />

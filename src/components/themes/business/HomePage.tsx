@@ -31,7 +31,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
         <header className="py-3 px-4 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
-                    {siteName || 'Business Today'}
+                    {siteName || ''}
                 </Link>
                  <div className="hidden md:flex items-center gap-4">
                     <nav>
@@ -66,7 +66,7 @@ export function PublicFooter({ siteName }: { siteName?: string }) {
         <footer className="py-12 px-6 border-t mt-16 bg-card">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || 'Business Today'}</p>
+                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || ''}</p>
                     <p className="text-sm text-muted-foreground mt-2">All rights reserved.</p>
                 </div>
                  <div className="space-y-4">

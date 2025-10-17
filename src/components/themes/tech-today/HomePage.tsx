@@ -32,7 +32,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
         <header className="py-4 px-6 sticky top-0 bg-gray-900/80 backdrop-blur-sm z-20 border-b border-gray-700">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-xl font-bold font-headline text-cyan-400 tracking-tighter">
-                    {siteName || 'Tech Today'}
+                    {siteName || ''}
                 </Link>
                  <div className="hidden md:flex items-center gap-4">
                     <nav>
@@ -62,12 +62,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
     )
 }
 
-export function PublicFooter() {
+export function PublicFooter({siteName}: {siteName?: string}) {
     return (
         <footer className="py-12 px-6 border-t border-gray-800 mt-16 bg-gray-900">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-gray-400">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-cyan-400 text-lg">Tech Today</p>
+                    <p className="font-bold font-headline text-cyan-400 text-lg">{siteName || ''}</p>
                     <p className="text-sm text-gray-500 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
                 </div>
                  <div className="space-y-4">
@@ -191,7 +191,7 @@ export default function HomePage() {
                 </>
             )}
         </main>
-        <PublicFooter />
+        <PublicFooter siteName={settings?.siteName} />
     </div>
   );
 }

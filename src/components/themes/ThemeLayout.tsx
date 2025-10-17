@@ -18,7 +18,7 @@ function PublicHeader({ siteName, HeaderComponent }: { siteName?: string, Header
         <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
             <div className="container mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                    {siteName || 'My Awesome Site'}
+                    {siteName || ''}
                 </Link>
                 <nav>
                     <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary">
@@ -39,7 +39,7 @@ function PublicFooter({ siteName, FooterComponent }: { siteName?: string, Footer
         <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">{siteName || 'My Awesome Site'}</p>
+                    <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
                     <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
                 </div>
                 <div className="space-y-4">

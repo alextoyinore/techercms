@@ -19,7 +19,7 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
         <div className="container mx-auto max-w-3xl">
             <div className="flex justify-between items-center">
                 <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
-                    {siteName || 'A Minimalist Blog'}
+                    {siteName || ''}
                 </Link>
                 <div className="md:hidden">
                      <Sheet>
@@ -46,11 +46,11 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
     </header>
 );
 
-export const MinimalistFooter: React.FC = () => (
+export const MinimalistFooter: React.FC<{siteName?: string}> = ({siteName}) => (
     <footer className="py-12 px-6 mt-16 border-t">
         <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-                 <p className="font-semibold font-headline text-foreground">A Minimalist Blog</p>
+                 <p className="font-semibold font-headline text-foreground">{siteName || ''}</p>
                  <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All rights reserved.</p>
             </div>
             <div className="space-y-4">

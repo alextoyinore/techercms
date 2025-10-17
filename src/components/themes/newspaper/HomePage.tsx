@@ -50,7 +50,7 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                        {currentDate}
                     </div>
                     <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
-                        {siteName || 'The Daily Chronicle'}
+                        {siteName || ''}
                     </Link>
                     <div className="text-sm hidden sm:flex items-center gap-2">
                         <SearchForm />
@@ -82,7 +82,7 @@ export const NewspaperFooter: React.FC<{siteName?: string}> = ({siteName}) => (
     <footer className="py-12 px-6 border-t mt-16 bg-muted/20">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">{siteName || 'The Daily Chronicle'}</p>
+                <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
                 <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
             </div>
              <div className="space-y-4">
