@@ -24,7 +24,7 @@ type SiteSettings = {
   siteName?: string;
 }
 
-function PublicHeader({ siteName }: { siteName?: string }) {
+export function PublicHeader({ siteName }: { siteName?: string }) {
     return (
         <header className="py-4 px-6 sticky top-0 bg-gray-900/80 backdrop-blur-sm z-20 border-b border-gray-700">
             <div className="container mx-auto flex justify-between items-center">
@@ -41,7 +41,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
     )
 }
 
-function PublicFooter() {
+export function PublicFooter() {
     return (
         <footer className="py-12 px-6 border-t border-gray-800 mt-16 bg-gray-900">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-gray-400">
