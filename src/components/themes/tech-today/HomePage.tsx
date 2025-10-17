@@ -12,6 +12,7 @@ import { ArrowRight, MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -33,9 +34,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-xl font-bold font-headline text-cyan-400 tracking-tighter">
                     {siteName || 'Tech Today'}
                 </Link>
-                 <nav className="hidden md:flex">
-                    <Menu locationId="tech-today-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="text-gray-400 hover:text-cyan-300 transition-colors" />
-                </nav>
+                 <div className="hidden md:flex items-center gap-4">
+                    <nav>
+                        <Menu locationId="tech-today-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="text-gray-400 hover:text-cyan-300 transition-colors" />
+                    </nav>
+                    <SearchForm />
+                 </div>
                  <div className="md:hidden">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -47,9 +51,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                             <div className="py-6">
                                <Menu locationId="tech-today-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-cyan-300 transition-colors" />
                                 <div className="mt-6 border-t border-gray-700 pt-6">
-                                     <Link href="/login" className="text-lg font-medium text-gray-400 hover:text-cyan-300">
-                                        Admin Login
-                                    </Link>
+                                     <SearchForm />
                                 </div>
                             </div>
                         </SheetContent>

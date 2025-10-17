@@ -12,6 +12,7 @@ import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -43,7 +44,10 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
                     {siteName || 'VOGUE'}
                 </Link>
-                <div className="flex-1 text-right">
+                <div className="flex-1 text-right flex justify-end items-center gap-4">
+                    <div className="hidden md:block">
+                        <SearchForm />
+                    </div>
                     <div className="md:hidden">
                         <Sheet>
                             <SheetTrigger asChild>
@@ -55,14 +59,13 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                                 <div className="py-6">
                                    <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
+                                    <SearchForm />
+                                     <Separator className="my-4" />
                                      <Link href="/login" className="text-lg font-medium hover:text-primary">Admin Login</Link>
                                 </div>
                             </SheetContent>
                         </Sheet>
                     </div>
-                     <Link href="/login" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hidden md:inline-block">
-                        Login
-                    </Link>
                 </div>
             </div>
         </header>

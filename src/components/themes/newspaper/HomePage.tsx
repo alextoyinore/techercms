@@ -11,8 +11,9 @@ import { Separator } from '@/components/ui/separator';
 import { ThemeLayout } from '../ThemeLayout';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { MenuIcon } from 'lucide-react';
+import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -45,8 +46,8 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                     <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || 'The Daily Chronicle'}
                     </Link>
-                    <div className="text-sm hidden sm:block">
-                        <Link href="/login" className="font-medium hover:underline">Admin Login</Link>
+                    <div className="text-sm hidden sm:flex items-center gap-2">
+                        <SearchForm />
                     </div>
                     <div className="sm:hidden">
                         <Sheet>
@@ -57,7 +58,7 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                                 <div className="py-6">
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
-                                     <Link href="/login" className="text-lg font-medium hover:text-primary">Admin Login</Link>
+                                    <SearchForm />
                                 </div>
                             </SheetContent>
                         </Sheet>

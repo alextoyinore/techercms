@@ -9,8 +9,9 @@ import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { ThemeLayout } from '../ThemeLayout';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { MenuIcon } from 'lucide-react';
+import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -27,9 +28,12 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
                 {siteName || 'Portfolio'}
             </Link>
-            <nav className="hidden md:flex">
-                 <Menu locationId="creative-portfolio-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
-            </nav>
+             <div className="hidden md:flex items-center gap-4">
+                <nav>
+                    <Menu locationId="creative-portfolio-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
+                </nav>
+                <SearchForm />
+            </div>
              <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>
@@ -40,6 +44,9 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                     <SheetContent side="right">
                          <div className="py-6">
                            <Menu locationId="creative-portfolio-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                           <div className="mt-6 pt-6 border-t">
+                                <SearchForm />
+                           </div>
                         </div>
                     </SheetContent>
                 </Sheet>

@@ -12,6 +12,7 @@ import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
+import { SearchForm } from '../SearchForm';
 
 type Post = {
   id: string;
@@ -33,9 +34,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-4xl font-black font-headline tracking-tighter">
                     {siteName || 'NewsPro'}
                 </Link>
-                <nav className="hidden md:flex">
-                     <Menu locationId="newspro-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
-                </nav>
+                <div className="hidden md:flex items-center gap-4">
+                     <nav>
+                         <Menu locationId="newspro-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
+                    </nav>
+                    <SearchForm />
+                </div>
                  <div className="md:hidden">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -46,6 +50,9 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         <SheetContent side="right">
                              <div className="py-6">
                                <Menu locationId="newspro-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                <div className="mt-6 pt-6 border-t">
+                                    <SearchForm />
+                                </div>
                             </div>
                         </SheetContent>
                     </Sheet>
