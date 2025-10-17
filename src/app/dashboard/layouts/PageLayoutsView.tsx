@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, writeBatch, setDoc } from 'firebase/firestore';
+import { doc, collection, writeBatch } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -96,19 +96,19 @@ export function PageLayoutsView() {
 
   // Initialize default layouts if they don't exist
   useEffect(() => {
-    if (!isLoadingLayouts && pageLayouts && firestore && !initialized.current) {
-      initialized.current = true; // Mark as initialized
-      const existingStructures = new Set(pageLayouts.map(p => p.structure));
-      const missingLayouts = defaultPageLayouts.filter(d => !existingStructures.has(d.structure));
-
-      if (missingLayouts.length > 0) {
-        const batch = writeBatch(firestore);
-        missingLayouts.forEach(layoutData => {
-          const newLayoutRef = doc(collection(firestore, 'page_layouts'));
-          batch.set(newLayoutRef, { name: layoutData.name, structure: layoutData.structure });
-        });
-        batch.commit().catch(err => console.error("Failed to initialize default page layouts:", err));
-      }
+    // Only run this effect once after the initial data load.
+    if (!isLoadingLayouts && pageLayouts && !initialized.current) {
+        initialized.current = true;
+        
+        // Only create layouts if the collection is empty.
+        if (pageLayouts.length === 0 && firestore) {
+            const batch = writeBatch(firestore);
+            defaultPageLayouts.forEach(layoutData => {
+                const newLayoutRef = doc(collection(firestore, 'page_layouts'));
+                batch.set(newLayoutRef, { name: layoutData.name, structure: layoutData.structure });
+            });
+            batch.commit().catch(err => console.error("Failed to initialize default page layouts:", err));
+        }
     }
   }, [isLoadingLayouts, pageLayouts, firestore]);
 
