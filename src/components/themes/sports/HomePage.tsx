@@ -33,9 +33,9 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
                     {siteName || 'Sports Now'}
                 </Link>
-                <div className="hidden md:flex">
+                <nav className="hidden md:flex">
                      <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
-                </div>
+                </nav>
                  <div className="md:hidden">
                     <Sheet>
                         <SheetTrigger asChild>

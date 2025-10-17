@@ -32,9 +32,9 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-2xl font-bold font-headline text-emerald-900">
                     {siteName || 'Earthy Elegance'}
                 </Link>
-                <div className="hidden md:flex">
+                <nav className="hidden md:flex">
                     <Menu locationId="earthy-elegance-header" className="flex items-center gap-6 text-sm" linkClassName="text-emerald-800 hover:text-emerald-600 transition-colors"/>
-                </div>
+                </nav>
                 <div className="md:hidden">
                     <Sheet>
                         <SheetTrigger asChild>

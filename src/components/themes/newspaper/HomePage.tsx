@@ -63,9 +63,9 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                         </Sheet>
                     </div>
                 </div>
-                <div className="hidden sm:block">
-                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
-                </div>
+                <nav className="hidden sm:flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider">
+                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 text-sm font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                </nav>
             </div>
         </header>
     )

@@ -21,9 +21,9 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
             <Link href="/" className="text-2xl font-bold font-headline text-primary">
                 {siteName || 'My Awesome Site'}
             </Link>
-            <div className="hidden md:flex">
+            <nav className="hidden md:flex">
                 <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
-            </div>
+            </nav>
             <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>

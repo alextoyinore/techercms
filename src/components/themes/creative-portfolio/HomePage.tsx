@@ -27,9 +27,9 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
                 {siteName || 'Portfolio'}
             </Link>
-            <div className="hidden md:flex">
+            <nav className="hidden md:flex">
                  <Menu locationId="creative-portfolio-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
-            </div>
+            </nav>
              <div className="md:hidden">
                 <Sheet>
                     <SheetTrigger asChild>

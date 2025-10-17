@@ -32,9 +32,9 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteName || 'Business Today'}
                 </Link>
-                <div className="hidden md:flex">
+                <nav className="hidden md:flex">
                      <Menu locationId="business-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:text-primary transition-colors text-muted-foreground" />
-                </div>
+                </nav>
                  <div className="md:hidden">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -59,7 +59,7 @@ export function PublicFooter({ siteName }: { siteName?: string }) {
         <footer className="py-12 px-6 border-t mt-16 bg-card">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">{new Date().getFullYear()} © {siteName || 'Business Today'}</p>
+                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || 'Business Today'}</p>
                     <p className="text-sm text-muted-foreground mt-2">All rights reserved.</p>
                 </div>
                  <div className="space-y-4">

@@ -19,9 +19,9 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
             <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
                 {siteName || 'A Minimalist Blog'}
             </Link>
-            <div className="hidden md:flex">
+            <nav className="hidden md:flex">
                 <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
-            </div>
+            </nav>
             <div className="md:hidden">
                  <Sheet>
                     <SheetTrigger asChild>
