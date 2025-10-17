@@ -70,7 +70,12 @@ export function FeaturedAndListWidget({
     
 
     if (isLoading) {
-        return <p>Loading stories...</p>;
+        return (
+            <div className="w-full">
+                {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
+                <div className="animate-pulse bg-muted h-96 rounded-md w-full"></div>
+            </div>
+        );
     }
     
     if (!featuredPost) {

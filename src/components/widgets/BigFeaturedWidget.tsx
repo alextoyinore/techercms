@@ -64,7 +64,12 @@ export function BigFeaturedWidget({
     const post = useMemo(() => posts?.[0], [posts]);
 
     if (isLoading) {
-        return <p>Loading story...</p>;
+        return (
+            <div className="w-full">
+                 {title && <h2 className="text-2xl font-bold font-headline mb-6">{title}</h2>}
+                 <div className="animate-pulse bg-muted h-64 rounded-md w-full"></div>
+            </div>
+        );
     }
     
     if (!post) {
