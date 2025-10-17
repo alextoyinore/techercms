@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, writeBatch, setDoc } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -71,6 +71,7 @@ type SiteSettings = {
 export function PageLayoutsView() {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const initialized = useRef(false);
 
   const layoutsCollection = useMemoFirebase(() => firestore ? collection(firestore, 'page_layouts') : null, [firestore]);
   const settingsRef = useMemoFirebase(() => firestore ? doc(firestore, 'site_settings', 'config') : null, [firestore]);
@@ -95,7 +96,8 @@ export function PageLayoutsView() {
 
   // Initialize default layouts if they don't exist
   useEffect(() => {
-    if (!isLoadingLayouts && pageLayouts && firestore) {
+    if (!isLoadingLayouts && pageLayouts && firestore && !initialized.current) {
+      initialized.current = true; // Mark as initialized
       const existingStructures = new Set(pageLayouts.map(p => p.structure));
       const missingLayouts = defaultPageLayouts.filter(d => !existingStructures.has(d.structure));
 
