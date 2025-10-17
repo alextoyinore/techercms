@@ -17,12 +17,12 @@ type TradingTickerWidgetProps = {
 
 export function TradingTickerWidget({ title = 'Market Watch' }: TradingTickerWidgetProps) {
     return (
-        <div className="bg-black text-white h-12 flex items-center rounded-md overflow-hidden">
-            <div className="bg-primary h-full flex items-center px-4">
-                <h3 className="font-headline font-bold text-sm whitespace-nowrap text-primary-foreground">{title}</h3>
-            </div>
+        <div className="bg-black text-white h-10 flex items-center overflow-hidden">
             <div className="relative flex-1 h-full flex items-center overflow-hidden">
                 <div className="absolute top-0 left-0 flex items-center h-full animate-marquee whitespace-nowrap">
+                    <div className="bg-primary h-full flex items-center px-4 font-bold text-sm text-primary-foreground mr-6">
+                        {title}
+                    </div>
                     {mockTickerData.concat(mockTickerData).map((stock, index) => (
                         <div key={index} className="mx-6 flex items-center gap-3">
                             <span className="font-bold text-sm">{stock.symbol}</span>
