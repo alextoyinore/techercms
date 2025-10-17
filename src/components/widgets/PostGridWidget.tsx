@@ -103,7 +103,7 @@ export function PostGridWidget({
                             </Link>
                         )}
                         <div className="flex flex-col">
-                            <h3 className="font-semibold leading-tight text-lg group-hover:underline">
+                            <h3 className="font-semibold leading-tight text-base group-hover:underline">
                                 <Link href={`/${post.slug}`}>{post.title}</Link>
                             </h3>
                             {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{post.excerpt}</p>}
