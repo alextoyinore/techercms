@@ -75,15 +75,13 @@ export function FeaturedSmallsWidget({
         return null; // Or some placeholder
     }
     
-    const featuredColSpan = featuredWidth > 60 ? "md:col-span-2" : "md:col-span-1";
-    const smallColSpan = featuredWidth > 60 ? "md:col-span-1" : "md:col-span-1";
-    const gridCols = featuredWidth > 60 ? "md:grid-cols-3" : "md:grid-cols-2";
+    const gridCols = "md:grid-cols-2";
 
     return (
         <div className="w-full">
             <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>
             <div className={cn("grid grid-cols-1 gap-8", gridCols)}>
-                <div className={cn("group", featuredColSpan)}>
+                <div className="group md:col-span-1">
                     <Link href={`/${featuredPost.slug}`}>
                         {featuredPost.featuredImageUrl && (
                             <div className="relative aspect-video w-full overflow-hidden mb-4 rounded-lg">
@@ -102,7 +100,7 @@ export function FeaturedSmallsWidget({
                         </time>
                     </Link>
                 </div>
-                <div className={cn("space-y-4", smallColSpan)}>
+                <div className="md:col-span-1 space-y-4">
                     {smallPosts.map((post, index) => (
                         <div key={post.id} className="flex gap-4 items-start group">
                             {showSmallImages && post.featuredImageUrl && (
@@ -123,7 +121,7 @@ export function FeaturedSmallsWidget({
                                 </h4>
                                 {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
                                 <time className="text-xs text-muted-foreground/80 mt-1 block">
-                                    {format(post.createdAt.toDate(), 'MMM d')}
+                                    {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
                                 </time>
                             </div>
                         </div>
