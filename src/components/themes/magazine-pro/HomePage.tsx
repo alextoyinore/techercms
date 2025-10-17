@@ -12,7 +12,7 @@ import { ThemeLayout } from '../ThemeLayout';
 import { Menu } from '@/components/Menu';
 
 
-const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
+export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
     <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="container mx-auto flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold font-headline text-primary">
@@ -23,7 +23,7 @@ const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
     </header>
 );
 
-const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
+export const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
      <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
