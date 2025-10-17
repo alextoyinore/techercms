@@ -106,7 +106,7 @@ export function PostCarouselWidget({
                                                 </div>
                                             )}
                                             <div className="p-4 flex-grow flex flex-col">
-                                                <h3 className="font-semibold leading-tight line-clamp-2 flex-grow">{post.title}</h3>
+                                                <h3 className="font-semibold leading-tight line-clamp-2 flex-grow text-sm">{post.title}</h3>
                                                 {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{post.excerpt}</p>}
                                             </div>
                                         </CardContent>

@@ -115,11 +115,11 @@ export function FeaturedTopAndGridWidget({
                         </Link>
                     )}
                     <div className={contentOrder}>
-                        <h3 className="text-2xl md:text-3xl font-bold font-headline leading-tight group-hover:underline">
+                        <h3 className="text-xl md:text-2xl font-bold font-headline leading-tight group-hover:underline">
                             <Link href={`/${featuredPost.slug}`}>{featuredPost.title}</Link>
                         </h3>
-                        <p className="text-base text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>
-                        <time className="text-sm text-muted-foreground/80 mt-2 block">
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>
+                        <time className="text-xs text-muted-foreground/80 mt-2 block">
                             {format(featuredPost.createdAt.toDate(), 'MMMM d, yyyy')}
                         </time>
                     </div>
@@ -144,7 +144,7 @@ export function FeaturedTopAndGridWidget({
                                             </div>
                                         </Link>
                                     )}
-                                    <h4 className="font-semibold leading-tight group-hover:underline">
+                                    <h4 className="font-semibold leading-tight group-hover:underline text-sm">
                                         <Link href={`/${post.slug}`}>{post.title}</Link>
                                     </h4>
                                     {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
