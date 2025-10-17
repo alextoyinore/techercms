@@ -51,11 +51,13 @@ type CustomTheme = {
     previewImageUrl?: string;
     colors: ThemeColors;
     authorId: string;
+    baseTheme: string;
 };
 
 type WebsiteThemeCustomizerProps = {
     children: React.ReactNode;
     themeSource: 'new' | CustomTheme;
+    builtInThemes: { name: string, description: string }[];
 };
 
 
@@ -88,7 +90,7 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
 }
 
 
-export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCustomizerProps) {
+export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }: WebsiteThemeCustomizerProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const auth = useAuth();
@@ -96,6 +98,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [baseTheme, setBaseTheme] = useState('Magazine Pro');
   const [colors, setColors] = useState<ThemeColors | null>(null);
   const [previewImageFile, setPreviewImageFile] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
@@ -124,12 +127,14 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
             setName('My Custom Theme');
             setDescription('');
             setColors(defaultTheme.colors);
+            setBaseTheme('Magazine Pro');
             setPreviewImageUrl('');
             setPreviewImageFile(null);
         } else {
             setName(themeSource.name);
             setDescription(themeSource.description || '');
             setColors(themeSource.colors);
+            setBaseTheme(themeSource.baseTheme);
             setPreviewImageUrl(themeSource.previewImageUrl || '');
             setPreviewImageFile(null);
         }
@@ -238,6 +243,7 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
             previewImageUrl: finalImageUrl,
             colors,
             authorId: auth.currentUser.uid,
+            baseTheme,
         };
 
         if (themeSource !== 'new' && themeSource.id) {
@@ -298,6 +304,20 @@ export function WebsiteThemeCustomizer({ children, themeSource }: WebsiteThemeCu
                         <div className="grid gap-2">
                             <Label htmlFor="theme-description">Description</Label>
                             <Textarea id="theme-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Base Theme</Label>
+                             <Select value={baseTheme} onValueChange={setBaseTheme}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a base theme" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {builtInThemes.map(theme => (
+                                        <SelectItem key={theme.name} value={theme.name}>{theme.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className='text-xs text-muted-foreground'>This determines the layout and structure your custom colors will apply to.</p>
                         </div>
                     </div>
 
@@ -435,4 +455,5 @@ function hexToHsl(hex: string): { h: number, s: number, l: number } | null {
     return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
+    
     

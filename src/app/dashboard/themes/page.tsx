@@ -97,6 +97,7 @@ type CustomTheme = {
   previewImageUrl: string;
   colors: any;
   authorId: string;
+  baseTheme: string;
 };
 
 export default function ThemesPage() {
@@ -213,7 +214,7 @@ export default function ThemesPage() {
         title="Appearance"
         description="Manage your website's themes and visual customization."
       >
-        <WebsiteThemeCustomizer themeSource="new">
+        <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
           <Button variant="outline">
               <Upload className="mr-2 h-4 w-4" />
               Create Custom Theme
@@ -272,7 +273,7 @@ export default function ThemesPage() {
                                       <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <WebsiteThemeCustomizer themeSource={theme}>
+                                        <WebsiteThemeCustomizer themeSource={theme} builtInThemes={builtInWebsiteThemes}>
                                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                                 Edit
                                             </DropdownMenuItem>
@@ -327,7 +328,7 @@ export default function ThemesPage() {
                                         'Activate'
                                     )}
                                 </Button>
-                                <WebsiteThemeCustomizer themeSource="new">
+                                <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
                                     <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
                                 </WebsiteThemeCustomizer>
                             </div>
@@ -422,4 +423,5 @@ export default function ThemesPage() {
   );
 }
 
+    
     

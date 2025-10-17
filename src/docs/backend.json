@@ -358,9 +358,10 @@
             "description": { "type": "string", "description": "A short description of the theme." },
             "previewImageUrl": { "type": "string", "description": "URL for the theme's preview image." },
             "colors": { "type": "object", "description": "An object containing the theme's color definitions." },
-            "authorId": { "type": "string", "description": "The ID of the user who created the theme." }
+            "authorId": { "type": "string", "description": "The ID of the user who created the theme." },
+            "baseTheme": { "type": "string", "description": "The name of the built-in theme this custom theme is based on." }
         },
-        "required": ["id", "name", "colors", "authorId"]
+        "required": ["id", "name", "colors", "authorId", "baseTheme"]
     },
     "PageLayout": {
         "title": "Page Layout",

@@ -5,6 +5,7 @@ import { Loading } from '@/components/loading';
 
 // Dynamically import theme components
 import dynamic from 'next/dynamic';
+import { useMemo } from 'react';
 
 const themes: Record<string, Record<string, any>> = {
   'Magazine Pro': {
@@ -100,30 +101,47 @@ const themes: Record<string, Record<string, any>> = {
 };
 
 type SiteSettings = {
-  activeTheme: keyof typeof themes;
+  activeTheme?: string;
   homepageType?: 'latest' | 'static';
   homepagePageId?: string;
+};
+
+type CustomTheme = {
+  id: string;
+  name: string;
+  baseTheme: keyof typeof themes;
 };
 
 type ThemeRendererProps = {
   pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search' | 'date';
 };
 
-export function ThemeRenderer({ pageType }: ThemeRendererProps) {
+function ActiveThemeResolver({ pageType, settings }: { pageType: ThemeRendererProps['pageType'], settings: SiteSettings }) {
   const firestore = useFirestore();
 
-  const settingsRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'site_settings', 'config');
-  }, [firestore]);
+  const customThemesQuery = useMemoFirebase(() => {
+    if (!firestore || !settings.activeTheme) return null;
+    return query(collection(firestore, 'custom_themes'), where('name', '==', settings.activeTheme));
+  }, [firestore, settings.activeTheme]);
 
-  const { data: settings, isLoading } = useDoc<SiteSettings>(settingsRef);
+  const { data: customThemes, isLoading: isLoadingCustomThemes } = useCollection<CustomTheme>(customThemesQuery);
 
-  if (isLoading) {
+  const activeThemeName = useMemo(() => {
+    if (isLoadingCustomThemes) return null; // Wait until we know if it's a custom theme
+
+    const customTheme = customThemes?.[0];
+    if (customTheme) {
+      return customTheme.baseTheme;
+    }
+    // It's a built-in theme or the default
+    return settings.activeTheme && themes[settings.activeTheme] ? settings.activeTheme : 'Magazine Pro';
+  }, [customThemes, isLoadingCustomThemes, settings.activeTheme]);
+
+
+  if (activeThemeName === null) {
     return <Loading />;
   }
 
-  const activeThemeName = settings?.activeTheme || 'Magazine Pro';
   const theme = themes[activeThemeName] || themes['Magazine Pro'];
 
   if (pageType === 'home' && settings?.homepageType === 'static' && settings.homepagePageId) {
@@ -161,6 +179,26 @@ export function ThemeRenderer({ pageType }: ThemeRendererProps) {
 }
 
 
+export function ThemeRenderer({ pageType }: ThemeRendererProps) {
+  const firestore = useFirestore();
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+
+  const { data: settings, isLoading } = useDoc<SiteSettings>(settingsRef);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+  
+  const finalSettings = settings || { activeTheme: 'Magazine Pro' };
+
+  return <ActiveThemeResolver pageType={pageType} settings={finalSettings} />;
+}
+
+
 function StaticHomepageRenderer({ pageId, theme }: { pageId: string, theme: any}) {
     const firestore = useFirestore();
 
@@ -184,3 +222,5 @@ function StaticHomepageRenderer({ pageId, theme }: { pageId: string, theme: any}
     const SlugPageComponent = theme.SlugPage;
     return <SlugPageComponent preloadedItem={page} />;
 }
+
+    
