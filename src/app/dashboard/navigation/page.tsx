@@ -24,6 +24,12 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -248,54 +254,46 @@ function MenuItemsManager({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="font-headline text-xl">{menu.name}</CardTitle>
+    <div>
+        <div className="flex items-center justify-between mb-2">
+             <Button variant="outline" size="sm" onClick={handleAddNewClick}>
+                <Plus className="mr-2 h-4 w-4" /> Add Item
+             </Button>
+             <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={handleDeleteMenuWithItems}
+             >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Menu
+             </Button>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleAddNewClick}>
-            <Plus className="mr-2 h-4 w-4" /> Add Item
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDeleteMenuWithItems}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete Menu
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading && <p>Loading items...</p>}
-        <div className="space-y-2">
+        <div className="space-y-1">
+          {isLoading && <p className="text-sm text-center text-muted-foreground p-4">Loading items...</p>}
           {sortedMenuItems?.map(item => (
             <div
               key={item.id}
-              className="flex items-center justify-between rounded-md border p-3"
+              className="flex items-center justify-between rounded-md border p-2"
             >
-              <div className="font-medium">
-                {item.label}{' '}
-                <span className="text-sm text-muted-foreground">
-                  ({item.url})
-                </span>
+              <div className="font-medium text-sm">
+                {item.label}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-7 w-7"
                   onClick={() => handleEditClick(item)}
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
                   onClick={() => handleDeleteItem(item.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -423,8 +421,7 @@ function MenuItemsManager({
             </SheetFooter>
           </SheetContent>
         </Sheet>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
 
@@ -512,8 +509,56 @@ export default function NavigationPage() {
         title="Navigation"
         description="Manage your site's reusable navigation menus and their locations."
       />
-      <div className="grid gap-6">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+         <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Manage Menus</CardTitle>
+                    <CardDescription>Create a new menu or edit an existing one below.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex gap-2">
+                    <Input
+                        placeholder="New Menu Name"
+                        value={newMenuName}
+                        onChange={e => setNewMenuName(e.target.value)}
+                        disabled={isSubmitting}
+                    />
+                    <Button
+                        onClick={handleAddMenu}
+                        disabled={isSubmitting || !newMenuName.trim()}
+                    >
+                        {isSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            'Create Menu'
+                        )}
+                    </Button>
+                </CardContent>
+                <div className="px-6 pb-6">
+                    {isLoading && <p className="text-sm text-muted-foreground text-center">Loading menus...</p>}
+                    {!isLoading && menus && menus.length > 0 && (
+                        <Accordion type="single" collapsible className="w-full">
+                            {menus.map(menu => (
+                                <AccordionItem value={menu.id} key={menu.id}>
+                                    <AccordionTrigger>{menu.name}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <MenuItemsManager
+                                            menu={menu}
+                                            onDeleteMenu={handleDeleteMenu}
+                                        />
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    )}
+                    {!isLoading && (!menus || menus.length === 0) && (
+                        <p className="text-sm text-muted-foreground text-center p-4 border rounded-md">No menus created yet.</p>
+                    )}
+                </div>
+            </Card>
+        </div>
+
+        <div className="lg:col-span-1">
             <Card>
                 <CardHeader>
                     <CardTitle>Menu Locations</CardTitle>
@@ -521,7 +566,7 @@ export default function NavigationPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {menuLocations.map(location => (
-                        <div key={location.id} className="grid grid-cols-2 items-center gap-4">
+                        <div key={location.id} className="grid items-center gap-2">
                             <div>
                                 <Label htmlFor={`location-${location.id}`} className="font-medium">{location.name}</Label>
                                 <p className="text-xs text-muted-foreground">Theme: {location.theme}</p>
@@ -544,53 +589,12 @@ export default function NavigationPage() {
                             </Select>
                         </div>
                     ))}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Create New Menu</CardTitle>
-                </CardHeader>
-                <CardContent className="flex gap-2">
-                    <Input
-                    placeholder="New Menu Name"
-                    value={newMenuName}
-                    onChange={e => setNewMenuName(e.target.value)}
-                    disabled={isSubmitting}
-                    />
-                    <Button
-                    onClick={handleAddMenu}
-                    disabled={isSubmitting || !newMenuName.trim()}
-                    >
-                    {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        'Create'
+                     {!isLoadingSettings && menuLocations.length === 0 && (
+                        <p className="text-sm text-center text-muted-foreground p-4">No menu locations defined by your themes.</p>
                     )}
-                    </Button>
                 </CardContent>
             </Card>
         </div>
-
-
-        {isLoading && <p>Loading menus...</p>}
-
-        <div className="space-y-4">
-          {menus?.map(menu => (
-            <MenuItemsManager
-              key={menu.id}
-              menu={menu}
-              onDeleteMenu={handleDeleteMenu}
-            />
-          ))}
-        </div>
-
-        {!isLoading && menus?.length === 0 && (
-          <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              You haven't created any menus yet.
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
