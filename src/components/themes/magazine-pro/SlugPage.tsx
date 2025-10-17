@@ -16,6 +16,7 @@ import { ThemeLayout } from '../ThemeLayout';
 import { Menu } from '@/components/Menu';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { SearchForm } from '../SearchForm';
+import { MagazineProHeader, MagazineProFooter } from './HomePage';
 
 type Post = {
   id: string;
@@ -47,57 +48,6 @@ type SiteSettings = {
     homepagePageId?: string;
     siteName?: string;
 }
-
-const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
-    <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-        <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                {siteName || 'My Awesome Site'}
-            </Link>
-            <div className="hidden md:flex items-center gap-4">
-                <nav>
-                    <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
-                </nav>
-                <SearchForm />
-            </div>
-            <div className="md:hidden">
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <MenuIcon />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right">
-                        <div className="py-6">
-                           <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
-                           <div className="mt-6 pt-6 border-t">
-                                <SearchForm />
-                           </div>
-                        </div>
-                    </SheetContent>
-                </Sheet>
-            </div>
-        </div>
-    </header>
-);
-
-const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
-     <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
-        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-2">
-                <p className="font-bold font-headline text-primary text-lg">{siteName || 'My Awesome Site'}</p>
-                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
-                <Menu locationId="magazine-pro-footer" className="mt-4 flex flex-col space-y-2" linkClassName="text-sm text-muted-foreground hover:text-primary" />
-            </div>
-            <div className="space-y-4">
-                <WidgetArea areaName="Footer Column 1" />
-            </div>
-            <div className="space-y-4">
-                <WidgetArea areaName="Footer Column 2" />
-            </div>
-        </div>
-    </footer>
-);
 
 function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();

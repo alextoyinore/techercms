@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -16,12 +16,24 @@ import { MenuIcon } from 'lucide-react';
 import { SearchForm } from '../SearchForm';
 
 
-export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => (
+export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
+    const [currentDate, setCurrentDate] = useState('');
+
+    useEffect(() => {
+        setCurrentDate(format(new Date(), 'eeee, MMMM d, yyyy'));
+    }, []);
+
+    return (
     <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="container mx-auto flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                {siteName || 'My Awesome Site'}
-            </Link>
+            <div className='hidden sm:block text-sm font-medium text-muted-foreground'>
+                {currentDate}
+            </div>
+            <div className="flex-1 text-center">
+                 <Link href="/" className="text-2xl font-bold font-headline text-primary">
+                    {siteName || 'My Awesome Site'}
+                </Link>
+            </div>
             <div className="hidden md:flex items-center gap-4">
                 <nav>
                     <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
@@ -47,7 +59,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
             </div>
         </div>
     </header>
-);
+)};
 
 export const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
      <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
