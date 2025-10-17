@@ -495,7 +495,7 @@ export default function NavigationPage() {
 
   const handleAssignmentChange = async (locationId: string, menuId: string) => {
     if (!settingsRef) return;
-    const newAssignments = { ...assignments, [locationId]: menuId };
+    const newAssignments = { ...assignments, [locationId]: menuId === 'none' ? '' : menuId };
     setAssignments(newAssignments); // Optimistic update
     try {
       await setDoc(settingsRef, { menuAssignments: newAssignments }, { merge: true });
@@ -527,7 +527,7 @@ export default function NavigationPage() {
                                 <p className="text-xs text-muted-foreground">Theme: {location.theme}</p>
                             </div>
                             <Select
-                                value={assignments[location.id] || ''}
+                                value={assignments[location.id] || 'none'}
                                 onValueChange={(menuId) => handleAssignmentChange(location.id, menuId)}
                                 disabled={isLoading || isLoadingSettings}
                             >
@@ -535,7 +535,7 @@ export default function NavigationPage() {
                                     <SelectValue placeholder="Select a menu..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">-- None --</SelectItem>
+                                    <SelectItem value="none">-- None --</SelectItem>
                                     <Separator />
                                     {menus?.map(menu => (
                                         <SelectItem key={menu.id} value={menu.id}>{menu.name}</SelectItem>
