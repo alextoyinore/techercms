@@ -304,7 +304,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {
@@ -383,7 +383,8 @@
                     "video",
                     "testimonials",
                     "contact-form",
-                    "featured-top-and-grid"
+                    "featured-top-and-grid",
+                    "featured-and-list"
                 ]
             },
             "config": { "type": "object", "description": "A flexible object to store block-specific PRESENTATIONAL settings (e.g., columns, showExcerpts)." }
@@ -592,3 +593,5 @@
     "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
   }
 }
+
+    
