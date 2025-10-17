@@ -44,6 +44,7 @@ import { TabbedPostsPreview } from './previews/TabbedPostsPreview';
 import { MediaLibrary } from '@/components/media-library';
 import Image from 'next/image';
 import { Slider } from '@/components/ui/slider';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -74,7 +75,7 @@ const initialConfig = {
     'post-grid': { columns: 3, showImages: true, showExcerpts: false },
     'post-list': { showImages: true, showExcerpts: true },
     'post-carousel': { showImages: true, showExcerpts: false },
-    'featured-and-smalls': { featuredWidth: 66, showSmallImages: true, showSmallExcerpts: false },
+    'featured-and-smalls': { featuredWidth: 50, showSmallImages: true, showSmallExcerpts: false, featuredPosition: 'left' },
     'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
@@ -368,11 +369,28 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
             return (
                 <div className="grid gap-4">
                     <div className="grid gap-2">
-                        <Label>Featured Post Width ({config.featuredWidth || 66}%)</Label>
+                        <Label>Featured Position</Label>
+                        <RadioGroup
+                            value={config.featuredPosition || 'left'}
+                            onValueChange={(value) => handleConfigChange({ featuredPosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="left" id="pos-left" />
+                                <Label htmlFor="pos-left">Left</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="right" id="pos-right" />
+                                <Label htmlFor="pos-right">Right</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Featured Post Width ({config.featuredWidth || 50}%)</Label>
                         <Slider 
-                            value={[config.featuredWidth || 66]}
+                            value={[config.featuredWidth || 50]}
                             onValueChange={(v) => handleConfigChange({ featuredWidth: v[0]})}
-                            min={50}
+                            min={25}
                             max={75}
                             step={1}
                         />

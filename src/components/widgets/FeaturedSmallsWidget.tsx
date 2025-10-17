@@ -26,6 +26,7 @@ type FeaturedSmallsWidgetProps = {
     featuredWidth?: number;
     showSmallImages?: boolean;
     showSmallExcerpts?: boolean;
+    featuredPosition?: 'left' | 'right';
 }
 
 export function FeaturedSmallsWidget({
@@ -33,10 +34,11 @@ export function FeaturedSmallsWidget({
     filterType = 'latest',
     sourceIds,
     tags,
-    postCount = 5,
-    featuredWidth = 66,
+    postCount = 5, // 1 featured + 4 smalls
+    featuredWidth = 50,
     showSmallImages = true,
     showSmallExcerpts = false,
+    featuredPosition = 'left',
 }: FeaturedSmallsWidgetProps) {
     const firestore = useFirestore();
 
@@ -72,16 +74,19 @@ export function FeaturedSmallsWidget({
     }
     
     if (!featuredPost) {
-        return null; // Or some placeholder
+        return null;
     }
     
     const gridCols = "md:grid-cols-2";
 
+    const featuredOrder = featuredPosition === 'right' ? 'md:order-2' : 'md:order-1';
+    const smallsOrder = featuredPosition === 'right' ? 'md:order-1' : 'md:order-2';
+
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>
+            {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
             <div className={cn("grid grid-cols-1 gap-8", gridCols)}>
-                <div className="group md:col-span-1">
+                <div className={cn("group md:col-span-1", featuredOrder)}>
                     <Link href={`/${featuredPost.slug}`}>
                         {featuredPost.featuredImageUrl && (
                             <div className="relative aspect-video w-full overflow-hidden mb-4 rounded-lg">
@@ -100,7 +105,7 @@ export function FeaturedSmallsWidget({
                         </time>
                     </Link>
                 </div>
-                <div className="md:col-span-1 space-y-4">
+                <div className={cn("md:col-span-1 space-y-4", smallsOrder)}>
                     {smallPosts.map((post, index) => (
                         <div key={post.id} className="flex gap-4 items-start group">
                             {showSmallImages && post.featuredImageUrl && (
@@ -119,7 +124,7 @@ export function FeaturedSmallsWidget({
                                 <h4 className="font-semibold text-sm leading-tight group-hover:underline">
                                     <Link href={`/${post.slug}`}>{post.title}</Link>
                                 </h4>
-                                {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
+                                {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{post.excerpt}</p>}
                                 <time className="text-xs text-muted-foreground/80 mt-1 block">
                                     {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
                                 </time>
