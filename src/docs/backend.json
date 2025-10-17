@@ -382,7 +382,8 @@
                     "gallery",
                     "video",
                     "testimonials",
-                    "contact-form"
+                    "contact-form",
+                    "featured-top-and-grid"
                 ]
             },
             "config": { "type": "object", "description": "A flexible object to store block-specific PRESENTATIONAL settings (e.g., columns, showExcerpts)." }

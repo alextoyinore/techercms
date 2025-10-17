@@ -45,6 +45,7 @@ import { MediaLibrary } from '@/components/media-library';
 import Image from 'next/image';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FeaturedTopAndGridPreview } from './previews/FeaturedTopAndGridPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -69,6 +70,7 @@ type NewBlockType =
     | 'contact-form'
     | 'post-carousel'
     | 'featured-and-smalls'
+    | 'featured-top-and-grid'
     | 'tabbed-posts';
 
 const initialConfig = {
@@ -76,6 +78,7 @@ const initialConfig = {
     'post-list': { showImages: true, showExcerpts: true },
     'post-carousel': { showImages: true, showExcerpts: false },
     'featured-and-smalls': { featuredWidth: 50, showSmallImages: true, showSmallExcerpts: false, featuredPosition: 'left' },
+    'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false },
     'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
@@ -91,6 +94,7 @@ const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
     { value: 'post-list', label: 'Post List', group: 'Posts' },
     { value: 'post-carousel', label: 'Post Carousel', group: 'Posts' },
     { value: 'featured-and-smalls', label: 'Featured & Smalls', group: 'Posts' },
+    { value: 'featured-top-and-grid', label: 'Featured & Grid', group: 'Posts' },
     { value: 'tabbed-posts', label: 'Tabbed Posts', group: 'Posts' },
     { value: 'hero', label: 'Hero Section', group: 'Page Sections' },
     { value: 'cta', label: 'Call to Action', group: 'Page Sections' },
@@ -405,6 +409,23 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                     </div>
                 </div>
             )
+        case 'featured-top-and-grid':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="grid-columns">Grid Columns</Label>
+                        <Input id="grid-columns" type="number" min="1" max="6" value={config.gridColumns || ''} onChange={e => handleConfigChange({ gridColumns: Number(e.target.value) })} />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-small-images-grid" checked={config.showSmallImages} onCheckedChange={c => handleConfigChange({ showSmallImages: c })} />
+                        <Label htmlFor="show-small-images-grid">Show images on grid posts</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-small-excerpts-grid" checked={config.showSmallExcerpts} onCheckedChange={c => handleConfigChange({ showSmallExcerpts: c })} />
+                        <Label htmlFor="show-small-excerpts-grid">Show excerpts on grid posts</Label>
+                    </div>
+                </div>
+            )
         case 'tabbed-posts':
             return (
                 <div className="grid gap-4">
@@ -472,6 +493,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  {type === 'post-list' && <PostListPreview config={config} />}
                  {type === 'post-carousel' && <PostCarouselPreview config={config} />}
                  {type === 'featured-and-smalls' && <FeaturedSmallsPreview config={config} />}
+                 {type === 'featured-top-and-grid' && <FeaturedTopAndGridPreview config={config} />}
                  {type === 'tabbed-posts' && <TabbedPostsPreview config={config} />}
                  {type === 'hero' && <HeroPreview config={config} />}
                  {type === 'cta' && <CtaPreview config={config} />}

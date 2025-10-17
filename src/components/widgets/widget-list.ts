@@ -20,6 +20,7 @@ import {
     PanelTop,
     PictureInPicture2,
     MessageCircle,
+    Copy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,6 +38,7 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'recent-posts', label: 'Recent Posts', icon: FileText, defaultConfig: { title: 'Recent Posts', count: 5 } },
     { type: 'post-carousel', label: 'Post Carousel', icon: PanelTop, defaultConfig: { title: 'Featured Posts' } },
     { type: 'featured-and-smalls', label: 'Featured & Smalls', icon: PictureInPicture2, defaultConfig: { title: 'Top Stories' } },
+    { type: 'featured-top-and-grid', label: 'Featured & Grid', icon: Copy, defaultConfig: { title: 'Highlights' } },
     { type: 'tabbed-posts', label: 'Tabbed Posts', icon: PanelTop, defaultConfig: { title: '' } },
     { type: 'categories-list', label: 'Categories List', icon: List, defaultConfig: { title: 'Categories' } },
     { type: 'search', label: 'Search', icon: Search, defaultConfig: { title: 'Search' } },

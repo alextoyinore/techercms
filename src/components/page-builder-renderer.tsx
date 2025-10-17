@@ -31,6 +31,7 @@ import { FeatureGridPreview } from '../app/dashboard/layouts/previews/FeatureGri
 import { HeroPreview } from '../app/dashboard/layouts/previews/HeroPreview';
 import { TestimonialsPreview } from '../app/dashboard/layouts/previews/TestimonialsPreview';
 import { VideoPreview } from '../app/dashboard/layouts/previews/VideoPreview';
+import { FeaturedTopAndGridWidget } from './widgets/FeaturedTopAndGridWidget';
 
 
 const blockLayoutWidgets: Record<string, React.FC<any>> = {
@@ -38,6 +39,7 @@ const blockLayoutWidgets: Record<string, React.FC<any>> = {
     'post-list': RecentPostsWidget,
     'post-carousel': PostCarouselWidget,
     'featured-and-smalls': FeaturedSmallsWidget,
+    'featured-top-and-grid': FeaturedTopAndGridWidget,
     'tabbed-posts': TabbedPostsWidget,
     'hero': HeroPreview,
     'cta': CtaPreview,
