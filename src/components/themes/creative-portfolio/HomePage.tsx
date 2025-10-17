@@ -45,7 +45,7 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                     <SheetContent side="right">
                         <SheetTitle className="sr-only">Main Menu</SheetTitle>
                          <div className="py-6">
-                           <Menu locationId="creative-portfolio-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                           <Menu locationId="creative-portfolio-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                            <div className="mt-6 pt-6 border-t">
                                 <SearchForm />
                            </div>
@@ -107,9 +107,11 @@ export default function HomePage() {
 
   return (
     <ThemeLayout HeaderComponent={hasContent ? CreativeHeader : undefined} FooterComponent={hasContent ? CreativeFooter : undefined} className="bg-background min-h-screen">
-        <div className="text-center mb-16">
-            <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">Exploring the intersection of art, design, and technology.</p>
-        </div>
+        {hasContent && (
+            <div className="text-center mb-16">
+                <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">Exploring the intersection of art, design, and technology.</p>
+            </div>
+        )}
 
         <div className="mb-16 space-y-8">
             <WidgetArea areaName="Homepage Content" />

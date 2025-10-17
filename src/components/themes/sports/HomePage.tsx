@@ -51,7 +51,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
-                               <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
+                               <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:underline" />
                                 <div className="mt-6 border-t border-white/20 pt-6">
                                     <Link href="/login" className="text-lg font-semibold uppercase hover:underline">
                                         Login

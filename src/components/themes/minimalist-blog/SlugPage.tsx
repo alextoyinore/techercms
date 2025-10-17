@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -11,7 +12,7 @@ import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 
@@ -46,7 +47,7 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
         <div className="container mx-auto max-w-3xl">
             <div className="flex justify-between items-center">
                 <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
-                    {siteName || 'A Minimalist Blog'}
+                    {siteName || ''}
                 </Link>
                 <div className="md:hidden">
                      <Sheet>
@@ -56,8 +57,9 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right">
+                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
-                                <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                             </div>
                         </SheetContent>
                     </Sheet>
@@ -73,11 +75,11 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     </header>
 );
 
-const MinimalistFooter: React.FC = () => (
+const MinimalistFooter: React.FC<{siteName?:string}> = ({siteName}) => (
     <footer className="py-12 px-6 mt-16 border-t">
         <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-                 <p className="font-semibold font-headline text-foreground">A Minimalist Blog</p>
+                 <p className="font-semibold font-headline text-foreground">{siteName || ''}</p>
                  <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All rights reserved.</p>
             </div>
             <div className="space-y-4">

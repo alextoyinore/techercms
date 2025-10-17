@@ -64,7 +64,7 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                              <SheetContent side="right">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="py-6">
-                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
                                     <SearchForm />
                                 </div>

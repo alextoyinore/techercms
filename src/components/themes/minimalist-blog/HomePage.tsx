@@ -32,7 +32,7 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
                         <SheetContent side="right">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
-                                <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                                <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                             </div>
                         </SheetContent>
                     </Sheet>

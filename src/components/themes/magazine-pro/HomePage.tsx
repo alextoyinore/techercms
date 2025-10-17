@@ -46,7 +46,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                     <SheetContent side="right">
                         <SheetTitle className="sr-only">Main Menu</SheetTitle>
                         <div className="py-6">
-                           <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
+                           <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                            <div className="mt-6 pt-6 border-t">
                                 <SearchForm />
                            </div>
@@ -116,9 +116,11 @@ export default function HomePage() {
 
   return (
     <ThemeLayout HeaderComponent={hasContent ? MagazineProHeader : undefined} FooterComponent={hasContent ? MagazineProFooter : undefined}>
-        <div className="text-center mb-12">
-            <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and stories.</p>
-        </div>
+        {hasContent && (
+            <div className="text-center mb-12">
+                <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and stories.</p>
+            </div>
+        )}
 
         <div className="mb-12 space-y-8">
             <WidgetArea areaName="Homepage Content" />

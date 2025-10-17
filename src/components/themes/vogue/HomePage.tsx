@@ -59,7 +59,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                             <SheetContent side="right">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="py-6">
-                                   <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                                   <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg font-headline uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
                                     <SearchForm />
                                      <Separator className="my-4" />
