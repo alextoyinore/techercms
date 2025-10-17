@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
+import { PublicHeader, PublicFooter } from './HomePage';
+import { ThemeLayout } from '../ThemeLayout';
 
 type Post = {
   id: string;
@@ -40,42 +42,6 @@ type SiteSettings = {
     siteName?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
-}
-
-function PublicHeader({ siteName }: { siteName?: string }) {
-    return (
-        <header className="py-3 px-4 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
-            <div className="container mx-auto flex justify-between items-center">
-                <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
-                    {siteName || 'Business Today'}
-                </Link>
-                <nav>
-                    <Link href="/login" className="text-xs font-semibold uppercase text-muted-foreground hover:text-primary">
-                        Login
-                    </Link>
-                </nav>
-            </div>
-        </header>
-    )
-}
-
-function PublicFooter({ siteName }: { siteName?: string }) {
-    return (
-        <footer className="py-12 px-6 border-t mt-16 bg-card">
-            <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">{new Date().getFullYear()} © {siteName || 'Business Today'}</p>
-                    <p className="text-sm text-muted-foreground mt-2">All rights reserved.</p>
-                </div>
-                 <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 1" />
-                </div>
-                <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 2" />
-                </div>
-            </div>
-        </footer>
-    )
 }
 
 function PageContent({ page }: { page: Page }) {
@@ -180,9 +146,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   return (
     <div className="bg-background text-foreground font-sans">
-      <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-4">
+        <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} pageId={pageId}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8">
                 <article className="max-w-none">
@@ -231,9 +195,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
             </aside>
         </div>
-      </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicFooter siteName={settings?.siteName} />
+      </ThemeLayout>
     </div>
   );
 }
