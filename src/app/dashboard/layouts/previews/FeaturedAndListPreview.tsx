@@ -2,11 +2,13 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 type FeaturedAndListPreviewProps = {
     config: {
         showSmallImages?: boolean;
         showSmallExcerpts?: boolean;
+        imagePosition?: 'before' | 'after';
     }
 }
 
@@ -14,18 +16,23 @@ export function FeaturedAndListPreview({ config }: FeaturedAndListPreviewProps) 
     const { 
         showSmallImages = true, 
         showSmallExcerpts = true,
+        imagePosition = 'before',
     } = config;
+    
+    const isImageAfter = imagePosition === 'after';
 
     return (
         <div className="space-y-4">
             {/* Featured Post */}
-            <div className="space-y-2">
+            <div className={cn("space-y-2 flex flex-col", isImageAfter && "flex-col-reverse")}>
                  <Skeleton className="w-full aspect-video" />
-                 <Skeleton className="w-4/5 h-5" />
-                 <Skeleton className="w-full h-3 mt-2" />
-                 <Skeleton className="w-full h-3" />
-                 <Skeleton className="w-1/2 h-3" />
-                 <Skeleton className="w-1/4 h-3 mt-1" />
+                 <div className="space-y-1.5">
+                    <Skeleton className="w-4/5 h-5" />
+                    <Skeleton className="w-full h-3 mt-2" />
+                    <Skeleton className="w-full h-3" />
+                    <Skeleton className="w-1/2 h-3" />
+                    <Skeleton className="w-1/4 h-3 mt-1" />
+                 </div>
             </div>
             
             <Separator />
@@ -51,5 +58,3 @@ export function FeaturedAndListPreview({ config }: FeaturedAndListPreviewProps) 
         </div>
     )
 }
-
-    

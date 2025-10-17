@@ -26,6 +26,7 @@ type FeaturedAndListWidgetProps = {
     postCount?: number;
     showSmallExcerpts?: boolean;
     showSmallImages?: boolean;
+    imagePosition?: 'before' | 'after';
 }
 
 export function FeaturedAndListWidget({
@@ -36,6 +37,7 @@ export function FeaturedAndListWidget({
     postCount = 5, // 1 featured + 4 in list
     showSmallExcerpts = true,
     showSmallImages = true,
+    imagePosition = 'before'
 }: FeaturedAndListWidgetProps) {
     const firestore = useFirestore();
 
@@ -75,15 +77,17 @@ export function FeaturedAndListWidget({
         return null;
     }
     
+    const isImageAfter = imagePosition === 'after';
+
     return (
         <div className="w-full">
             {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
             <div className="space-y-8">
                 {/* Featured Post */}
-                <div className="group">
+                <div className={cn("group flex flex-col gap-4", isImageAfter && "flex-col-reverse")}>
                     <Link href={`/${featuredPost.slug}`}>
                         {featuredPost.featuredImageUrl && (
-                            <div className="relative aspect-video w-full overflow-hidden mb-4 rounded-lg">
+                            <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                                 <Image
                                     src={featuredPost.featuredImageUrl}
                                     alt={featuredPost.title}
@@ -92,12 +96,16 @@ export function FeaturedAndListWidget({
                                 />
                             </div>
                         )}
-                        <h3 className="text-2xl md:text-3xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
+                    </Link>
+                    <div>
+                        <h3 className="text-2xl md:text-3xl font-bold font-headline leading-tight group-hover:underline">
+                            <Link href={`/${featuredPost.slug}`}>{featuredPost.title}</Link>
+                        </h3>
                         <p className="text-base text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>
                         <time className="text-sm text-muted-foreground/80 mt-2 block">
                             {format(featuredPost.createdAt.toDate(), 'MMMM d, yyyy')}
                         </time>
-                    </Link>
+                    </div>
                 </div>
 
                 {listPosts.length > 0 && (

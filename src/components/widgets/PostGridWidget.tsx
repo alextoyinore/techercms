@@ -26,6 +26,7 @@ type PostGridWidgetProps = {
     columns?: number;
     showExcerpts?: boolean;
     showImages?: boolean;
+    imagePosition?: 'before' | 'after';
 }
 
 export function PostGridWidget({
@@ -37,6 +38,7 @@ export function PostGridWidget({
     columns = 3,
     showExcerpts = false,
     showImages = true,
+    imagePosition = 'before',
 }: PostGridWidgetProps) {
     const firestore = useFirestore();
 
@@ -71,6 +73,8 @@ export function PostGridWidget({
         6: 'md:grid-cols-6',
     }[columns] || 'md:grid-cols-3';
 
+    const isImageAfter = imagePosition === 'after';
+
 
     if (isLoading) {
         return <div>Loading posts...</div>
@@ -85,7 +89,7 @@ export function PostGridWidget({
             {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
             <div className={cn('grid grid-cols-1 gap-6', gridCols)}>
                 {posts.map(post => (
-                    <div key={post.id} className="grid gap-2 group">
+                    <div key={post.id} className={cn("grid gap-2 group", isImageAfter && "flex flex-col-reverse justify-end")}>
                         {showImages && post.featuredImageUrl && (
                             <Link href={`/${post.slug}`}>
                                 <div className="relative aspect-video w-full overflow-hidden rounded-md">
@@ -98,13 +102,15 @@ export function PostGridWidget({
                                 </div>
                             </Link>
                         )}
-                        <h3 className="font-semibold leading-tight text-lg group-hover:underline">
-                            <Link href={`/${post.slug}`}>{post.title}</Link>
-                        </h3>
-                        {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>}
-                         <time className="text-xs text-muted-foreground">
-                            {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
-                        </time>
+                        <div className="flex flex-col">
+                            <h3 className="font-semibold leading-tight text-lg group-hover:underline">
+                                <Link href={`/${post.slug}`}>{post.title}</Link>
+                            </h3>
+                            {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{post.excerpt}</p>}
+                             <time className="text-xs text-muted-foreground mt-1">
+                                {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
+                            </time>
+                        </div>
                     </div>
                 ))}
             </div>

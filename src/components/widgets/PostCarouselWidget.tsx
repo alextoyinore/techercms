@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { cn } from '@/lib/utils';
 
 type Post = {
     id: string;
@@ -25,6 +26,7 @@ type PostCarouselWidgetProps = {
     postCount?: number;
     showExcerpts?: boolean;
     showImages?: boolean;
+    imagePosition?: 'before' | 'after';
 }
 
 export function PostCarouselWidget({
@@ -35,6 +37,7 @@ export function PostCarouselWidget({
     postCount = 8,
     showExcerpts = false,
     showImages = true,
+    imagePosition = 'before',
 }: PostCarouselWidgetProps) {
     const firestore = useFirestore();
 
@@ -59,6 +62,8 @@ export function PostCarouselWidget({
     }, [firestore, filterType, sourceIds, tags, postCount]);
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
+    
+    const isImageAfter = imagePosition === 'after';
 
     if (isLoading) {
         return (
@@ -86,10 +91,10 @@ export function PostCarouselWidget({
                 <CarouselContent>
                     {posts.map((post) => (
                         <CarouselItem key={post.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                             <div className="p-1">
-                                <Link href={`/${post.slug}`} className="block group">
+                             <div className="p-1 h-full">
+                                <Link href={`/${post.slug}`} className="block group h-full">
                                     <Card className="overflow-hidden h-full flex flex-col">
-                                        <CardContent className="p-0 flex-grow flex flex-col">
+                                        <CardContent className={cn("p-0 flex-grow flex flex-col", isImageAfter && "flex-col-reverse")}>
                                             {showImages && post.featuredImageUrl && (
                                                 <div className="relative aspect-video">
                                                     <Image 

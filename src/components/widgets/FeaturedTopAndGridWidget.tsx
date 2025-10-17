@@ -27,6 +27,7 @@ type FeaturedTopAndGridWidgetProps = {
     gridColumns?: number;
     showSmallExcerpts?: boolean;
     showSmallImages?: boolean;
+    imagePosition?: 'before' | 'after';
 }
 
 export function FeaturedTopAndGridWidget({
@@ -38,6 +39,7 @@ export function FeaturedTopAndGridWidget({
     gridColumns = 4,
     showSmallExcerpts = false,
     showSmallImages = true,
+    imagePosition = 'before',
 }: FeaturedTopAndGridWidgetProps) {
     const firestore = useFirestore();
 
@@ -86,6 +88,9 @@ export function FeaturedTopAndGridWidget({
         return null;
     }
     
+    const imageOrder = imagePosition === 'after' ? 'md:order-2' : 'md:order-1';
+    const contentOrder = imagePosition === 'after' ? 'md:order-1' : 'md:order-2';
+
     return (
         <div className="w-full">
             {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
@@ -93,7 +98,7 @@ export function FeaturedTopAndGridWidget({
                 {/* Featured Post */}
                 <div className="group grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                     {featuredPost.featuredImageUrl && (
-                        <Link href={`/${featuredPost.slug}`}>
+                        <Link href={`/${featuredPost.slug}`} className={imageOrder}>
                             <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                                 <Image
                                     src={featuredPost.featuredImageUrl}
@@ -104,7 +109,7 @@ export function FeaturedTopAndGridWidget({
                             </div>
                         </Link>
                     )}
-                    <div>
+                    <div className={contentOrder}>
                         <h3 className="text-2xl md:text-3xl font-bold font-headline leading-tight group-hover:underline">
                             <Link href={`/${featuredPost.slug}`}>{featuredPost.title}</Link>
                         </h3>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 type Post = {
     id: string;
@@ -23,6 +24,7 @@ type RecentPostsWidgetProps = {
     postCount?: number;
     showExcerpts?: boolean;
     showImages?: boolean;
+    imagePosition?: 'before' | 'after';
 }
 
 export function RecentPostsWidget({ 
@@ -33,6 +35,7 @@ export function RecentPostsWidget({
     postCount = 5,
     showExcerpts = true,
     showImages = true,
+    imagePosition = 'before',
 }: RecentPostsWidgetProps) {
     const firestore = useFirestore();
 
@@ -58,6 +61,8 @@ export function RecentPostsWidget({
 
     const { data: posts, isLoading } = useCollection<Post>(postsQuery);
 
+    const isImageAfter = imagePosition === 'after';
+
     if (isLoading) {
         return (
              <Card>
@@ -79,7 +84,7 @@ export function RecentPostsWidget({
             <CardContent>
                 <div className="space-y-4">
                     {posts && posts.length > 0 ? posts.map(post => (
-                        <div key={post.id} className="flex items-start gap-4">
+                        <div key={post.id} className={cn("flex items-start gap-4", isImageAfter && "flex-row-reverse")}>
                            {showImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="block shrink-0">
                                     <div className="relative h-16 w-24 rounded-md overflow-hidden">

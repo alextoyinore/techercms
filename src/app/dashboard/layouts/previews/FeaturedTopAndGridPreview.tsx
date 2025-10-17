@@ -8,6 +8,7 @@ type FeaturedTopAndGridPreviewProps = {
         gridColumns?: number;
         showSmallImages?: boolean;
         showSmallExcerpts?: boolean;
+        imagePosition?: 'before' | 'after';
     }
 }
 
@@ -16,6 +17,7 @@ export function FeaturedTopAndGridPreview({ config }: FeaturedTopAndGridPreviewP
         gridColumns = 3, 
         showSmallImages = true, 
         showSmallExcerpts = false,
+        imagePosition = 'before',
     } = config;
     
     const gridColsClass = {
@@ -27,12 +29,15 @@ export function FeaturedTopAndGridPreview({ config }: FeaturedTopAndGridPreviewP
         6: 'grid-cols-6',
     }[gridColumns] || 'grid-cols-3';
 
+    const imageOrder = imagePosition === 'after' ? 'order-2' : 'order-1';
+    const contentOrder = imagePosition === 'after' ? 'order-1' : 'order-2';
+
     return (
         <div className="space-y-4">
             {/* Featured Post */}
             <div className="grid grid-cols-2 gap-4">
-                 <Skeleton className="w-full aspect-video" />
-                 <div className="space-y-2">
+                 <Skeleton className={cn("w-full aspect-video", imageOrder)} />
+                 <div className={cn("space-y-2", contentOrder)}>
                     <Skeleton className="w-full h-5" />
                     <Skeleton className="w-3/4 h-5" />
                     <Skeleton className="w-full h-3 mt-2" />

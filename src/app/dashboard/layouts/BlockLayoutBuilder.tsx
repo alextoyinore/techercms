@@ -28,9 +28,9 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PostGridPreview } from './PostGridPreview';
+import { PostGridPreview } from './previews/PostGridPreview';
 import { Textarea } from '@/components/ui/textarea';
-import { PostListPreview } from './PostListPreview';
+import { PostListPreview } from './previews/PostListPreview';
 import { HeroPreview } from './previews/HeroPreview';
 import { CtaPreview } from './previews/CtaPreview';
 import { FeatureGridPreview } from './previews/FeatureGridPreview';
@@ -78,12 +78,12 @@ type NewBlockType =
     | 'contact-form';
 
 const initialConfig = {
-    'post-grid': { columns: 3, showImages: true, showExcerpts: false },
-    'post-list': { showImages: true, showExcerpts: true },
-    'post-carousel': { showImages: true, showExcerpts: false },
+    'post-grid': { columns: 3, showImages: true, showExcerpts: false, imagePosition: 'before' },
+    'post-list': { showImages: true, showExcerpts: true, imagePosition: 'before' },
+    'post-carousel': { showImages: true, showExcerpts: false, imagePosition: 'before' },
     'featured-and-smalls': { featuredWidth: 50, showSmallImages: true, showSmallExcerpts: false, featuredPosition: 'left' },
-    'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false },
-    'featured-and-list': { showSmallImages: true, showSmallExcerpts: true },
+    'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false, imagePosition: 'before' },
+    'featured-and-list': { showSmallImages: true, showSmallExcerpts: true, imagePosition: 'before' },
     'big-featured': { imagePosition: 'left', showExcerpt: true, buttonText: 'Read More' },
     'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
@@ -372,6 +372,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                 </div>
             )
         case 'post-grid':
+        case 'post-carousel':
              return (
                 <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -382,7 +383,23 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                             </div>
                         )}
                     </div>
-                    
+                    <div className="grid gap-2">
+                        <Label>Image Position</Label>
+                        <RadioGroup
+                            value={config.imagePosition || 'before'}
+                            onValueChange={(value) => handleConfigChange({ imagePosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="before" id="pos-before-grid" />
+                                <Label htmlFor="pos-before-grid">Before Text</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="after" id="pos-after-grid" />
+                                <Label htmlFor="pos-after-grid">After Text</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
                         <Label htmlFor="show-images">Show featured images</Label>
@@ -394,9 +411,25 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                 </div>
             )
         case 'post-list':
-        case 'post-carousel':
              return (
                 <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Image Position</Label>
+                        <RadioGroup
+                            value={config.imagePosition || 'before'}
+                            onValueChange={(value) => handleConfigChange({ imagePosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="before" id="pos-before-list" />
+                                <Label htmlFor="pos-before-list">Left</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="after" id="pos-after-list" />
+                                <Label htmlFor="pos-after-list">Right</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-images" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
                         <Label htmlFor="show-images">Show featured images</Label>
@@ -451,6 +484,23 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
             return (
                 <div className="grid gap-4">
                     <div className="grid gap-2">
+                        <Label>Image Position (Featured Post)</Label>
+                        <RadioGroup
+                            value={config.imagePosition || 'before'}
+                            onValueChange={(value) => handleConfigChange({ imagePosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="before" id="pos-before-topgrid" />
+                                <Label htmlFor="pos-before-topgrid">Left</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="after" id="pos-after-topgrid" />
+                                <Label htmlFor="pos-after-topgrid">Right</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                    <div className="grid gap-2">
                         <Label htmlFor="grid-columns">Grid Columns</Label>
                         <Input id="grid-columns" type="number" min="1" max="6" value={config.gridColumns || ''} onChange={e => handleConfigChange({ gridColumns: Number(e.target.value) })} />
                     </div>
@@ -467,6 +517,23 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
         case 'featured-and-list':
              return (
                 <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Image Position (Featured Post)</Label>
+                        <RadioGroup
+                            value={config.imagePosition || 'before'}
+                            onValueChange={(value) => handleConfigChange({ imagePosition: value })}
+                            className="flex gap-4"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="before" id="pos-before-featlist" />
+                                <Label htmlFor="pos-before-featlist">Before Text</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="after" id="pos-after-featlist" />
+                                <Label htmlFor="pos-after-featlist">After Text</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-small-images-list" checked={config.showSmallImages} onCheckedChange={c => handleConfigChange({ showSmallImages: c })} />
                         <Label htmlFor="show-small-images-list">Show images on list posts</Label>
