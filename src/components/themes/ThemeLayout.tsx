@@ -74,6 +74,7 @@ export function ThemeLayout({ children, HeaderComponent, FooterComponent, pageId
     
     return (
         <div className={className}>
+            <WidgetArea areaName="Header" />
             <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
             <PublicHeader siteName={settings?.siteName} HeaderComponent={HeaderComponent} />
             <main className="container mx-auto py-8 px-6">
