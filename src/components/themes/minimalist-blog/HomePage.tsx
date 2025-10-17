@@ -16,7 +16,7 @@ type Post = {
   createdAt: Timestamp;
 };
 
-const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
+export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     <header className="py-8 px-6">
         <div className="container mx-auto max-w-3xl flex justify-between items-center">
             <Link href="/" className="text-2xl font-semibold font-headline text-foreground">
@@ -31,7 +31,7 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     </header>
 );
 
-const MinimalistFooter: React.FC = () => (
+export const MinimalistFooter: React.FC = () => (
     <footer className="py-12 px-6 mt-16 border-t">
         <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
