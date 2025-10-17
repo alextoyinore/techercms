@@ -24,6 +24,7 @@ function SearchResults() {
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || '';
+  const lowercaseQuery = q.toLowerCase();
 
   // IMPORTANT: Firestore doesn't support native full-text search.
   // This is a simple "starts with" search on the title for demonstration purposes.
@@ -34,9 +35,7 @@ function SearchResults() {
       collection(firestore, 'posts'),
       where('status', '==', 'published'),
       where('title', '>=', q),
-      where('title', '<=', q + '\uf8ff'),
-      orderBy('title'),
-      orderBy('createdAt', 'desc')
+      where('title', '<=', q + '\uf8ff')
     );
   }, [firestore, q]);
 

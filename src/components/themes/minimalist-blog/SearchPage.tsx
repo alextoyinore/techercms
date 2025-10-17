@@ -21,6 +21,7 @@ function SearchResults() {
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const q = searchParams.get('q') || '';
+  const lowercaseQuery = q.toLowerCase();
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !q) return null;
@@ -28,9 +29,7 @@ function SearchResults() {
       collection(firestore, 'posts'),
       where('status', '==', 'published'),
       where('title', '>=', q),
-      where('title', '<=', q + '\uf8ff'),
-      orderBy('title'),
-      orderBy('createdAt', 'desc')
+      where('title', '<=', q + '\uf8ff')
     );
   }, [firestore, q]);
 
