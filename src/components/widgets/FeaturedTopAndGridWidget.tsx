@@ -35,7 +35,7 @@ export function FeaturedTopAndGridWidget({
     filterType = 'latest',
     sourceIds,
     tags,
-    postCount = 5, // 1 featured + 4 smalls
+    postCount = 5, // 1 featured + 4 grid
     gridColumns = 4,
     showSmallExcerpts = false,
     showSmallImages = true,

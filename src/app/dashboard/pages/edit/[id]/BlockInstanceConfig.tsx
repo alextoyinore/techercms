@@ -81,7 +81,16 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
   };
   
   const renderContentFilterFields = () => {
-    const postTypes = ['post-grid', 'post-list', 'post-carousel', 'featured-and-smalls', 'tabbed-posts'];
+    const postTypes = [
+        'post-grid', 
+        'post-list', 
+        'post-carousel', 
+        'featured-and-smalls', 
+        'tabbed-posts',
+        'featured-and-list',
+        'featured-top-and-grid',
+        'big-featured'
+    ];
     if (!layoutType || !postTypes.includes(layoutType)) {
         return <p className="text-sm text-muted-foreground">This block type has no content filtering options.</p>;
     }
@@ -159,6 +168,15 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
         </SheetHeader>
         <ScrollArea className="flex-1 -mx-6 px-6">
             <div className="py-4 space-y-4">
+                 <div className="grid gap-2">
+                    <Label htmlFor="section-title">Section Title (Optional)</Label>
+                    <Input
+                        id="section-title"
+                        placeholder="e.g., Latest News"
+                        value={config.title || ''}
+                        onChange={(e) => handleConfigChange({ title: e.target.value })}
+                    />
+                </div>
                 {renderContentFilterFields()}
             </div>
         </ScrollArea>
