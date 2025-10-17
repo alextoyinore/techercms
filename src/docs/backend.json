@@ -269,7 +269,11 @@
         },
         "contentWidth": {
             "type": "number",
-            "description": "The percentage width of the content when in centered mode."
+            "description": "The percentage width of the content when in centered mode for large screens."
+        },
+        "mediumContentWidth": {
+            "type": "number",
+            "description": "The percentage width of the content when in centered mode for medium screens."
         },
         "hideAllPageTitles": {
           "type": "boolean",

@@ -7,6 +7,7 @@ import { doc } from 'firebase/firestore';
 type SiteSettings = {
   pageWidth?: 'full' | 'centered';
   contentWidth?: number;
+  mediumContentWidth?: number;
 };
 
 export function GlobalStyleProvider({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,8 @@ export function GlobalStyleProvider({ children }: { children: React.ReactNode })
     
     let css = '';
     if (settings?.pageWidth === 'centered') {
-        const width = settings.contentWidth || 80;
+        const largeWidth = settings.contentWidth || 80;
+        const mediumWidth = settings.mediumContentWidth || 90;
         css = `
             .container {
                 max-width: 95%;
@@ -39,12 +41,12 @@ export function GlobalStyleProvider({ children }: { children: React.ReactNode })
             }
             @media (min-width: 768px) {
                 .container {
-                    max-width: 90%;
+                    max-width: ${mediumWidth}%;
                 }
             }
             @media (min-width: 1600px) {
                 .container {
-                    max-width: ${width}%;
+                    max-width: ${largeWidth}%;
                 }
             }
         `;
