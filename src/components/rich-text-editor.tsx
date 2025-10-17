@@ -44,10 +44,9 @@ import {
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { MediaLibrary } from './media-library';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Button } from './ui/button';
 
 const RichTextEditor = ({
   content,
@@ -92,7 +91,7 @@ const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert prose-sm min-h-[300px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+          'prose dark:prose-invert prose-sm min-h-[300px] w-full max-w-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
       },
     },
     onUpdate({ editor }) {
@@ -100,6 +99,8 @@ const RichTextEditor = ({
     },
     editable: !disabled,
   });
+
+  const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
@@ -110,6 +111,7 @@ const RichTextEditor = ({
   const addImageFromUrl = useCallback((url: string) => {
     if (url && editor) {
       editor.chain().focus().setImage({ src: url }).run();
+      setIsMediaLibraryOpen(false); // Close the dialog on select
     }
   }, [editor]);
 
@@ -285,7 +287,7 @@ const RichTextEditor = ({
         >
             <LinkIcon className="h-4 w-4" />
         </Toggle>
-        <Dialog>
+        <Dialog open={isMediaLibraryOpen} onOpenChange={setIsMediaLibraryOpen}>
           <DialogTrigger asChild>
              <Toggle
               size="sm"

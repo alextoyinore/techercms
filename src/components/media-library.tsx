@@ -13,8 +13,10 @@ import {
   Card,
   CardContent
 } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
 import { useFirestore, useCollection, useAuth, useMemoFirebase } from "@/firebase";
 import { collection, query, where, Timestamp } from "firebase/firestore";
+import { MediaUploader } from './media-uploader';
 
 type MediaItem = {
     id: string;
@@ -52,14 +54,15 @@ export function MediaLibrary({ children, onSelect }: MediaLibraryProps) {
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-5/6 flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-row items-center justify-between">
           <DialogTitle>Media Library</DialogTitle>
+          <MediaUploader />
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
             {isLoading && <p>Loading media...</p>}
             {!isLoading && mediaItems?.length === 0 && (
                 <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">No media found in your library.</p>
+                    <p className="text-muted-foreground">No media found. Upload something to get started.</p>
                 </div>
             )}
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
