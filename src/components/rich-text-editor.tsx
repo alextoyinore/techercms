@@ -287,24 +287,11 @@ const RichTextEditor = ({
         >
             <LinkIcon className="h-4 w-4" />
         </Toggle>
-        <Dialog open={isMediaLibraryOpen} onOpenChange={setIsMediaLibraryOpen}>
-          <DialogTrigger asChild>
-             <Toggle
-              size="sm"
-              disabled={disabled}
-            >
-              <ImageIcon className="h-4 w-4" />
+        <MediaLibrary onSelect={addImageFromUrl}>
+            <Toggle size="sm" disabled={disabled}>
+                <ImageIcon className="h-4 w-4" />
             </Toggle>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl h-5/6 flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Select an Image</DialogTitle>
-            </DialogHeader>
-            <div className='flex-1 overflow-y-auto'>
-              <MediaLibrary onSelect={addImageFromUrl} />
-            </div>
-          </DialogContent>
-        </Dialog>
+        </MediaLibrary>
         <Toggle
           size="sm"
           pressed={editor.isActive('codeBlock')}
