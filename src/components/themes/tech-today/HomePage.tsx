@@ -106,22 +106,20 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1)
   }, [posts]);
   
+  const hasContent = sortedPosts.length > 0;
   const [heroPost, ...otherPosts] = sortedPosts;
 
-  const isLoading = isLoadingPosts || isLoadingSettings;
-
-  if (isLoading) {
+  if (isLoadingPosts || isLoadingSettings) {
     return <Loading />;
   }
 
   return (
     <div className="bg-gray-900 text-gray-200 min-h-screen">
-        <PublicHeader siteName={settings?.siteName} />
+        {hasContent && <PublicHeader siteName={settings?.siteName} />}
         <main className="container mx-auto py-8 px-4">
             
-            {!posts || posts.length === 0 ? (
+            {!hasContent ? (
                 <div className="text-center py-24">
-                    <h2 className="text-3xl font-bold font-headline text-cyan-400">System Ready</h2>
                     <p className="text-gray-400 mt-4">No articles have been deployed yet. Awaiting new data...</p>
                 </div>
             ) : (
@@ -191,7 +189,7 @@ export default function HomePage() {
                 </>
             )}
         </main>
-        <PublicFooter siteName={settings?.siteName} />
+        {hasContent && <PublicFooter siteName={settings?.siteName} />}
     </div>
   );
 }

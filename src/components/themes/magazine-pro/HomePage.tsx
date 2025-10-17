@@ -2,8 +2,8 @@
 import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loading } from '@/components/loading';
@@ -105,17 +105,16 @@ export default function HomePage() {
       return dateB.getTime() - dateA.getTime();
     });
   }, [posts]);
+  
+  const hasContent = sortedPosts.length > 0;
 
-  const isLoading = isLoadingPosts;
-
-  if (isLoading) {
+  if (isLoadingPosts) {
       return <Loading />;
   }
 
   return (
-    <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter}>
+    <ThemeLayout HeaderComponent={hasContent ? MagazineProHeader : undefined} FooterComponent={hasContent ? MagazineProFooter : undefined}>
         <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold font-headline tracking-tight lg:text-5xl">Our Blog</h1>
             <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and stories.</p>
         </div>
 
@@ -123,7 +122,7 @@ export default function HomePage() {
             <WidgetArea areaName="Homepage Content" />
         </div>
 
-        {!isLoading && (!sortedPosts || sortedPosts.length === 0) && (
+        {!isLoadingPosts && !hasContent && (
             <div className="text-center py-16">
                 <p className="text-muted-foreground">No posts have been published yet. Check back soon!</p>
             </div>

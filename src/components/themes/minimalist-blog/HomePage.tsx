@@ -90,18 +90,20 @@ export default function HomePage() {
       return dateB.getTime() - dateA.getTime();
     });
   }, [posts]);
+  
+  const hasContent = sortedPosts.length > 0;
 
   if (isLoadingPosts) {
     return <Loading />;
   }
 
   return (
-    <ThemeLayout HeaderComponent={MinimalistHeader} FooterComponent={MinimalistFooter}>
+    <ThemeLayout HeaderComponent={hasContent ? MinimalistHeader : undefined} FooterComponent={hasContent ? MinimalistFooter : undefined}>
         <div className="mb-12 space-y-8 max-w-3xl mx-auto">
             <WidgetArea areaName="Homepage Content" />
         </div>
 
-        {(!sortedPosts || sortedPosts.length === 0) && (
+        {!hasContent && (
             <div className="text-center py-16 max-w-3xl mx-auto">
                 <p className="text-muted-foreground">No thoughts published yet. The silence is golden.</p>
             </div>

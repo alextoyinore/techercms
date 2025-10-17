@@ -104,23 +104,21 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
+  const hasContent = sortedPosts.length > 0;
   const [mainStory, ...otherStories] = sortedPosts;
   const topStories = otherStories.slice(0, 2);
   const secondaryStories = otherStories.slice(2, 6);
 
-  const isLoading = isLoadingPosts || isLoadingSettings;
-
-  if (isLoading) {
+  if (isLoadingPosts || isLoadingSettings) {
     return <Loading />;
   }
 
   return (
     <div className="bg-background text-foreground font-serif">
-        <PublicHeader siteName={settings?.siteName} />
+        {hasContent && <PublicHeader siteName={settings?.siteName} />}
         <main className="container mx-auto py-8 px-4">
-            {!posts || posts.length === 0 ? (
+            {!hasContent ? (
                  <div className="text-center py-24">
-                    <h2 className="text-3xl font-bold font-headline">The Presses are Silent</h2>
                     <p className="text-muted-foreground mt-4">Breaking news will appear here. Stay tuned.</p>
                 </div>
             ) : (
@@ -177,7 +175,7 @@ export default function HomePage() {
                 <WidgetArea areaName="Homepage Content" />
             </div>
         </main>
-        <PublicFooter siteName={settings?.siteName} />
+        {hasContent && <PublicFooter siteName={settings?.siteName} />}
     </div>
   );
 }

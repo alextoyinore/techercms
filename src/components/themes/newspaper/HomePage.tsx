@@ -140,6 +140,7 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1)
   }, [posts]);
   
+  const hasContent = sortedPosts.length > 0;
   const [heroPost, ...otherPosts] = sortedPosts || [];
   const topPosts = otherPosts.slice(0, 2);
   const nextPosts = otherPosts.slice(2, 6);
@@ -149,11 +150,10 @@ export default function HomePage() {
   }
 
   return (
-    <ThemeLayout HeaderComponent={NewspaperHeader} FooterComponent={NewspaperFooter} className="bg-background min-h-screen">
+    <ThemeLayout HeaderComponent={hasContent ? NewspaperHeader : undefined} FooterComponent={hasContent ? NewspaperFooter : undefined} className="bg-background min-h-screen">
        <main className="container mx-auto">
-            {!posts || posts.length === 0 ? (
+            {!hasContent ? (
                 <div className="text-center py-24">
-                    <h2 className="text-2xl font-semibold">Extra! Extra! Read all about it!</h2>
                     <p className="text-muted-foreground mt-4">Nothing has been published yet. Check back soon for the latest stories.</p>
                 </div>
             ) : (
@@ -197,6 +197,7 @@ export default function HomePage() {
 
                     {/* Sidebar */}
                     <aside className="lg:col-span-1 space-y-8">
+                        <WidgetArea areaName="Sidebar" />
                     </aside>
                 </div>
             )}

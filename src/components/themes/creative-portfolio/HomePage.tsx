@@ -97,14 +97,15 @@ export default function HomePage() {
     });
   }, [posts]);
 
+  const hasContent = sortedPosts.length > 0;
+
   if (isLoadingPosts) {
     return <Loading />;
   }
 
   return (
-    <ThemeLayout HeaderComponent={CreativeHeader} FooterComponent={CreativeFooter} className="bg-background min-h-screen">
+    <ThemeLayout HeaderComponent={hasContent ? CreativeHeader : undefined} FooterComponent={hasContent ? CreativeFooter : undefined} className="bg-background min-h-screen">
         <div className="text-center mb-16">
-            <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl">Our Work</h1>
             <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">Exploring the intersection of art, design, and technology.</p>
         </div>
 
@@ -112,7 +113,7 @@ export default function HomePage() {
             <WidgetArea areaName="Homepage Content" />
         </div>
 
-        {(!sortedPosts || sortedPosts.length === 0) && (
+        {!hasContent && (
             <div className="text-center py-16">
                 <p className="text-muted-foreground">No projects have been published yet. Stay tuned!</p>
             </div>

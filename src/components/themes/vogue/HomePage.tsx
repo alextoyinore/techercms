@@ -132,22 +132,20 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
   
+  const hasContent = sortedPosts.length > 0;
   const [mainPost, secondPost, thirdPost, ...otherPosts] = sortedPosts;
   const latestPosts = otherPosts.slice(0, 4);
 
-  const isLoading = isLoadingPosts || isLoadingSettings;
-
-  if (isLoading) {
+  if (isLoadingPosts || isLoadingSettings) {
     return <Loading />;
   }
 
   return (
     <div className="bg-background text-foreground font-serif">
-        <PublicHeader siteName={settings?.siteName} />
+        {hasContent && <PublicHeader siteName={settings?.siteName} />}
         <main className="container mx-auto py-8 px-4">
-            {!posts || posts.length === 0 ? (
+            {!hasContent ? (
                  <div className="text-center py-24">
-                    <h2 className="text-3xl font-bold font-headline">The Runway is Clear</h2>
                     <p className="text-muted-foreground mt-4">New looks and stories are coming soon. Stay fashionable.</p>
                 </div>
             ) : (
@@ -219,7 +217,7 @@ export default function HomePage() {
                 </div>
             )}
         </main>
-        <PublicFooter siteName={settings?.siteName} />
+        {hasContent && <PublicFooter siteName={settings?.siteName} />}
     </div>
   );
 }
