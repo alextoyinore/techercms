@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -44,6 +43,7 @@ import { FeaturedSmallsPreview } from './previews/FeaturedSmallsPreview';
 import { TabbedPostsPreview } from './previews/TabbedPostsPreview';
 import { MediaLibrary } from '@/components/media-library';
 import Image from 'next/image';
+import { Slider } from '@/components/ui/slider';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -74,7 +74,7 @@ const initialConfig = {
     'post-grid': { columns: 3, showImages: true, showExcerpts: false },
     'post-list': { showImages: true, showExcerpts: true },
     'post-carousel': { showImages: true, showExcerpts: false },
-    'featured-and-smalls': { showImages: true, showExcerpts: true },
+    'featured-and-smalls': { featuredWidth: 66, showSmallImages: true, showSmallExcerpts: false },
     'tabbed-posts': { showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
@@ -352,7 +352,6 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
             )
         case 'post-list':
         case 'post-carousel':
-        case 'featured-and-smalls':
              return (
                 <div className="grid gap-4">
                     <div className="flex items-center space-x-2">
@@ -362,6 +361,29 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-excerpts" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
                         <Label htmlFor="show-excerpts">Show post excerpts</Label>
+                    </div>
+                </div>
+            )
+        case 'featured-and-smalls':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Featured Post Width ({config.featuredWidth || 66}%)</Label>
+                        <Slider 
+                            value={[config.featuredWidth || 66]}
+                            onValueChange={(v) => handleConfigChange({ featuredWidth: v[0]})}
+                            min={50}
+                            max={75}
+                            step={1}
+                        />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-small-images" checked={config.showSmallImages} onCheckedChange={c => handleConfigChange({ showSmallImages: c })} />
+                        <Label htmlFor="show-small-images">Show images on small posts</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="show-small-excerpts" checked={config.showSmallExcerpts} onCheckedChange={c => handleConfigChange({ showSmallExcerpts: c })} />
+                        <Label htmlFor="show-small-excerpts">Show excerpts on small posts</Label>
                     </div>
                 </div>
             )

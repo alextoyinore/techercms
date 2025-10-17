@@ -5,6 +5,8 @@ import { collection, query, where, orderBy, limit, Timestamp } from 'firebase/fi
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type Post = {
     id: string;
@@ -21,8 +23,9 @@ type FeaturedSmallsWidgetProps = {
     sourceIds?: string[];
     tags?: string;
     postCount?: number;
-    showExcerpts?: boolean;
-    showImages?: boolean;
+    featuredWidth?: number;
+    showSmallImages?: boolean;
+    showSmallExcerpts?: boolean;
 }
 
 export function FeaturedSmallsWidget({
@@ -31,8 +34,9 @@ export function FeaturedSmallsWidget({
     sourceIds,
     tags,
     postCount = 5,
-    showExcerpts = true,
-    showImages = true,
+    featuredWidth = 66,
+    showSmallImages = true,
+    showSmallExcerpts = false,
 }: FeaturedSmallsWidgetProps) {
     const firestore = useFirestore();
 
@@ -70,14 +74,18 @@ export function FeaturedSmallsWidget({
     if (!featuredPost) {
         return null; // Or some placeholder
     }
+    
+    const featuredColSpan = featuredWidth > 60 ? "md:col-span-2" : "md:col-span-1";
+    const smallColSpan = featuredWidth > 60 ? "md:col-span-1" : "md:col-span-1";
+    const gridCols = featuredWidth > 60 ? "md:grid-cols-3" : "md:grid-cols-2";
 
     return (
         <div className="w-full">
             <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 group">
+            <div className={cn("grid grid-cols-1 gap-8", gridCols)}>
+                <div className={cn("group", featuredColSpan)}>
                     <Link href={`/${featuredPost.slug}`}>
-                        {showImages && featuredPost.featuredImageUrl && (
+                        {featuredPost.featuredImageUrl && (
                             <div className="relative aspect-video w-full overflow-hidden mb-4 rounded-lg">
                                 <Image
                                     src={featuredPost.featuredImageUrl}
@@ -87,16 +95,19 @@ export function FeaturedSmallsWidget({
                                 />
                             </div>
                         )}
-                        <h3 className="text-xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
-                        {showExcerpts && <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>}
+                        <h3 className="text-xl md:text-2xl font-bold font-headline leading-tight group-hover:underline">{featuredPost.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>
+                        <time className="text-xs text-muted-foreground/80 mt-2 block">
+                            {format(featuredPost.createdAt.toDate(), 'MMMM d, yyyy')}
+                        </time>
                     </Link>
                 </div>
-                <div className="md:col-span-1 space-y-4">
+                <div className={cn("space-y-4", smallColSpan)}>
                     {smallPosts.map((post, index) => (
-                        <div key={post.id} className="flex gap-4 items-center group">
-                            {showImages && post.featuredImageUrl && (
+                        <div key={post.id} className="flex gap-4 items-start group">
+                            {showSmallImages && post.featuredImageUrl && (
                                 <Link href={`/${post.slug}`} className="shrink-0">
-                                    <div className="relative h-12 w-20 overflow-hidden rounded-md">
+                                    <div className="relative h-16 w-24 overflow-hidden rounded-md">
                                         <Image
                                             src={post.featuredImageUrl}
                                             alt={post.title}
@@ -106,10 +117,14 @@ export function FeaturedSmallsWidget({
                                     </div>
                                 </Link>
                             )}
-                             <div>
-                                <h4 className="font-semibold text-xs leading-tight group-hover:underline">
+                             <div className="flex-1">
+                                <h4 className="font-semibold text-sm leading-tight group-hover:underline">
                                     <Link href={`/${post.slug}`}>{post.title}</Link>
                                 </h4>
+                                {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
+                                <time className="text-xs text-muted-foreground/80 mt-1 block">
+                                    {format(post.createdAt.toDate(), 'MMM d')}
+                                </time>
                             </div>
                         </div>
                     ))}
