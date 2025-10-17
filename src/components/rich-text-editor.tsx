@@ -45,6 +45,9 @@ import {
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
 import { useCallback, useEffect } from 'react';
+import { MediaLibrary } from './media-library';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Button } from './ui/button';
 
 const RichTextEditor = ({
   content,
@@ -104,9 +107,7 @@ const RichTextEditor = ({
     }
   }, [content, editor]);
 
-  const addImage = useCallback(() => {
-    const url = window.prompt('URL');
-
+  const addImageFromUrl = useCallback((url: string) => {
     if (url && editor) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -284,13 +285,24 @@ const RichTextEditor = ({
         >
             <LinkIcon className="h-4 w-4" />
         </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={addImage}
-          disabled={disabled}
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Toggle>
+        <Dialog>
+          <DialogTrigger asChild>
+             <Toggle
+              size="sm"
+              disabled={disabled}
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Toggle>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl h-5/6 flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Select an Image</DialogTitle>
+            </DialogHeader>
+            <div className='flex-1 overflow-y-auto'>
+              <MediaLibrary onSelect={addImageFromUrl} />
+            </div>
+          </DialogContent>
+        </Dialog>
         <Toggle
           size="sm"
           pressed={editor.isActive('codeBlock')}
