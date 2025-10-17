@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
+import { ThemeLayout } from '../ThemeLayout';
 
 type Post = {
   id: string;
@@ -39,45 +40,8 @@ type Page = {
 };
 
 type SiteSettings = {
-    siteName?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
-}
-
-function PublicHeader({ siteName }: { siteName?: string }) {
-    return (
-        <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-            <div className="container mx-auto flex justify-between items-center">
-                <Link href="/" className="text-2xl font-bold font-headline text-primary">
-                     {siteName || 'My Awesome Site'}
-                </Link>
-                <nav>
-                    <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary">
-                        Admin Login
-                    </Link>
-                </nav>
-            </div>
-        </header>
-    )
-}
-
-function PublicFooter() {
-    return (
-        <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
-            <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">My Awesome Site</p>
-                    <p className="text-sm text-muted-foreground mt-2">© {new Date().getFullYear()} All Rights Reserved.</p>
-                </div>
-                 <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 1" />
-                </div>
-                <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 2" />
-                </div>
-            </div>
-        </footer>
-    )
 }
 
 function PageContent({ page }: { page: Page }) {
@@ -185,10 +149,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   return (
-    <div className="bg-background">
-      <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId}/>
-      <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-6">
+    <ThemeLayout pageId={pageId}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-3">
                 <article className="max-w-none">
@@ -235,9 +196,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
             </aside>
         </div>
-      </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicFooter />
-    </div>
+    </ThemeLayout>
   );
 }
