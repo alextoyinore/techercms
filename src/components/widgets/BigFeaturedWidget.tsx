@@ -73,7 +73,7 @@ export function BigFeaturedWidget({
     const contentOrder = imagePosition === 'right' ? 'md:order-1' : 'md:order-2';
 
     return (
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center group">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start group">
             {post.featuredImageUrl && (
                 <div className={cn("relative aspect-[4/3] w-full", imageOrder)}>
                      <Link href={`/${post.slug}`}>
