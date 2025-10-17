@@ -66,11 +66,11 @@ export function PostGridWidget({
     
     const gridCols = {
         1: 'grid-cols-1',
-        2: 'md:grid-cols-2',
-        3: 'md:grid-cols-3',
-        4: 'md:grid-cols-4',
-        5: 'md:grid-cols-5',
-        6: 'md:grid-cols-6',
+        2: 'grid-cols-2',
+        3: 'grid-cols-2 md:grid-cols-3',
+        4: 'grid-cols-2 md:grid-cols-4',
+        5: 'grid-cols-2 md:grid-cols-5',
+        6: 'grid-cols-2 md:grid-cols-6',
     }[columns] || 'md:grid-cols-3';
 
     const isImageAfter = imagePosition === 'after';
@@ -87,7 +87,7 @@ export function PostGridWidget({
     return (
         <div className="w-full">
             {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
-            <div className={cn('grid grid-cols-2 gap-6', gridCols)}>
+            <div className={cn('grid gap-6', gridCols)}>
                 {posts.map(post => (
                     <div key={post.id} className={cn("grid gap-2 group", isImageAfter && "flex flex-col-reverse justify-end")}>
                         {showImages && post.featuredImageUrl && (
@@ -103,7 +103,7 @@ export function PostGridWidget({
                             </Link>
                         )}
                         <div className="flex flex-col">
-                            <h3 className="font-semibold leading-tight text-base group-hover:underline">
+                            <h3 className="font-semibold leading-tight text-sm group-hover:underline">
                                 <Link href={`/${post.slug}`}>{post.title}</Link>
                             </h3>
                             {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{post.excerpt}</p>}
