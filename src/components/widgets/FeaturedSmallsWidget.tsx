@@ -30,7 +30,7 @@ type FeaturedSmallsWidgetProps = {
 }
 
 export function FeaturedSmallsWidget({
-    title = 'Top Stories',
+    title,
     filterType = 'latest',
     sourceIds,
     tags,
