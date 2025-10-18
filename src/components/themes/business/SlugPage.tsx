@@ -129,7 +129,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
             <h1 className="text-6xl font-bold font-headline mb-4">404</h1>
-            <p className="text-xl text-muted-foreground mb-8">This article could not be found.</p>
+            <p className="text-xl text-muted-foreground mb-8">This page could not be found.</p>
             <Button asChild variant="default" size="lg">
                 <Link href="/">
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -155,13 +155,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   return (
     <>
       <Head>
-          <title>{pageTitle}</title>
+          <title>{siteTitle} - {pageTitle}</title>
           <meta name="description" content={metaDescription} />
       </Head>
       <div className="bg-background text-foreground font-sans">
           <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} pageId={pageId}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+              <div className="lg:col-span-9">
                   <article className="max-w-none">
                   <header className="mb-8 border-b pb-4">
                       {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
@@ -203,7 +203,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                   )}
                   </article>
               </div>
-              <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
+              <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
                   <WidgetArea areaName="Sidebar" />
                   <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
               </aside>
@@ -213,3 +213,4 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+

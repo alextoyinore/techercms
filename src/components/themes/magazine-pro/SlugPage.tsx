@@ -167,7 +167,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
         <meta name="description" content={metaDescription} />
     </Head>
     <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:max-w-7xl mx-auto">
             <div className="lg:col-span-3">
                 <article className="max-w-none">
                 <header className="mb-8">
@@ -210,7 +210,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                 )}
                 </article>
             </div>
-            <aside className="lg:col-span-1 space-y-8">
+            <aside className="lg:col-span-1 space-y-8 lg:sticky lg:top-24 self-start">
                 <WidgetArea areaName="Sidebar" />
                 <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
             </aside>
