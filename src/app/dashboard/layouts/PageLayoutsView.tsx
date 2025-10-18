@@ -65,7 +65,6 @@ type SiteSettings = {
   activePageLayoutId?: string;
   pageWidth?: 'full' | 'centered';
   contentWidth?: number;
-  mediumContentWidth?: number;
 }
 
 export function PageLayoutsView() {
@@ -82,26 +81,21 @@ export function PageLayoutsView() {
   const [activeLayoutId, setActiveLayoutId] = useState<string | null>(null);
   const [pageWidth, setPageWidth] = useState<'full' | 'centered'>('full');
   const [contentWidth, setContentWidth] = useState(75);
-  const [mediumContentWidth, setMediumContentWidth] = useState(90);
-
 
   useEffect(() => {
     if (settings) {
       setActiveLayoutId(settings.activePageLayoutId || null);
       setPageWidth(settings.pageWidth || 'full');
       setContentWidth(settings.contentWidth || 75);
-      setMediumContentWidth(settings.mediumContentWidth || 90);
     }
   }, [settings]);
 
   // Initialize default layouts if they don't exist
   useEffect(() => {
-    // Only run this effect once after the initial data load.
-    if (!isLoadingLayouts && pageLayouts && !initialized.current) {
+    if (!isLoadingLayouts && pageLayouts?.length === 0 && !initialized.current) {
         initialized.current = true;
         
-        // Only create layouts if the collection is empty.
-        if (pageLayouts.length === 0 && firestore) {
+        if (firestore) {
             const batch = writeBatch(firestore);
             defaultPageLayouts.forEach(layoutData => {
                 const newLayoutRef = doc(collection(firestore, 'page_layouts'));
@@ -119,13 +113,12 @@ export function PageLayoutsView() {
     toast({ title: 'Default Layout Updated' });
   };
   
-  const handleWidthSettingsChange = (newWidth?: 'full' | 'centered', newContentWidth?: number, newMediumContentWidth?: number) => {
+  const handleWidthSettingsChange = (newWidth?: 'full' | 'centered', newContentWidth?: number) => {
     if (!settingsRef) return;
     const finalPageWidth = newWidth || pageWidth;
     const finalContentWidth = newContentWidth ?? contentWidth;
-    const finalMediumContentWidth = newMediumContentWidth ?? mediumContentWidth;
     
-    setDocumentNonBlocking(settingsRef, { pageWidth: finalPageWidth, contentWidth: finalContentWidth, mediumContentWidth: finalMediumContentWidth }, { merge: true });
+    setDocumentNonBlocking(settingsRef, { pageWidth: finalPageWidth, contentWidth: finalContentWidth }, { merge: true });
     toast({ title: 'Global Layout Settings Updated' });
   }
 
@@ -197,28 +190,16 @@ export function PageLayoutsView() {
                 {pageWidth === 'centered' && (
                     <div className='grid gap-8'>
                         <div className='grid gap-2 max-w-sm'>
-                            <Label>Large Screen Content Width ({contentWidth}%)</Label>
+                            <Label>Max Content Width ({contentWidth}%)</Label>
                             <Slider
                                 value={[contentWidth]}
                                 onValueChange={(value) => setContentWidth(value[0])}
-                                onValueCommit={(value) => handleWidthSettingsChange(undefined, value[0], undefined)}
+                                onValueCommit={(value) => handleWidthSettingsChange(undefined, value[0])}
                                 min={50}
                                 max={100}
                                 step={1}
                             />
-                            <p className="text-sm text-muted-foreground">Max width for screens over 1600px.</p>
-                        </div>
-                         <div className='grid gap-2 max-w-sm'>
-                            <Label>Medium Screen Content Width ({mediumContentWidth}%)</Label>
-                            <Slider
-                                value={[mediumContentWidth]}
-                                onValueChange={(value) => setMediumContentWidth(value[0])}
-                                onValueCommit={(value) => handleWidthSettingsChange(undefined, undefined, value[0])}
-                                min={50}
-                                max={100}
-                                step={1}
-                            />
-                            <p className="text-sm text-muted-foreground">Max width for screens up to 1600px.</p>
+                            <p className="text-sm text-muted-foreground">Sets the maximum width for large screens (over 1600px). Smaller screens will use 95%.</p>
                         </div>
                     </div>
                 )}
