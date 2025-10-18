@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -75,6 +76,12 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                 <nav className="hidden sm:flex justify-center items-center gap-6 py-3 text-sm font-semibold uppercase tracking-wider">
                     <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 text-sm font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </nav>
+                 <div className="border-t">
+                    <ScrollArea className="w-full whitespace-nowrap">
+                        <Menu locationId="newspaper-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                        <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                    </ScrollArea>
+                </div>
             </div>
         </header>
     )

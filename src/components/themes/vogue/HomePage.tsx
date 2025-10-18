@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -69,6 +70,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         </Sheet>
                     </div>
                 </div>
+            </div>
+             <div className="border-t mt-4">
+                <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
+                    <Menu locationId="vogue-subheader" className="flex justify-center items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                </ScrollArea>
             </div>
         </header>
     )

@@ -14,6 +14,7 @@ import { ChevronRight, MenuIcon } from 'lucide-react';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -30,8 +31,8 @@ type SiteSettings = {
 
 export function PublicHeader({ siteName }: { siteName?: string }) {
     return (
-        <header className="py-4 px-4 sticky top-0 bg-primary text-primary-foreground z-20 shadow-lg">
-            <div className="container mx-auto flex justify-between items-center">
+        <header className="sticky top-0 bg-primary text-primary-foreground z-20 shadow-lg">
+            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
                     {siteName || ''}
                 </Link>
@@ -64,6 +65,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         </SheetContent>
                     </Sheet>
                 </div>
+            </div>
+             <div className="border-t border-primary-foreground/20">
+                <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
+                    <Menu locationId="sports-subheader" className="flex items-center gap-6 text-xs font-semibold uppercase" linkClassName="text-primary-foreground/80 hover:text-primary-foreground py-2 inline-block" />
+                    <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                </ScrollArea>
             </div>
         </header>
     )

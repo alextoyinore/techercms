@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 
 export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
@@ -41,6 +42,12 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
              <nav className="hidden md:flex justify-center mt-6">
                 <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
             </nav>
+            <div className="border-t mt-6 pt-2">
+                <ScrollArea className="w-full whitespace-nowrap">
+                    <Menu locationId="minimalist-blog-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                </ScrollArea>
+            </div>
             <div className="mt-6 flex justify-center">
                 <SearchForm />
             </div>

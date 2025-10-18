@@ -15,6 +15,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/s
 import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 
 export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
@@ -25,8 +26,8 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
     }, []);
 
     return (
-    <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-        <div className="container mx-auto flex justify-between items-center">
+    <header className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
              <Link href="/" className="text-2xl font-bold font-headline text-primary">
                 {siteName || ''}
             </Link>
@@ -54,6 +55,12 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                     </SheetContent>
                 </Sheet>
             </div>
+        </div>
+        <div className="border-t">
+            <ScrollArea className="container mx-auto px-6 w-full whitespace-nowrap">
+                <Menu locationId="magazine-pro-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                <ScrollBar orientation="horizontal" className="invisible md:visible" />
+            </ScrollArea>
         </div>
     </header>
 )};

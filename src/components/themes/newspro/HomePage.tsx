@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -30,8 +31,8 @@ type SiteSettings = {
 
 export function PublicHeader({ siteName }: { siteName?: string }) {
     return (
-        <header className="py-4 px-4 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b-4 border-primary">
-            <div className="container mx-auto flex justify-between items-center">
+        <header className="sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b-4 border-primary">
+            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <Link href="/" className="text-4xl font-black font-headline tracking-tighter">
                     {siteName || ''}
                 </Link>
@@ -59,6 +60,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         </SheetContent>
                     </Sheet>
                 </div>
+            </div>
+            <div className="border-t">
+                <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
+                    <Menu locationId="newspro-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                </ScrollArea>
             </div>
         </header>
     )

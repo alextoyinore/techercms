@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -59,6 +60,12 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                         </SheetContent>
                     </Sheet>
                 </div>
+            </div>
+            <div className="border-t border-gray-700 mt-4">
+                <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
+                    <Menu locationId="tech-today-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-gray-400 hover:text-white py-2 inline-block" />
+                    <ScrollBar orientation="horizontal" className="invisible md:visible" />
+                </ScrollArea>
             </div>
         </header>
     )

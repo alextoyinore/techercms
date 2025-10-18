@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 type Post = {
   id: string;
@@ -24,7 +25,7 @@ type Post = {
 };
 
 export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
-    <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10">
+    <header className="py-6 px-6 sticky top-0 bg-background/90 backdrop-blur-md z-10 border-b">
         <div className="container mx-auto flex justify-between items-center">
             <Link href="/" className="text-3xl font-extrabold font-headline text-primary tracking-tighter">
                 {siteName || ''}
@@ -53,6 +54,12 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                     </SheetContent>
                 </Sheet>
             </div>
+        </div>
+         <div className="border-t mt-4">
+            <ScrollArea className="container mx-auto px-6 w-full whitespace-nowrap">
+                <Menu locationId="creative-portfolio-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                <ScrollBar orientation="horizontal" className="invisible md:visible" />
+            </ScrollArea>
         </div>
     </header>
 );
