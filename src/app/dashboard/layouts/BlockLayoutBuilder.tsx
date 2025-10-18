@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -85,7 +86,7 @@ const initialConfig = {
     'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false, imagePosition: 'before' },
     'featured-and-list': { showSmallImages: true, showSmallExcerpts: true, imagePosition: 'before' },
     'big-featured': { imagePosition: 'left', showExcerpt: true, buttonText: 'Read More' },
-    'tabbed-posts': { tabs: [{id: '1', title: 'Latest', filterType: 'latest'}], showImages: true, showExcerpts: true },
+    'tabbed-posts': { tabs: [{id: '1', title: 'Latest'}], showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
@@ -163,21 +164,15 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
     handleConfigChange({ testimonials: newTestimonials });
   };
 
-  const handleTabChange = (index: number, field: 'title' | 'filterType' | 'category' | 'tag', value: string) => {
+  const handleTabChange = (index: number, field: 'title', value: string) => {
     const newTabs = [...(config.tabs || [])];
     const updatedTab = { ...newTabs[index], [field]: value };
-
-    if(field === 'filterType' && value === 'latest') {
-        delete updatedTab.category;
-        delete updatedTab.tag;
-    }
-
     newTabs[index] = updatedTab;
     handleConfigChange({ tabs: newTabs });
   }
 
   const addTab = () => {
-    const newTab = {id: `${Date.now()}`, title: 'New Tab', filterType: 'latest'};
+    const newTab = {id: `${Date.now()}`, title: 'New Tab'};
     handleConfigChange({ tabs: [...(config.tabs || []), newTab] });
   }
 
