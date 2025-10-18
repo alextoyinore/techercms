@@ -43,6 +43,7 @@ type Page = {
 
 type SiteSettings = {
     siteName?: string;
+    siteLogoUrl?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
 }
@@ -158,7 +159,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <meta name="description" content={metaDescription} />
       </Head>
       <div className="bg-background text-foreground font-sans">
-          <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} pageId={pageId}>
+          <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} pageId={pageId}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-8">
                   <article className="max-w-none">
@@ -212,5 +213,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    
