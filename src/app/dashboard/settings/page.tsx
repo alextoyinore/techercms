@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
-import { CheckCircle, Loader2, Palette } from 'lucide-react';
+import { CheckCircle, Loader2, Palette, Library } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -31,10 +31,12 @@ import { timezones } from '@/lib/timezones';
 import { languages } from '@/lib/languages';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
+import { MediaLibrary } from '@/components/media-library';
 
 type SiteSettings = {
   activeTheme?: string;
   siteName?: string;
+  siteLogoUrl?: string;
   homepageType?: 'latest' | 'static';
   homepagePageId?: string;
   language?: string;
@@ -55,6 +57,7 @@ export default function SettingsPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   
   const [siteName, setSiteName] = useState('');
+  const [siteLogoUrl, setSiteLogoUrl] = useState('');
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
   const [homepagePageId, setHomepagePageId] = useState<string | undefined>(undefined);
   const [language, setLanguage] = useState<string>('en');
@@ -77,6 +80,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (settings) {
       setSiteName(settings.siteName || '');
+      setSiteLogoUrl(settings.siteLogoUrl || '');
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
@@ -104,6 +108,7 @@ export default function SettingsPage() {
     setIsSavingSettings(true);
     const settingsToSave: Partial<SiteSettings> = {
         siteName,
+        siteLogoUrl,
         homepageType,
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
         language,
@@ -135,10 +140,32 @@ export default function SettingsPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
-                <div className="grid gap-2 max-w-sm">
-                    <Label htmlFor="siteName">Site Name</Label>
-                    <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
-                    <p className="text-sm text-muted-foreground">This name is displayed publicly on your site.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid gap-2 max-w-sm">
+                        <Label htmlFor="siteName">Site Name</Label>
+                        <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
+                        <p className="text-sm text-muted-foreground">This name is displayed publicly on your site.</p>
+                    </div>
+                     <div className="grid gap-2 max-w-sm">
+                        <Label>Site Logo</Label>
+                        <div className="flex items-center gap-4">
+                            {siteLogoUrl && (
+                                <Image
+                                src={siteLogoUrl}
+                                alt="Site Logo Preview"
+                                width={48}
+                                height={48}
+                                className="rounded-md object-contain bg-muted"
+                                />
+                            )}
+                            <MediaLibrary onSelect={setSiteLogoUrl}>
+                                <Button variant="outline">
+                                    <Library className="mr-2 h-4 w-4" />
+                                    Choose from Library
+                                </Button>
+                            </MediaLibrary>
+                        </div>
+                    </div>
                 </div>
                  <div className="flex items-center space-x-2">
                     <Switch
