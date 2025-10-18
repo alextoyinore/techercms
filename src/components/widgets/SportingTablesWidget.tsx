@@ -12,7 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSportingTables, type GetSportingTablesOutput } from '@/ai/flows/get-sporting-tables';
 import { Loader2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 
 type SportingTablesWidgetProps = {
@@ -95,7 +95,7 @@ export function SportingTablesWidget({ title = 'League Standings', season = '202
             </CardHeader>
             <CardContent className="p-0">
                 <Tabs defaultValue={defaultLeague}>
-                    <ScrollArea className="whitespace-nowrap">
+                    <ScrollArea className="w-full whitespace-nowrap">
                         <TabsList className="w-full justify-start rounded-none bg-transparent border-b px-4">
                             {leagues.map(league => (
                                 <TabsTrigger key={league.id} value={league.id} className="text-xs px-2 sm:px-3">
@@ -103,6 +103,7 @@ export function SportingTablesWidget({ title = 'League Standings', season = '202
                                 </TabsTrigger>
                             ))}
                         </TabsList>
+                        <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                     {leagues.map(league => (
                         <TabsContent key={league.id} value={league.id} className="m-0">
