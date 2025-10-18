@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -8,43 +9,68 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const mockStandings = [
-    { rank: 1, team: 'FC Pioneers', p: 10, w: 8, d: 1, l: 1, pts: 25 },
-    { rank: 2, team: 'United Strikers', p: 10, w: 7, d: 2, l: 1, pts: 23 },
-    { rank: 3, team: 'City Rovers', p: 10, w: 6, d: 2, l: 2, pts: 20 },
-    { rank: 4, team: 'Mountain FC', p: 10, w: 5, d: 3, l: 2, pts: 18 },
-];
+import { getSportingTables, type GetSportingTablesOutput } from '@/ai/flows/get-sporting-tables';
+import { Loader2 } from 'lucide-react';
 
 type SportingTablesWidgetProps = {
     title?: string;
+    leagueId?: string;
 }
 
-export function SportingTablesWidget({ title = 'League Standings' }: SportingTablesWidgetProps) {
+export function SportingTablesWidget({ title = 'League Standings', leagueId = '4328' }: SportingTablesWidgetProps) {
+    const [standings, setStandings] = useState<GetSportingTablesOutput['table']>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTable = async () => {
+            setIsLoading(true);
+            try {
+                const result = await getSportingTables({ leagueId });
+                // Show top 5 for widget brevity
+                setStandings(result.table.slice(0, 5));
+            } catch (error) {
+                console.error("Failed to fetch league table:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchTable();
+    }, [leagueId]);
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[40px]">#</TableHead>
-                            <TableHead>Team</TableHead>
-                            <TableHead className="text-right">Pts</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {mockStandings.map((row) => (
-                            <TableRow key={row.rank}>
-                                <TableCell className="font-medium">{row.rank}</TableCell>
-                                <TableCell>{row.team}</TableCell>
-                                <TableCell className="text-right">{row.pts}</TableCell>
+                {isLoading ? (
+                     <div className="flex items-center justify-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : standings.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[40px]">#</TableHead>
+                                <TableHead>Team</TableHead>
+                                <TableHead className="text-right">Pts</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {standings.map((row) => (
+                                <TableRow key={row.intRank}>
+                                    <TableCell className="font-medium">{row.intRank}</TableCell>
+                                    <TableCell>{row.strTeam}</TableCell>
+                                    <TableCell className="text-right">{row.intPoints}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Standings not available.</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
