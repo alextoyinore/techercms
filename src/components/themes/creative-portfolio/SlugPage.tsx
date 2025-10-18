@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -24,6 +25,8 @@ type Post = {
   status: 'draft' | 'published' | 'archived';
   createdAt: Timestamp;
   tagIds?: string[];
+  metaDescription?: string;
+  excerpt?: string;
 };
 
 type Page = {
@@ -42,6 +45,7 @@ type Page = {
 type SiteSettings = {
   hideAllPageTitles?: boolean;
   homepagePageId?: string;
+  siteName?: string;
 }
 
 function PageContent({ page }: { page: Page }) {
@@ -143,61 +147,73 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const isHomepage = !isPost && settings?.homepagePageId === item.id;
   const pageShowTitle = !isPost ? (item as Page).showTitle : true;
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
+  
+  const siteTitle = settings?.siteName || 'Techer CMS';
+  const pageTitle = `${item.title} - ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
 
   return (
-    <div className="bg-background">
-      <CreativeHeader />
-      <main className="container mx-auto px-6 py-8">
-        <article className="max-w-none">
-          {item.featuredImageUrl && (
-            <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
-              <Image
-                src={item.featuredImageUrl}
-                alt={item.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-          <header className="mb-8 text-center">
-            {displayTitle && <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>}
-            <div className="text-muted-foreground text-sm uppercase tracking-widest">
-                <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`}>
-                    <span className='hover:underline'>{item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}</span>
-                </Link>
-            </div>
-          </header>
-          
-          <div className="max-w-3xl mx-auto">
-            {isPost ? (
-              <div
-                  className="prose dark:prose-invert lg:prose-xl max-w-none"
-                  dangerouslySetInnerHTML={{ __html: item.content }}
-              />
-            ) : (
-                <PageContent page={item as Page} />
+    <>
+      <Head>
+          <title>{pageTitle}</title>
+          <meta name="description" content={metaDescription} />
+      </Head>
+      <div className="bg-background">
+        <CreativeHeader />
+        <main className="container mx-auto px-6 py-8">
+          <article className="max-w-none">
+            {item.featuredImageUrl && (
+              <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
+                <Image
+                  src={item.featuredImageUrl}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
             )}
+            <header className="mb-8 text-center">
+              {displayTitle && <h1 className="text-5xl font-extrabold font-headline tracking-tighter lg:text-7xl mb-4">{item.title}</h1>}
+              <div className="text-muted-foreground text-sm uppercase tracking-widest">
+                  <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`}>
+                      <span className='hover:underline'>{item.createdAt ? format(item.createdAt.toDate(), 'MMMM dd, yyyy') : ''}</span>
+                  </Link>
+              </div>
+            </header>
+            
+            <div className="max-w-3xl mx-auto">
+              {isPost ? (
+                <div
+                    className="prose dark:prose-invert lg:prose-xl max-w-none"
+                    dangerouslySetInnerHTML={{ __html: item.content }}
+                />
+              ) : (
+                  <PageContent page={item as Page} />
+              )}
 
-            {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-              <footer className="mt-12 text-center">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                      {(item as Post).tagIds!.map(tag => (
-                          <Link key={tag} href={`/tag/${tag}`}>
-                              <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
-                          </Link>
-                      ))}
-                  </div>
-              </footer>
-            )}
-          </div>
-        </article>
-        <aside className="mt-12 space-y-8 max-w-5xl mx-auto">
-          <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
-        </aside>
-      </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-      <CreativeFooter />
-    </div>
+              {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                <footer className="mt-12 text-center">
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        {(item as Post).tagIds!.map(tag => (
+                            <Link key={tag} href={`/tag/${tag}`}>
+                                <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                            </Link>
+                        ))}
+                    </div>
+                </footer>
+              )}
+            </div>
+          </article>
+          <aside className="mt-12 space-y-8 max-w-5xl mx-auto">
+            <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
+          </aside>
+        </main>
+        <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
+        <CreativeFooter />
+      </div>
+    </>
   );
 }
+
+    

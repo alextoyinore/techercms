@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -28,6 +29,7 @@ type Post = {
   status: 'draft' | 'published' | 'archived';
   createdAt: Timestamp;
   tagIds?: string[];
+  metaDescription?: string;
 };
 
 type Page = {
@@ -153,7 +155,17 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const pageShowTitle = !isPost ? (item as Page).showTitle : true;
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
+  const siteTitle = settings?.siteName || 'Techer CMS';
+  const pageTitle = `${item.title} - ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as any)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
+
+
   return (
+    <>
+    <Head>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+    </Head>
     <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             <div className="lg:col-span-3">
@@ -204,5 +216,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             </aside>
         </div>
     </ThemeLayout>
+    </>
   );
 }
+
+    

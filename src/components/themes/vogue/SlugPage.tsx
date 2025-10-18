@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -24,6 +25,8 @@ type Post = {
   featuredImageUrl: string;
   createdAt: Timestamp;
   tagIds?: string[];
+  metaDescription?: string;
+  excerpt?: string;
 };
 
 type Page = {
@@ -144,54 +147,66 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const pageShowTitle = !isPost ? (item as Page).showTitle : true;
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
-  return (
-    <div className="bg-background text-foreground font-serif">
-      <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} pageId={pageId}>
-        <main className="container mx-auto">
-            <article className="max-w-none">
-            <header className="mb-8 text-center">
-                {displayTitle && <h1 className="text-5xl font-black font-headline tracking-tight lg:text-7xl mb-4">{item.title}</h1>}
-                <div className="text-muted-foreground text-sm uppercase tracking-widest">
-                    <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
-                        <span>{item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
-                    </Link>
-                </div>
-            </header>
-            
-            {item.featuredImageUrl && (
-                <div className="relative aspect-[4/3] w-full mb-12 bg-muted">
-                <Image
-                    src={item.featuredImageUrl}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                />
-                </div>
-            )}
-            
-            {isPost ? (
-                <div
-                    className="prose lg:prose-xl max-w-none mx-auto"
-                    dangerouslySetInnerHTML={{ __html: item.content }}
-                />
-            ) : (
-                <PageContent page={item as Page} />
-            )}
+  const siteTitle = settings?.siteName || 'Techer CMS';
+  const pageTitle = `${item.title} - ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
 
-            {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                <footer className="mt-12 pt-8 border-t">
-                    <div className="flex flex-wrap gap-2 justify-center">
-                        {(item as Post).tagIds!.map(tag => (
-                            <Link key={tag} href={`/tag/${tag}`}>
-                                <Badge variant="outline" className="rounded-none uppercase tracking-wider">{tag}</Badge>
-                            </Link>
-                        ))}
-                    </div>
-                </footer>
-            )}
-            </article>
-        </main>
-      </ThemeLayout>
-    </div>
+  return (
+    <>
+      <Head>
+          <title>{pageTitle}</title>
+          <meta name="description" content={metaDescription} />
+      </Head>
+      <div className="bg-background text-foreground font-serif">
+        <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} pageId={pageId}>
+          <main className="container mx-auto">
+              <article className="max-w-none">
+              <header className="mb-8 text-center">
+                  {displayTitle && <h1 className="text-5xl font-black font-headline tracking-tight lg:text-7xl mb-4">{item.title}</h1>}
+                  <div className="text-muted-foreground text-sm uppercase tracking-widest">
+                      <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                          <span>{item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
+                      </Link>
+                  </div>
+              </header>
+              
+              {item.featuredImageUrl && (
+                  <div className="relative aspect-[4/3] w-full mb-12 bg-muted">
+                  <Image
+                      src={item.featuredImageUrl}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                  />
+                  </div>
+              )}
+              
+              {isPost ? (
+                  <div
+                      className="prose lg:prose-xl max-w-none mx-auto"
+                      dangerouslySetInnerHTML={{ __html: item.content }}
+                  />
+              ) : (
+                  <PageContent page={item as Page} />
+              )}
+
+              {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                  <footer className="mt-12 pt-8 border-t">
+                      <div className="flex flex-wrap gap-2 justify-center">
+                          {(item as Post).tagIds!.map(tag => (
+                              <Link key={tag} href={`/tag/${tag}`}>
+                                  <Badge variant="outline" className="rounded-none uppercase tracking-wider">{tag}</Badge>
+                              </Link>
+                          ))}
+                      </div>
+                  </footer>
+              )}
+              </article>
+          </main>
+        </ThemeLayout>
+      </div>
+    </>
   );
 }
+
+    

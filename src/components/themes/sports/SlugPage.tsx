@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, MenuIcon } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 
@@ -25,6 +26,8 @@ type Post = {
   featuredImageUrl: string;
   createdAt: Timestamp;
   tagIds?: string[];
+  metaDescription?: string;
+  excerpt?: string;
 };
 
 type Page = {
@@ -66,6 +69,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
+                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
                                <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
                                 <div className="mt-6 border-t border-white/20 pt-6">
@@ -203,64 +207,76 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const pageShowTitle = !isPost ? (item as Page).showTitle : true;
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
-  return (
-    <div className="bg-background text-foreground font-sans">
-      <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicHeader siteName={settings?.siteName}/>
-      <main className="container mx-auto py-8 px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8">
-                <article className="max-w-none">
-                    <header className="mb-8">
-                        {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 uppercase">{item.title}</h1>}
-                        <div className="text-muted-foreground text-sm font-semibold">
-                            <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
-                                <span>{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
-                            </Link>
-                        </div>
-                    </header>
-                    
-                    {item.featuredImageUrl && (
-                        <div className="relative aspect-video w-full mb-8">
-                        <Image
-                            src={item.featuredImageUrl}
-                            alt={item.title}
-                            fill
-                            className="object-cover"
-                        />
-                        </div>
-                    )}
-                    
-                     {isPost ? (
-                         <div
-                            className="prose dark:prose-invert lg:prose-lg max-w-none"
-                            dangerouslySetInnerHTML={{ __html: item.content }}
-                        />
-                    ) : (
-                        <PageContent page={item as Page} />
-                    )}
+  const siteTitle = settings?.siteName || 'Techer CMS';
+  const pageTitle = `${item.title} - ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
 
-                    {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                        <footer className="mt-12 pt-8 border-t">
-                            <div className="flex flex-wrap gap-2">
-                                {(item as Post).tagIds!.map(tag => (
-                                    <Link key={tag} href={`/tag/${tag}`}>
-                                        <Badge variant="default">{tag}</Badge>
-                                    </Link>
-                                ))}
-                            </div>
-                        </footer>
-                    )}
-                </article>
-            </div>
-            <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
-                <WidgetArea areaName="Sidebar" />
-                <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
-            </aside>
-        </div>
-      </main>
-      <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-      <PublicFooter siteName={settings?.siteName} />
-    </div>
+  return (
+    <>
+      <Head>
+          <title>{pageTitle}</title>
+          <meta name="description" content={metaDescription} />
+      </Head>
+      <div className="bg-background text-foreground font-sans">
+        <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
+        <PublicHeader siteName={settings?.siteName}/>
+        <main className="container mx-auto py-8 px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-8">
+                  <article className="max-w-none">
+                      <header className="mb-8">
+                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 uppercase">{item.title}</h1>}
+                          <div className="text-muted-foreground text-sm font-semibold">
+                              <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                                  <span>{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
+                              </Link>
+                          </div>
+                      </header>
+                      
+                      {item.featuredImageUrl && (
+                          <div className="relative aspect-video w-full mb-8">
+                          <Image
+                              src={item.featuredImageUrl}
+                              alt={item.title}
+                              fill
+                              className="object-cover"
+                          />
+                          </div>
+                      )}
+                      
+                       {isPost ? (
+                           <div
+                              className="prose dark:prose-invert lg:prose-lg max-w-none"
+                              dangerouslySetInnerHTML={{ __html: item.content }}
+                          />
+                      ) : (
+                          <PageContent page={item as Page} />
+                      )}
+
+                      {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                          <footer className="mt-12 pt-8 border-t">
+                              <div className="flex flex-wrap gap-2">
+                                  {(item as Post).tagIds!.map(tag => (
+                                      <Link key={tag} href={`/tag/${tag}`}>
+                                          <Badge variant="default">{tag}</Badge>
+                                      </Link>
+                                  ))}
+                              </div>
+                          </footer>
+                      )}
+                  </article>
+              </div>
+              <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
+                  <WidgetArea areaName="Sidebar" />
+                  <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
+              </aside>
+          </div>
+        </main>
+        <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
+        <PublicFooter siteName={settings?.siteName} />
+      </div>
+    </>
   );
 }
+
+    

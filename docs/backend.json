@@ -1,30 +1,5 @@
 {
   "entities": {
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
-      "type": "object",
-      "description": "Represents a user of the CMS.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the user."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "The email of the user."
-        }
-      },
-      "required": [
-        "id",
-        "email"
-      ]
-    },
     "Page": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Page",
@@ -72,6 +47,15 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the page was last updated."
+        },
+        "builderEnabled": {
+          "type": "boolean",
+          "description": "If true, the page uses the block-based builder instead of the rich text editor."
+        },
+        "showTitle": {
+            "type": "boolean",
+            "description": "Whether or not to display the title on the page.",
+            "default": true
         }
       },
       "required": [
@@ -150,6 +134,13 @@
           "type": "string",
           "description": "A URL-friendly version of the post title."
         },
+        "titleKeywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of lowercase words from the title for searching."
+        },
         "content": {
           "type": "string",
           "description": "The main body content of the post."
@@ -157,6 +148,10 @@
         "excerpt": {
           "type": "string",
           "description": "A short summary of the post."
+        },
+        "metaDescription": {
+          "type": "string",
+          "description": "An SEO-friendly description for the post's meta tag."
         },
         "featuredImageUrl": {
           "type": "string",
@@ -277,6 +272,27 @@
         "baseFontSize": {
             "type": "number",
             "description": "The base font size in pixels."
+        },
+        "pageWidth": {
+            "type": "string",
+            "description": "The overall page width.",
+            "enum": ["full", "centered"]
+        },
+        "contentWidth": {
+            "type": "number",
+            "description": "The percentage width of the content when in centered mode for large screens."
+        },
+        "hideAllPageTitles": {
+          "type": "boolean",
+          "description": "If true, all page titles will be hidden site-wide.",
+          "default": false
+        },
+        "menuAssignments": {
+            "type": "object",
+            "description": "A map of theme menu location IDs to NavigationMenu IDs.",
+            "additionalProperties": {
+                "type": "string"
+            }
         }
       },
       "required": [
@@ -306,7 +322,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid", "big-featured"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {
@@ -346,11 +362,13 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the theme." },
             "name": { "type": "string", "description": "The name of the custom theme." },
+            "description": { "type": "string", "description": "A short description of the theme." },
             "previewImageUrl": { "type": "string", "description": "URL for the theme's preview image." },
             "colors": { "type": "object", "description": "An object containing the theme's color definitions." },
-            "authorId": { "type": "string", "description": "The ID of the user who created the theme." }
+            "authorId": { "type": "string", "description": "The ID of the user who created the theme." },
+            "baseTheme": { "type": "string", "description": "The name of the built-in theme this custom theme is based on." }
         },
-        "required": ["id", "name", "colors", "authorId"]
+        "required": ["id", "name", "colors", "authorId", "baseTheme"]
     },
     "PageLayout": {
         "title": "Page Layout",
@@ -371,10 +389,55 @@
             "id": { "type": "string", "description": "Unique identifier for the block layout." },
             "name": { "type": "string", "description": "A human-readable name (e.g., 'Featured Posts Grid')." },
             "description": { "type": "string", "description": "A short explanation of what the block layout does or is for." },
-            "type": { "type": "string", "description": "The type of block to render (e.g., 'post-grid')." },
-            "config": { "type": "object", "description": "A flexible object to store block-specific settings (e.g., post count, columns, filters)." }
+            "type": { "type": "string", "description": "The type of block to render (e.g., 'post-grid', 'post-carousel')." ,
+                "enum": [
+                    "post-grid",
+                    "post-list",
+                    "post-carousel",
+                    "featured-and-smalls",
+                    "tabbed-posts",
+                    "hero",
+                    "cta",
+                    "feature-grid",
+                    "gallery",
+                    "video",
+                    "testimonials",
+                    "contact-form",
+                    "featured-top-and-grid",
+                    "featured-and-list",
+                    "big-featured"
+                ]
+            },
+            "config": { "type": "object", "description": "A flexible object to store block-specific PRESENTATIONAL settings (e.g., columns, showExcerpts)." }
         },
         "required": ["id", "name", "type"]
+    },
+    "PageSection": {
+      "title": "Page Section",
+      "description": "A container for content blocks on a page, defining a column layout.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the page section." },
+        "pageId": { "type": "string", "description": "The ID of the Page this section belongs to." },
+        "order": { "type": "number", "description": "The vertical display order of the section on the page." },
+        "type": { "type": "string", "description": "The column layout type (e.g., 'one-column', 'two-column-50-50')." },
+        "config": { "type": "object", "description": "Configuration for the section, like background colors or padding." }
+      },
+      "required": ["id", "pageId", "order", "type"]
+    },
+    "SectionBlock": {
+      "title": "Section Block",
+      "description": "An instance of a Block Layout placed within a Page Section's column.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the section block instance." },
+        "sectionId": { "type": "string", "description": "The ID of the PageSection this block belongs to." },
+        "blockLayoutId": { "type": "string", "description": "The ID of the BlockLayout being used." },
+        "columnIndex": { "type": "number", "description": "The zero-based index of the column this block is in." },
+        "order": { "type": "number", "description": "The vertical display order of the block within its column." },
+        "config": { "type": "object", "description": "A flexible object to store instance-specific settings, such as content filters (e.g., post count, category filters)." }
+      },
+      "required": ["id", "sectionId", "blockLayoutId", "columnIndex", "order"]
     }
   },
   "auth": {
@@ -530,8 +593,26 @@
           "schema": { "$ref": "#/backend/entities/BlockLayout" },
           "description": "Stores reusable, configurable content blocks like post grids."
         }
+      },
+      {
+        "path": "/page_sections/{sectionId}",
+        "definition": {
+          "entityName": "PageSection",
+          "schema": { "$ref": "#/backend/entities/PageSection" },
+          "description": "Stores layout container sections for a specific page."
+        }
+      },
+       {
+        "path": "/section_blocks/{sectionBlockId}",
+        "definition": {
+          "entityName": "SectionBlock",
+          "schema": { "$ref": "#/backend/entities/SectionBlock" },
+          "description": "Stores instances of Block Layouts within page sections."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
   }
 }
+
+    

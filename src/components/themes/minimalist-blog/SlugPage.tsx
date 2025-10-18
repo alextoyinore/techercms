@@ -1,6 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -23,6 +24,8 @@ type Post = {
   slug: string;
   authorId: string;
   createdAt: Timestamp;
+  metaDescription?: string;
+  excerpt?: string;
 };
 
 type Page = {
@@ -189,33 +192,45 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     );
   }
 
-  return (
-    <ThemeLayout HeaderComponent={MinimalistHeader} FooterComponent={MinimalistFooter} pageId={pageId}>
-        <div className="max-w-3xl mx-auto">
-            <article className="max-w-none">
-            <header className="mb-12 text-center">
-                 <div className="text-sm text-muted-foreground">
-                    <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
-                        <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
-                    </Link>
-                </div>
-                {displayTitle && <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>}
-            </header>
-            
-            {isPost ? (
-                <div
-                    className="prose dark:prose-invert lg:prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{ __html: item.content }}
-                />
-            ) : (
-                 <PageContent page={item as Page} />
-            )}
+  const siteTitle = settings?.siteName || 'Techer CMS';
+  const pageTitle = `${item.title} - ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
 
-            </article>
-             <aside className="mt-12 space-y-8">
-                <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
-            </aside>
-        </div>
-    </ThemeLayout>
+  return (
+    <>
+      <Head>
+          <title>{pageTitle}</title>
+          <meta name="description" content={metaDescription} />
+      </Head>
+      <ThemeLayout HeaderComponent={MinimalistHeader} FooterComponent={MinimalistFooter} pageId={pageId}>
+          <div className="max-w-3xl mx-auto">
+              <article className="max-w-none">
+              <header className="mb-12 text-center">
+                   <div className="text-sm text-muted-foreground">
+                      <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                          <span>Published on {item.createdAt ? format(item.createdAt.toDate(), 'MMMM d, yyyy') : ''}</span>
+                      </Link>
+                  </div>
+                  {displayTitle && <h1 className="text-5xl font-bold font-headline tracking-tight mt-2">{item.title}</h1>}
+              </header>
+              
+              {isPost ? (
+                  <div
+                      className="prose dark:prose-invert lg:prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ __html: item.content }}
+                  />
+              ) : (
+                   <PageContent page={item as Page} />
+              )}
+
+              </article>
+               <aside className="mt-12 space-y-8">
+                  <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId}/>
+              </aside>
+          </div>
+      </ThemeLayout>
+    </>
   );
 }
+
+    
