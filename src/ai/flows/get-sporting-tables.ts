@@ -38,7 +38,7 @@ const getSportingTablesFlow = ai.defineFlow(
       throw new Error('TheSportsDB API key is not configured.');
     }
     
-    const url = `https://www.thesportsdb.com/api/v1/json/${apiKey}/lookuptable.php?l=${leagueId}&s=2023-2024`;
+    const url = `https://www.thesportsdb.com/api/v1/json/${apiKey}/lookuptable.php?l=${leagueId}&s=2025-2026`;
 
     try {
       const response = await fetch(url);
