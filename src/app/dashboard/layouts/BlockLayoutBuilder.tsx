@@ -549,7 +549,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
         case 'tabbed-posts':
             return (
                 <div className="grid gap-4">
-                     <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                         <Checkbox id="show-images-tabs" checked={config.showImages} onCheckedChange={c => handleConfigChange({ showImages: c })} />
                         <Label htmlFor="show-images-tabs">Show featured images</Label>
                     </div>
@@ -558,19 +558,16 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                         <Label htmlFor="show-excerpts-tabs">Show post excerpts</Label>
                     </div>
                     <div className="grid gap-4 border-t pt-4">
-                        <Label>Tabs</Label>
+                        <Label>Initial Tabs (Can be overridden per page)</Label>
                         {(config.tabs || []).map((tab: any, index: number) => (
-                            <div key={tab.id} className="grid gap-4 rounded-md border p-4">
-                                <div className="grid gap-2">
-                                    <Label>Tab Title</Label>
-                                    <Input value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} />
-                                </div>
-                                <Button variant="ghost" size="sm" onClick={() => removeTab(index)} className="text-destructive hover:text-destructive justify-self-start">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Remove Tab
+                            <div key={tab.id} className="flex gap-2 items-center rounded-md border p-2">
+                                <Input value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} className="flex-grow" />
+                                <Button variant="ghost" size="icon" onClick={() => removeTab(index)} className="text-destructive hover:text-destructive shrink-0">
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
                         ))}
-                        <Button variant="outline" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Tab</Button>
+                        <Button variant="outline" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Initial Tab</Button>
                     </div>
                 </div>
             )

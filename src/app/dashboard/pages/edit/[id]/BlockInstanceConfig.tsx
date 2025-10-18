@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { BlockLayout } from '@/app/dashboard/layouts/BlockLayoutsView';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -59,9 +59,15 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
 
   useEffect(() => {
     if (block) {
-      setConfig(block.config || {});
+      // If it's a tabbed block and no tabs are configured in the instance,
+      // initialize it with the default from the layout.
+      if (layoutType === 'tabbed-posts' && !block.config?.tabs) {
+          setConfig({ ...layout?.config, ...block.config, tabs: layout?.config.tabs || [{id: `${Date.now()}`, title: 'Latest'}] });
+      } else {
+        setConfig(block.config || {});
+      }
     }
-  }, [block]);
+  }, [block, layout, layoutType]);
 
   const handleSave = () => {
     if (!block) return;
@@ -72,23 +78,30 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
     setConfig(prev => ({ ...prev, ...newConfig }));
   };
 
-  const handleTabConfigChange = (index: number, newTabConfig: any) => {
-    const newTabs = [...(config.tabs || layout?.config.tabs || [])];
-    newTabs[index] = { ...newTabs[index], ...newTabConfig };
+  const handleTabChange = (index: number, field: string, value: any) => {
+    const newTabs = [...(config.tabs || [])];
+    const updatedTab = { ...newTabs[index], [field]: value };
+    newTabs[index] = updatedTab;
     handleConfigChange({ tabs: newTabs });
   }
 
-  const handleCategoryChange = (categoryId: string, checked: boolean, tabIndex?: number) => {
-    if (tabIndex !== undefined) {
-        const tab = (config.tabs || [])[tabIndex] || (layout?.config.tabs || [])[tabIndex];
-        const currentIds = tab.sourceIds || [];
-        const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
-        handleTabConfigChange(tabIndex, { sourceIds: newIds });
-    } else {
-        const currentIds = config.sourceIds || [];
-        const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
-        handleConfigChange({ sourceIds: newIds });
-    }
+  const addTab = () => {
+    const newTab = {id: `${Date.now()}`, title: 'New Tab', filterType: 'latest'};
+    handleConfigChange({ tabs: [...(config.tabs || []), newTab] });
+  }
+
+  const removeTab = (index: number) => {
+    const newTabs = [...config.tabs];
+    newTabs.splice(index, 1);
+    handleConfigChange({ tabs: newTabs });
+  }
+
+  const handleCategoryChange = (categoryId: string, checked: boolean, tabIndex: number) => {
+    const tab = (config.tabs || [])[tabIndex];
+    if (!tab) return;
+    const currentIds = tab.sourceIds || [];
+    const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
+    handleTabChange(tabIndex, 'sourceIds', newIds);
   };
   
   const renderContentFilterFields = () => {
@@ -102,63 +115,75 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
         'big-featured'
     ];
     if (layoutType === 'tabbed-posts') {
-        const tabs = layout?.config.tabs || [];
+        const tabs = config.tabs || [];
         return (
              <div className="grid gap-4 border-t pt-4">
-                <h3 className="font-medium">Content Source per Tab</h3>
-                {tabs.map((tab: any, index: number) => {
-                    const tabConfig = (config.tabs || [])[index] || {};
-                    return (
-                        <div key={tab.id || index} className="grid gap-4 rounded-md border p-4">
-                            <p className="font-semibold text-sm">{tab.title}</p>
-                            <div className="grid gap-2">
-                                <Label>Filter Type</Label>
-                                <Select 
-                                    value={tabConfig.filterType || 'latest'} 
-                                    onValueChange={v => handleTabConfigChange(index, { filterType: v, sourceIds: [], tags: '' })}
-                                >
-                                    <SelectTrigger><SelectValue/></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="latest">Latest Posts</SelectItem>
-                                        <SelectItem value="category">By Category</SelectItem>
-                                        <SelectItem value="tag">By Tag</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                <div className="flex justify-between items-center">
+                    <h3 className="font-medium">Tabs</h3>
+                    <Button variant="outline" size="sm" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Tab</Button>
+                </div>
+                {tabs.map((tab: any, index: number) => (
+                    <div key={tab.id || index} className="grid gap-4 rounded-md border p-4">
+                        <div className="flex justify-between items-start">
+                            <div className="grid gap-2 flex-grow">
+                                <Label htmlFor={`tab-title-${index}`}>Tab Title</Label>
+                                <Input id={`tab-title-${index}`} value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} />
                             </div>
-                            {tabConfig.filterType === 'category' && (
-                                <div className="grid gap-2">
-                                    <Label>Categories</Label>
-                                    <ScrollArea className="h-40 rounded-md border p-2">
-                                        <div className='grid gap-2'>
-                                        {isLoadingCategories && <p>Loading...</p>}
-                                        {categories?.map(cat => (
-                                            <div key={cat.id} className="flex items-center gap-2">
-                                                <Checkbox
-                                                    id={`cat-tab-${index}-${cat.id}`}
-                                                    checked={(tabConfig.sourceIds || []).includes(cat.id)}
-                                                    onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, index)}
-                                                />
-                                                <Label htmlFor={`cat-tab-${index}-${cat.id}`} className="font-normal">{cat.name}</Label>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </ScrollArea>
-                                </div>
-                            )}
-                            {tabConfig.filterType === 'tag' && (
-                                <div className="grid gap-2">
-                                    <Label htmlFor={`tags-tab-${index}`}>Tags (comma-separated)</Label>
-                                    <Input
-                                        id={`tags-tab-${index}`}
-                                        placeholder="e.g., tech, news"
-                                        value={tabConfig.tags || ''}
-                                        onChange={e => handleTabConfigChange(index, { tags: e.target.value })}
-                                    />
-                                </div>
-                            )}
+                            <Button variant="ghost" size="icon" onClick={() => removeTab(index)} className="text-destructive hover:text-destructive ml-2 shrink-0">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
                         </div>
-                    )
-                })}
+                        <div className="grid gap-2">
+                            <Label>Content Source</Label>
+                            <Select 
+                                value={tab.filterType || 'latest'} 
+                                onValueChange={v => {
+                                    const newTabs = [...(config.tabs || [])];
+                                    newTabs[index] = { ...newTabs[index], filterType: v, sourceIds: [], tags: '' };
+                                    handleConfigChange({ tabs: newTabs });
+                                }}
+                            >
+                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="latest">Latest Posts</SelectItem>
+                                    <SelectItem value="category">By Category</SelectItem>
+                                    <SelectItem value="tag">By Tag</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {tab.filterType === 'category' && (
+                            <div className="grid gap-2">
+                                <Label>Categories</Label>
+                                <ScrollArea className="h-40 rounded-md border p-2">
+                                    <div className='grid gap-2'>
+                                    {isLoadingCategories && <p>Loading...</p>}
+                                    {categories?.map(cat => (
+                                        <div key={cat.id} className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`cat-tab-${index}-${cat.id}`}
+                                                checked={(tab.sourceIds || []).includes(cat.id)}
+                                                onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, index)}
+                                            />
+                                            <Label htmlFor={`cat-tab-${index}-${cat.id}`} className="font-normal">{cat.name}</Label>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </ScrollArea>
+                            </div>
+                        )}
+                        {tab.filterType === 'tag' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor={`tags-tab-${index}`}>Tags (comma-separated)</Label>
+                                <Input
+                                    id={`tags-tab-${index}`}
+                                    placeholder="e.g., tech, news"
+                                    value={tab.tags || ''}
+                                    onChange={e => handleTabChange(index, 'tags', e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
             </div>
         )
     }
@@ -198,7 +223,7 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
                                 <Checkbox
                                     id={`cat-${cat.id}`}
                                     checked={(config.sourceIds || []).includes(cat.id)}
-                                    onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean)}
+                                    onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, -1)}
                                 />
                                 <Label htmlFor={`cat-${cat.id}`} className="font-normal">{cat.name}</Label>
                             </div>
