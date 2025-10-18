@@ -149,6 +149,10 @@
           "type": "string",
           "description": "A short summary of the post."
         },
+        "metaDescription": {
+          "type": "string",
+          "description": "An SEO-friendly description for the post's meta tag."
+        },
         "featuredImageUrl": {
           "type": "string",
           "description": "The URL for the post's main image."
@@ -249,6 +253,10 @@
             "type": "string",
             "description": "The public name of the website."
         },
+        "siteLogoUrl": {
+            "type": "string",
+            "description": "The URL for the website's logo."
+        },
         "language": {
             "type": "string",
             "description": "The primary language of the website."
@@ -346,10 +354,14 @@
         "id": { "type": "string", "description": "Unique identifier for the menu item." },
         "menuId": { "type": "string", "description": "The ID of the NavigationMenu this item belongs to." },
         "label": { "type": "string", "description": "The text to display for the link." },
-        "url": { "type": "string", "description": "The URL the link points to." },
-        "order": { "type": "number", "description": "The display order of the link within its menu." }
+        "type": { "type": "string", "enum": ["custom", "page", "category"], "description": "The type of link." },
+        "url": { "type": "string", "description": "The URL the link points to (for custom links)." },
+        "objectId": { "type": "string", "description": "The ID of the linked Page or Category." },
+        "target": { "type": "string", "enum": ["_self", "_blank"], "description": "Link target attribute." },
+        "order": { "type": "number", "description": "The display order of the link within its menu." },
+        "parentId": { "type": "string", "description": "The ID of the parent menu item, for creating sub-menus." }
       },
-      "required": ["id", "menuId", "label", "url", "order"]
+      "required": ["id", "menuId", "label", "type", "order"]
     },
     "CustomTheme": {
         "title": "Custom Theme",
@@ -607,6 +619,8 @@
         }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation."
   }
 }
+
+  
