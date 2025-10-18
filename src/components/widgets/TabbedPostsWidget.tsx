@@ -79,7 +79,7 @@ function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: T
                         </Link>
                     )}
                     <div>
-                        <h4 className="font-semibold leading-tight group-hover:underline">
+                        <h4 className="font-semibold leading-tight group-hover:underline text-sm">
                             <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h4>
                         {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2">{post.excerpt}</p>}
