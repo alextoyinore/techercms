@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -20,7 +21,7 @@ type Post = {
 type TabConfig = {
     id: string;
     title: string;
-    filterType: 'latest' | 'category' | 'tag';
+    filterType?: 'latest' | 'category' | 'tag';
     sourceIds?: string[]; // For categories
     tags?: string; // For tags
 }
@@ -91,12 +92,13 @@ function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: T
 
 export function TabbedPostsWidget({
     title,
-    tabs,
+    tabs: instanceTabs,
     postCountPerTab = 5,
     showExcerpts = true,
     showImages = true,
 }: TabbedPostsWidgetProps) {
     
+    const tabs = instanceTabs || [];
     const defaultTab = useMemo(() => tabs?.[0]?.id, [tabs]);
 
     if (!tabs || tabs.length === 0) {
