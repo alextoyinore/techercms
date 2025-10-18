@@ -85,7 +85,7 @@ const initialConfig = {
     'featured-top-and-grid': { gridColumns: 3, showSmallImages: true, showSmallExcerpts: false, imagePosition: 'before' },
     'featured-and-list': { showSmallImages: true, showSmallExcerpts: true, imagePosition: 'before' },
     'big-featured': { imagePosition: 'left', showExcerpt: true, buttonText: 'Read More' },
-    'tabbed-posts': { showImages: true, showExcerpts: true },
+    'tabbed-posts': { tabs: [{id: '1', title: 'Latest', filterType: 'latest'}], showImages: true, showExcerpts: true },
     'hero': { headline: 'Hero Headline', subheadline: 'Subheadline text goes here.', buttonText: 'Learn More', buttonUrl: '#', imageUrl: '' },
     'cta': { headline: 'Call to Action', subheadline: 'Encourage users to take an action.', buttonText: 'Get Started', buttonUrl: '#' },
     'feature-grid': { features: [{ id: '1', icon: 'zap', title: 'Feature One', description: 'Description for feature one.'}, { id: '2', icon: 'bar-chart', title: 'Feature Two', description: 'Description for feature two.'}, { id: '3', icon: 'shield', title: 'Feature Three', description: 'Description for feature three.'}] },
@@ -164,8 +164,15 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   };
 
   const handleTabChange = (index: number, field: 'title' | 'filterType' | 'category' | 'tag', value: string) => {
-    const newTabs = [...config.tabs];
-    newTabs[index] = {...newTabs[index], [field]: value};
+    const newTabs = [...(config.tabs || [])];
+    const updatedTab = { ...newTabs[index], [field]: value };
+
+    if(field === 'filterType' && value === 'latest') {
+        delete updatedTab.category;
+        delete updatedTab.tag;
+    }
+
+    newTabs[index] = updatedTab;
     handleConfigChange({ tabs: newTabs });
   }
 
@@ -554,6 +561,21 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                     <div className="flex items-center space-x-2">
                         <Checkbox id="show-excerpts-tabs" checked={config.showExcerpts} onCheckedChange={c => handleConfigChange({ showExcerpts: c })} />
                         <Label htmlFor="show-excerpts-tabs">Show post excerpts</Label>
+                    </div>
+                    <div className="grid gap-4 border-t pt-4">
+                        <Label>Tabs</Label>
+                        {(config.tabs || []).map((tab: any, index: number) => (
+                            <div key={tab.id} className="grid gap-4 rounded-md border p-4">
+                                <div className="grid gap-2">
+                                    <Label>Tab Title</Label>
+                                    <Input value={tab.title} onChange={e => handleTabChange(index, 'title', e.target.value)} />
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => removeTab(index)} className="text-destructive hover:text-destructive justify-self-start">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Remove Tab
+                                </Button>
+                            </div>
+                        ))}
+                        <Button variant="outline" onClick={addTab}><Plus className="mr-2 h-4 w-4" /> Add Tab</Button>
                     </div>
                 </div>
             )

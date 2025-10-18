@@ -72,12 +72,23 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
     setConfig(prev => ({ ...prev, ...newConfig }));
   };
 
-  const handleCategoryChange = (categoryId: string, checked: boolean) => {
-    const currentIds = config.sourceIds || [];
-    const newIds = checked
-        ? [...currentIds, categoryId]
-        : currentIds.filter((id: string) => id !== categoryId);
-    handleConfigChange({ sourceIds: newIds });
+  const handleTabConfigChange = (index: number, newTabConfig: any) => {
+    const newTabs = [...(config.tabs || layout?.config.tabs || [])];
+    newTabs[index] = { ...newTabs[index], ...newTabConfig };
+    handleConfigChange({ tabs: newTabs });
+  }
+
+  const handleCategoryChange = (categoryId: string, checked: boolean, tabIndex?: number) => {
+    if (tabIndex !== undefined) {
+        const tab = (config.tabs || [])[tabIndex] || (layout?.config.tabs || [])[tabIndex];
+        const currentIds = tab.sourceIds || [];
+        const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
+        handleTabConfigChange(tabIndex, { sourceIds: newIds });
+    } else {
+        const currentIds = config.sourceIds || [];
+        const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
+        handleConfigChange({ sourceIds: newIds });
+    }
   };
   
   const renderContentFilterFields = () => {
@@ -86,11 +97,69 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
         'post-list', 
         'post-carousel', 
         'featured-and-smalls', 
-        'tabbed-posts',
-        'featured-and-list',
         'featured-top-and-grid',
+        'featured-and-list',
         'big-featured'
     ];
+    if (layoutType === 'tabbed-posts') {
+        const tabs = config.tabs || layout?.config.tabs || [];
+        return (
+             <div className="grid gap-4 border-t pt-4">
+                <h3 className="font-medium">Content Source per Tab</h3>
+                {tabs.map((tab: any, index: number) => (
+                    <div key={tab.id || index} className="grid gap-4 rounded-md border p-4">
+                        <p className="font-semibold text-sm">{tab.title}</p>
+                        <div className="grid gap-2">
+                            <Label>Filter Type</Label>
+                            <Select 
+                                value={tab.filterType || 'latest'} 
+                                onValueChange={v => handleTabConfigChange(index, { filterType: v, sourceIds: [], tags: '' })}
+                            >
+                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="latest">Latest Posts</SelectItem>
+                                    <SelectItem value="category">By Category</SelectItem>
+                                    <SelectItem value="tag">By Tag</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {tab.filterType === 'category' && (
+                             <div className="grid gap-2">
+                                <Label>Categories</Label>
+                                <ScrollArea className="h-40 rounded-md border p-2">
+                                    <div className='grid gap-2'>
+                                    {isLoadingCategories && <p>Loading...</p>}
+                                    {categories?.map(cat => (
+                                        <div key={cat.id} className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`cat-tab-${index}-${cat.id}`}
+                                                checked={(tab.sourceIds || []).includes(cat.id)}
+                                                onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, index)}
+                                            />
+                                            <Label htmlFor={`cat-tab-${index}-${cat.id}`} className="font-normal">{cat.name}</Label>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </ScrollArea>
+                            </div>
+                        )}
+                        {tab.filterType === 'tag' && (
+                             <div className="grid gap-2">
+                                <Label htmlFor={`tags-tab-${index}`}>Tags (comma-separated)</Label>
+                                <Input
+                                    id={`tags-tab-${index}`}
+                                    placeholder="e.g., tech, news"
+                                    value={tab.tags || ''}
+                                    onChange={e => handleTabConfigChange(index, { tags: e.target.value })}
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
     if (!layoutType || !postTypes.includes(layoutType)) {
         return <p className="text-sm text-muted-foreground">This block type has no content filtering options.</p>;
     }

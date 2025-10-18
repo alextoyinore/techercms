@@ -21,8 +21,8 @@ type TabConfig = {
     id: string;
     title: string;
     filterType: 'latest' | 'category' | 'tag';
-    category?: string; // Should be a single category ID
-    tag?: string; // Should be a single tag string
+    sourceIds?: string[]; // For categories
+    tags?: string; // For tags
 }
 
 type TabbedPostsWidgetProps = {
@@ -44,12 +44,13 @@ function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: T
             where('status', '==', 'published')
         );
 
-        if (filter.filterType === 'category' && filter.category) {
-            q = query(q, where('categoryIds', 'array-contains', filter.category));
-        } else if (filter.filterType === 'tag' && filter.tag) {
-            // Note: Firestore doesn't support OR queries on different fields easily.
-            // This setup assumes tags are stored in an array `tagIds`.
-            q = query(q, where('tagIds', 'array-contains', filter.tag));
+        if (filter.filterType === 'category' && filter.sourceIds && filter.sourceIds.length > 0) {
+            q = query(q, where('categoryIds', 'array-contains-any', filter.sourceIds));
+        } else if (filter.filterType === 'tag' && filter.tags && filter.tags.trim() !== '') {
+            const tagArray = filter.tags.split(',').map(t => t.trim()).filter(Boolean);
+            if(tagArray.length > 0) {
+                q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            }
         }
 
         return query(q, orderBy('createdAt', 'desc'), limit(postCount));
@@ -89,6 +90,7 @@ function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: T
 }
 
 export function TabbedPostsWidget({
+    title,
     tabs,
     postCountPerTab = 5,
     showExcerpts = true,
@@ -108,26 +110,29 @@ export function TabbedPostsWidget({
     }
 
     return (
-        <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList>
+        <div className="w-full">
+            {title && <h2 className="text-2xl font-bold font-headline mb-4">{title}</h2>}
+            <Tabs defaultValue={defaultTab} className="w-full">
+                <TabsList>
+                    {tabs.map(tab => (
+                        <TabsTrigger key={tab.id} value={tab.id}>{tab.title}</TabsTrigger>
+                    ))}
+                </TabsList>
                 {tabs.map(tab => (
-                    <TabsTrigger key={tab.id} value={tab.id}>{tab.title}</TabsTrigger>
+                    <TabsContent key={tab.id} value={tab.id}>
+                        <Card>
+                            <CardContent className="p-4">
+                                <TabContent 
+                                    filter={tab} 
+                                    postCount={postCountPerTab}
+                                    showImages={showImages}
+                                    showExcerpts={showExcerpts}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 ))}
-            </TabsList>
-            {tabs.map(tab => (
-                <TabsContent key={tab.id} value={tab.id}>
-                    <Card>
-                        <CardContent className="p-4">
-                            <TabContent 
-                                filter={tab} 
-                                postCount={postCountPerTab}
-                                showImages={showImages}
-                                showExcerpts={showExcerpts}
-                            />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            ))}
-        </Tabs>
+            </Tabs>
+        </div>
     );
 }
