@@ -153,6 +153,14 @@ function MenuItemsManager({
 
   const { data: menuItems, isLoading } =
     useCollection<NavigationMenuItem>(menuItemsQuery);
+    
+  const [localMenuItems, setLocalMenuItems] = useState<NavigationMenuItem[]>([]);
+  useEffect(() => {
+    if(menuItems) {
+      setLocalMenuItems(menuItems);
+    }
+  }, [menuItems]);
+
 
   const pagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -172,17 +180,15 @@ function MenuItemsManager({
     useCollection<Category>(categoriesQuery);
 
   const menuTree = useMemo(() => {
-    if (!menuItems) return [];
+    if (!localMenuItems) return [];
     const itemsMap = new Map<string, MenuItemWithChildren>();
     const roots: MenuItemWithChildren[] = [];
 
-    // First pass: create a map of all items
-    menuItems.forEach(item => {
+    localMenuItems.forEach(item => {
       itemsMap.set(item.id, { ...item, children: [] });
     });
 
-    // Second pass: build the tree structure
-    menuItems.forEach(item => {
+    localMenuItems.forEach(item => {
       const currentItem = itemsMap.get(item.id);
       if (!currentItem) return;
 
@@ -194,14 +200,12 @@ function MenuItemsManager({
       }
     });
 
-    // Sort children for each item
     itemsMap.forEach(item => {
         item.children.sort((a,b) => a.order - b.order);
     });
 
-    // Sort root items
     return roots.sort((a,b) => a.order - b.order);
-  }, [menuItems]);
+  }, [localMenuItems]);
 
   useEffect(() => {
     if (isSheetOpen && (editingItem as NavigationMenuItem).id) {
@@ -229,8 +233,8 @@ function MenuItemsManager({
   };
   
   const getOrderForNewItem = (parentId?: string) => {
-    if (!menuItems) return 0;
-    const siblings = menuItems.filter(item => item.parentId === parentId);
+    if (!localMenuItems) return 0;
+    const siblings = localMenuItems.filter(item => item.parentId === parentId);
     return siblings.length;
   }
 
@@ -278,16 +282,16 @@ function MenuItemsManager({
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!firestore || !menuItems) return;
+    if (!firestore || !localMenuItems) return;
     try {
       const batch = writeBatch(firestore);
       const itemsToDelete = [itemId];
-      const childrenStack = menuItems.filter(item => item.parentId === itemId).map(i => i.id);
+      const childrenStack = localMenuItems.filter(item => item.parentId === itemId).map(i => i.id);
 
       while(childrenStack.length > 0) {
         const currentId = childrenStack.pop()!;
         itemsToDelete.push(currentId);
-        const children = menuItems.filter(item => item.parentId === currentId).map(i => i.id);
+        const children = localMenuItems.filter(item => item.parentId === currentId).map(i => i.id);
         childrenStack.push(...children);
       }
 
@@ -309,9 +313,9 @@ function MenuItemsManager({
   const handleDeleteMenuWithItems = async () => {
     if (!firestore) return;
 
-    if (menuItems && menuItems.length > 0) {
+    if (localMenuItems && localMenuItems.length > 0) {
       const batch = writeBatch(firestore);
-      menuItems.forEach(item => {
+      localMenuItems.forEach(item => {
         const itemRef = doc(firestore, 'navigation_menu_items', item.id);
         batch.delete(itemRef);
       });
@@ -344,31 +348,45 @@ function MenuItemsManager({
     }
   };
   
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: {
+        distance: 8,
+    },
+  }));
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id || !menuItems) return;
+    if (!over || active.id === over.id || !localMenuItems) return;
 
-    const oldIndex = menuItems.findIndex(item => item.id === active.id);
-    const newIndex = menuItems.findIndex(item => item.id === over.id);
+    setLocalMenuItems((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
 
-    const newOrder = arrayMove(menuItems, oldIndex, newIndex);
-    
-    const batch = writeBatch(firestore);
-    newOrder.forEach((item, index) => {
-        const itemRef = doc(firestore, 'navigation_menu_items', item.id);
-        batch.update(itemRef, { order: index });
+        if (oldIndex === -1 || newIndex === -1) return items;
+
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+
+        // Batch updates to Firestore
+        const batch = writeBatch(firestore);
+        newOrder.forEach((item, index) => {
+            const itemRef = doc(firestore, 'navigation_menu_items', item.id);
+            if (item.order !== index) {
+                batch.update(itemRef, { order: index });
+            }
+        });
+
+        batch.commit().then(() => {
+            toast({ title: "Menu reordered" });
+        }).catch(error => {
+            toast({ variant: 'destructive', title: 'Reorder failed', description: error.message });
+            // Revert local state on error
+            setLocalMenuItems(menuItems || []);
+        });
+
+        return newOrder;
     });
 
-    try {
-        await batch.commit();
-        toast({ title: "Menu reordered" });
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Reorder failed', description: error.message });
-    }
-
-  }, [menuItems, firestore, toast]);
+  }, [localMenuItems, firestore, toast, menuItems]);
 
   return (
     <div>
@@ -389,7 +407,7 @@ function MenuItemsManager({
           {isLoading && <p className="text-sm text-center text-muted-foreground p-4">Loading items...</p>}
           
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={menuItems?.map(i => i.id) || []} strategy={verticalListSortingStrategy}>
+            <SortableContext items={localMenuItems?.map(i => i.id) || []} strategy={verticalListSortingStrategy}>
               {menuTree.map(item => (
                 <SortableMenuItem key={item.id} item={item} onEdit={handleEditClick} onDelete={handleDeleteItem} />
               ))}
