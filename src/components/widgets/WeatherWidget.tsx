@@ -1,20 +1,22 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Sun, Cloud, CloudRain, CloudSnow } from 'lucide-react';
+import { Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Haze, Wind, Loader2 } from 'lucide-react';
+import { getWeather, type GetWeatherOutput } from '@/ai/flows/get-weather';
 
-const mockWeatherData: Record<string, any> = {
-    sunny: { temp: 75, condition: 'Sunny', icon: Sun, high: 80, low: 65 },
-    cloudy: { temp: 68, condition: 'Cloudy', icon: Cloud, high: 72, low: 62 },
-    rainy: { temp: 62, condition: 'Rainy', icon: CloudRain, high: 65, low: 58 },
-    snowy: { temp: 30, condition: 'Snowy', icon: CloudSnow, high: 32, low: 25 },
+const iconMap: Record<string, React.FC<any>> = {
+  '01d': Sun, '01n': Sun,
+  '02d': Cloud, '02n': Cloud,
+  '03d': Cloud, '03n': Cloud,
+  '04d': Cloud, '04n': Cloud,
+  '09d': CloudRain, '09n': CloudRain,
+  '10d': CloudRain, '10n': CloudRain,
+  '11d': CloudLightning, '11n': CloudLightning,
+  '13d': CloudSnow, '13n': CloudSnow,
+  '50d': Haze, '50n': Haze,
+  default: Sun,
 };
 
-// Function to get a pseudo-random weather type based on location string
-const getWeatherType = (location: string) => {
-    const charCodeSum = location.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    const types = Object.keys(mockWeatherData);
-    return types[charCodeSum % types.length];
-};
 
 type WeatherWidgetProps = {
     title?: string;
@@ -22,9 +24,27 @@ type WeatherWidgetProps = {
 }
 
 export function WeatherWidget({ title = 'Weather', location = "New York, NY" }: WeatherWidgetProps) {
-    const weatherType = getWeatherType(location);
-    const weatherData = mockWeatherData[weatherType];
-    const Icon = weatherData.icon;
+    const [weatherData, setWeatherData] = useState<GetWeatherOutput | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchWeather() {
+            if (!location) return;
+            setIsLoading(true);
+            try {
+                const data = await getWeather({ location });
+                setWeatherData(data);
+            } catch (error) {
+                console.error("Failed to get weather data:", error);
+                setWeatherData(null);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchWeather();
+    }, [location]);
+
+    const Icon = weatherData ? (iconMap[weatherData.icon] || iconMap.default) : Loader2;
 
     return (
         <Card>
@@ -33,19 +53,27 @@ export function WeatherWidget({ title = 'Weather', location = "New York, NY" }: 
                  <p className="text-sm text-muted-foreground">{location}</p>
             </CardHeader>
             <CardContent>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Icon className="h-12 w-12 text-primary" />
-                        <div>
-                            <div className="text-4xl font-bold">{weatherData.temp}°</div>
-                            <div className="text-sm text-muted-foreground">{weatherData.condition}</div>
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-24">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : weatherData && weatherData.condition !== "Error fetching data" ? (
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <Icon className="h-12 w-12 text-primary" />
+                            <div>
+                                <div className="text-4xl font-bold">{weatherData.temp}°C</div>
+                                <div className="text-sm text-muted-foreground capitalize">{weatherData.condition}</div>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm">H: {weatherData.high}°</div>
+                            <div className="text-sm text-muted-foreground">L: {weatherData.low}°</div>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-sm">H: {weatherData.high}°</div>
-                        <div className="text-sm text-muted-foreground">L: {weatherData.low}°</div>
-                    </div>
-                </div>
+                ) : (
+                     <p className="text-sm text-destructive">Could not load weather data.</p>
+                )}
             </CardContent>
         </Card>
     );
