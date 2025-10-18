@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import {
   collection,
@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Trash2, Edit } from 'lucide-react';
+import { Loader2, Plus, Trash2, Edit, GripVertical } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -54,6 +54,11 @@ import {
 } from '@/components/ui/select';
 import { menuLocations } from '@/lib/menu-locations';
 import { Separator } from '@/components/ui/separator';
+import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
+
 
 type NavigationMenu = {
   id: string;
@@ -66,6 +71,8 @@ type NavigationMenuItem = {
   label: string;
   url: string;
   order: number;
+  parentId?: string;
+  type: 'custom' | 'page' | 'category';
 };
 
 type Page = {
@@ -83,6 +90,41 @@ type Category = {
 type SiteSettings = {
     menuAssignments?: Record<string, string>;
 };
+
+type MenuItemWithChildren = NavigationMenuItem & { children: MenuItemWithChildren[] };
+
+
+const SortableMenuItem = ({ item, onEdit, onDelete, level = 0 }: { item: MenuItemWithChildren, onEdit: (item: NavigationMenuItem) => void, onDelete: (itemId: string) => void, level?: number }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+    const style = { transform: CSS.Transform.toString(transform), transition };
+  
+    return (
+      <div ref={setNodeRef} style={style} className={cn('relative', isDragging && 'opacity-50 z-10')}>
+        <div className="flex items-center bg-card border rounded-md" style={{ marginLeft: `${level * 2}rem` }}>
+          <div {...attributes} {...listeners} className="p-2 cursor-grab touch-none">
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-grow font-medium text-sm p-2">{item.label}</div>
+          <div className="flex gap-1 p-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(item)}>
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDelete(item.id)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+        {item.children.length > 0 && (
+          <div className="mt-1">
+            {item.children.map(child => (
+              <SortableMenuItem key={child.id} item={child} onEdit={onEdit} onDelete={onDelete} level={level + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+};
+
 
 function MenuItemsManager({
   menu,
@@ -129,9 +171,36 @@ function MenuItemsManager({
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
 
-  const sortedMenuItems = useMemo(() => {
+  const menuTree = useMemo(() => {
     if (!menuItems) return [];
-    return [...menuItems].sort((a, b) => a.order - b.order);
+    const itemsMap = new Map<string, MenuItemWithChildren>();
+    const roots: MenuItemWithChildren[] = [];
+
+    // First pass: create a map of all items
+    menuItems.forEach(item => {
+      itemsMap.set(item.id, { ...item, children: [] });
+    });
+
+    // Second pass: build the tree structure
+    menuItems.forEach(item => {
+      const currentItem = itemsMap.get(item.id);
+      if (!currentItem) return;
+
+      if (item.parentId && itemsMap.has(item.parentId)) {
+        const parentItem = itemsMap.get(item.parentId);
+        parentItem?.children.push(currentItem);
+      } else {
+        roots.push(currentItem);
+      }
+    });
+
+    // Sort children for each item
+    itemsMap.forEach(item => {
+        item.children.sort((a,b) => a.order - b.order);
+    });
+
+    // Sort root items
+    return roots.sort((a,b) => a.order - b.order);
   }, [menuItems]);
 
   useEffect(() => {
@@ -158,6 +227,12 @@ function MenuItemsManager({
     setEditingItem({});
     setIsSheetOpen(true);
   };
+  
+  const getOrderForNewItem = (parentId?: string) => {
+    if (!menuItems) return 0;
+    const siblings = menuItems.filter(item => item.parentId === parentId);
+    return siblings.length;
+  }
 
   const handleSaveItem = async () => {
     if (!firestore) return;
@@ -183,7 +258,7 @@ function MenuItemsManager({
         toast({ title: 'Item Updated' });
       } else {
         const newDocRef = collection(firestore, 'navigation_menu_items');
-        const order = sortedMenuItems ? sortedMenuItems.length : 0;
+        const order = getOrderForNewItem(itemToSave.parentId);
         await addDocumentNonBlocking(newDocRef, {
           ...itemToSave,
           menuId: menu.id,
@@ -203,11 +278,25 @@ function MenuItemsManager({
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!firestore) return;
+    if (!firestore || !menuItems) return;
     try {
-      const itemRef = doc(firestore, 'navigation_menu_items', itemId);
-      await deleteDocumentNonBlocking(itemRef);
-      toast({ title: 'Item Deleted' });
+      const batch = writeBatch(firestore);
+      const itemsToDelete = [itemId];
+      const childrenStack = menuItems.filter(item => item.parentId === itemId).map(i => i.id);
+
+      while(childrenStack.length > 0) {
+        const currentId = childrenStack.pop()!;
+        itemsToDelete.push(currentId);
+        const children = menuItems.filter(item => item.parentId === currentId).map(i => i.id);
+        childrenStack.push(...children);
+      }
+
+      itemsToDelete.forEach(id => {
+        batch.delete(doc(firestore, 'navigation_menu_items', id));
+      });
+      
+      await batch.commit();
+      toast({ title: 'Item and sub-items Deleted' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -220,9 +309,9 @@ function MenuItemsManager({
   const handleDeleteMenuWithItems = async () => {
     if (!firestore) return;
 
-    if (sortedMenuItems && sortedMenuItems.length > 0) {
+    if (menuItems && menuItems.length > 0) {
       const batch = writeBatch(firestore);
-      sortedMenuItems.forEach(item => {
+      menuItems.forEach(item => {
         const itemRef = doc(firestore, 'navigation_menu_items', item.id);
         batch.delete(itemRef);
       });
@@ -238,6 +327,7 @@ function MenuItemsManager({
         ...editingItem,
         url: `/${slug}`,
         label: selectedPage.title,
+        type: 'page',
       });
     }
   };
@@ -249,9 +339,36 @@ function MenuItemsManager({
         ...editingItem,
         url: `/category/${slug}`,
         label: selectedCategory.name,
+        type: 'category'
       });
     }
   };
+  
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !menuItems) return;
+
+    const oldIndex = menuItems.findIndex(item => item.id === active.id);
+    const newIndex = menuItems.findIndex(item => item.id === over.id);
+
+    const newOrder = arrayMove(menuItems, oldIndex, newIndex);
+    
+    const batch = writeBatch(firestore);
+    newOrder.forEach((item, index) => {
+        const itemRef = doc(firestore, 'navigation_menu_items', item.id);
+        batch.update(itemRef, { order: index });
+    });
+
+    try {
+        await batch.commit();
+        toast({ title: "Menu reordered" });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Reorder failed', description: error.message });
+    }
+
+  }, [menuItems, firestore, toast]);
 
   return (
     <div>
@@ -270,36 +387,17 @@ function MenuItemsManager({
         </div>
         <div className="space-y-1">
           {isLoading && <p className="text-sm text-center text-muted-foreground p-4">Loading items...</p>}
-          {sortedMenuItems?.map(item => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between rounded-md border p-2"
-            >
-              <div className="font-medium text-sm">
-                {item.label}
-              </div>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => handleEditClick(item)}
-                >
-                  <Edit className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={() => handleDeleteItem(item.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          {!isLoading && sortedMenuItems?.length === 0 && (
-            <p className="text-sm text-muted-foreground p-3 text-center">
+          
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={menuItems?.map(i => i.id) || []} strategy={verticalListSortingStrategy}>
+              {menuTree.map(item => (
+                <SortableMenuItem key={item.id} item={item} onEdit={handleEditClick} onDelete={handleDeleteItem} />
+              ))}
+            </SortableContext>
+          </DndContext>
+          
+          {!isLoading && menuTree.length === 0 && (
+            <p className="text-sm text-muted-foreground p-3 text-center border rounded-md">
               No items in this menu yet.
             </p>
           )}
@@ -342,7 +440,7 @@ function MenuItemsManager({
                     id="url"
                     value={(editingItem as NavigationMenuItem).url || ''}
                     onChange={e =>
-                      setEditingItem({ ...editingItem, url: e.target.value })
+                      setEditingItem({ ...editingItem, url: e.target.value, type: 'custom' })
                     }
                   />
                 </div>
