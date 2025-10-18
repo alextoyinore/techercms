@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import {
   collection,
@@ -93,14 +93,13 @@ type SiteSettings = {
 
 type MenuItemWithChildren = NavigationMenuItem & { children: MenuItemWithChildren[] };
 
-
-const SortableMenuItem = ({ item, onEdit, onDelete, level = 0 }: { item: MenuItemWithChildren, onEdit: (item: NavigationMenuItem) => void, onDelete: (itemId: string) => void, level?: number }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+const SortableMenuItem = ({ item, onEdit, onDelete }: { item: MenuItemWithChildren, onEdit: (item: NavigationMenuItem) => void, onDelete: (itemId: string) => void }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, data: { item } });
     const style = { transform: CSS.Transform.toString(transform), transition };
   
     return (
       <div ref={setNodeRef} style={style} className={cn('relative', isDragging && 'opacity-50 z-10')}>
-        <div className="flex items-center bg-card border rounded-md" style={{ marginLeft: `${level * 2}rem` }}>
+        <div className="flex items-center bg-card border rounded-md">
           <div {...attributes} {...listeners} className="p-2 cursor-grab touch-none">
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
@@ -114,17 +113,77 @@ const SortableMenuItem = ({ item, onEdit, onDelete, level = 0 }: { item: MenuIte
             </Button>
           </div>
         </div>
-        {item.children.length > 0 && (
-          <div className="mt-1">
-            {item.children.map(child => (
-              <SortableMenuItem key={child.id} item={child} onEdit={onEdit} onDelete={onDelete} level={level + 1} />
-            ))}
-          </div>
-        )}
       </div>
     );
 };
 
+const buildTree = (items: NavigationMenuItem[]): MenuItemWithChildren[] => {
+    if (!items || items.length === 0) return [];
+    
+    const itemsMap = new Map<string, MenuItemWithChildren>();
+    const roots: MenuItemWithChildren[] = [];
+
+    items.forEach(item => {
+      itemsMap.set(item.id, { ...item, children: [] });
+    });
+
+    items.forEach(item => {
+      const currentItem = itemsMap.get(item.id);
+      if (!currentItem) return;
+
+      if (item.parentId && itemsMap.has(item.parentId)) {
+        const parentItem = itemsMap.get(item.parentId);
+        parentItem?.children.push(currentItem);
+      } else {
+        roots.push(currentItem);
+      }
+    });
+    
+    const sortRecursive = (nodes: MenuItemWithChildren[]) => {
+        nodes.sort((a,b) => a.order - b.order);
+        nodes.forEach(node => {
+            if(node.children.length > 0) {
+                sortRecursive(node.children);
+            }
+        });
+    }
+
+    sortRecursive(roots);
+
+    return roots;
+};
+
+const flattenTree = (tree: MenuItemWithChildren[]): NavigationMenuItem[] => {
+    const flattened: NavigationMenuItem[] = [];
+    const traverse = (nodes: MenuItemWithChildren[]) => {
+        for (const node of nodes) {
+            const { children, ...item } = node;
+            flattened.push(item);
+            if (children && children.length > 0) {
+                traverse(children);
+            }
+        }
+    };
+    traverse(tree);
+    return flattened;
+};
+
+const RecursiveSortableList = ({ items, onEdit, onDelete }: { items: MenuItemWithChildren[], onEdit: (item: NavigationMenuItem) => void, onDelete: (itemId: string) => void }) => {
+  return (
+    <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+      {items.map(item => (
+        <div key={item.id} className="space-y-1">
+          <SortableMenuItem item={item} onEdit={onEdit} onDelete={onDelete} />
+          {item.children.length > 0 && (
+            <div className="ml-6">
+              <RecursiveSortableList items={item.children} onEdit={onEdit} onDelete={onDelete} />
+            </div>
+          )}
+        </div>
+      ))}
+    </SortableContext>
+  )
+}
 
 function MenuItemsManager({
   menu,
@@ -157,10 +216,11 @@ function MenuItemsManager({
   const [localMenuItems, setLocalMenuItems] = useState<NavigationMenuItem[]>([]);
   useEffect(() => {
     if(menuItems) {
-      setLocalMenuItems(menuItems);
+      setLocalMenuItems(menuItems.sort((a, b) => a.order - b.order));
     }
   }, [menuItems]);
 
+  const menuTree = useMemo(() => buildTree(localMenuItems), [localMenuItems]);
 
   const pagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -178,34 +238,6 @@ function MenuItemsManager({
   }, [firestore]);
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
-
-  const menuTree = useMemo(() => {
-    if (!localMenuItems) return [];
-    const itemsMap = new Map<string, MenuItemWithChildren>();
-    const roots: MenuItemWithChildren[] = [];
-
-    localMenuItems.forEach(item => {
-      itemsMap.set(item.id, { ...item, children: [] });
-    });
-
-    localMenuItems.forEach(item => {
-      const currentItem = itemsMap.get(item.id);
-      if (!currentItem) return;
-
-      if (item.parentId && itemsMap.has(item.parentId)) {
-        const parentItem = itemsMap.get(item.parentId);
-        parentItem?.children.push(currentItem);
-      } else {
-        roots.push(currentItem);
-      }
-    });
-
-    itemsMap.forEach(item => {
-        item.children.sort((a,b) => a.order - b.order);
-    });
-
-    return roots.sort((a,b) => a.order - b.order);
-  }, [localMenuItems]);
 
   useEffect(() => {
     if (isSheetOpen && (editingItem as NavigationMenuItem).id) {
@@ -355,38 +387,76 @@ function MenuItemsManager({
   }));
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over, delta } = event;
+
     if (!over || active.id === over.id || !localMenuItems) return;
+    
+    const activeItem = localMenuItems.find(i => i.id === active.id);
+    if (!activeItem) return;
 
-    setLocalMenuItems((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
+    let newItems = [...localMenuItems];
+    const oldIndex = newItems.findIndex(i => i.id === active.id);
+    let newIndex = newItems.findIndex(i => i.id === over.id);
 
-        if (oldIndex === -1 || newIndex === -1) return items;
-
-        const newOrder = arrayMove(items, oldIndex, newIndex);
-
-        // Batch updates to Firestore
-        const batch = writeBatch(firestore);
-        newOrder.forEach((item, index) => {
-            const itemRef = doc(firestore, 'navigation_menu_items', item.id);
-            if (item.order !== index) {
-                batch.update(itemRef, { order: index });
+    const isNesting = delta.x > 30; // Indent
+    const isUnNesting = delta.x < -30; // Un-indent
+    
+    if (isNesting && newIndex > 0) {
+        const newParent = newItems[newIndex - 1];
+        if (newParent.id !== activeItem.parentId && newParent.id !== active.id) {
+           newItems[oldIndex] = { ...activeItem, parentId: newParent.id };
+        }
+    } else if (isUnNesting && activeItem.parentId) {
+        const oldParent = newItems.find(i => i.id === activeItem.parentId);
+        newItems[oldIndex] = { ...activeItem, parentId: oldParent?.parentId };
+    } else {
+        newItems = arrayMove(newItems, oldIndex, newIndex);
+    }
+    
+    // Re-calculate orders after any structural change
+    const roots = buildTree(newItems);
+    const finalItems: NavigationMenuItem[] = [];
+    let orderCounter = 0;
+    
+    function reorder(items: MenuItemWithChildren[], parentId?: string) {
+        for(let i = 0; i < items.length; i++) {
+            const {children, ...item} = items[i];
+            const updatedItem: NavigationMenuItem = {
+                ...item,
+                order: i,
+                parentId: parentId
+            };
+            finalItems.push(updatedItem);
+            if(children && children.length > 0) {
+                reorder(children, item.id);
             }
-        });
+        }
+    }
 
-        batch.commit().then(() => {
-            toast({ title: "Menu reordered" });
-        }).catch(error => {
-            toast({ variant: 'destructive', title: 'Reorder failed', description: error.message });
-            // Revert local state on error
-            setLocalMenuItems(menuItems || []);
-        });
+    reorder(roots);
 
-        return newOrder;
+    setLocalMenuItems(finalItems);
+    
+    const batch = writeBatch(firestore);
+    finalItems.forEach(item => {
+        const docRef = doc(firestore, 'navigation_menu_items', item.id);
+        const originalItem = menuItems?.find(i => i.id === item.id);
+        if (item.order !== originalItem?.order || item.parentId !== originalItem?.parentId) {
+            batch.update(docRef, { order: item.order, parentId: item.parentId || null });
+        }
     });
 
+    try {
+        await batch.commit();
+        toast({ title: 'Menu updated' });
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Update failed', description: error.message });
+        setLocalMenuItems(menuItems || []); // Revert on failure
+    }
+
   }, [localMenuItems, firestore, toast, menuItems]);
+
+  const flattenedItems = flattenTree(menuTree);
 
   return (
     <div>
@@ -407,11 +477,9 @@ function MenuItemsManager({
           {isLoading && <p className="text-sm text-center text-muted-foreground p-4">Loading items...</p>}
           
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={localMenuItems?.map(i => i.id) || []} strategy={verticalListSortingStrategy}>
-              {menuTree.map(item => (
-                <SortableMenuItem key={item.id} item={item} onEdit={handleEditClick} onDelete={handleDeleteItem} />
-              ))}
-            </SortableContext>
+            <div className="space-y-1">
+              <RecursiveSortableList items={menuTree} onEdit={handleEditClick} onDelete={handleDeleteItem} />
+            </div>
           </DndContext>
           
           {!isLoading && menuTree.length === 0 && (
