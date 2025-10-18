@@ -12,8 +12,15 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type NavigationMenuItemData = {
   id: string;
@@ -97,9 +104,37 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
     );
 };
 
+const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
+  if (item.children.length > 0) {
+    return (
+      <AccordionItem value={item.id} className="border-b-0">
+        <AccordionTrigger className={cn("py-2 hover:no-underline", linkClassName)}>{item.label}</AccordionTrigger>
+        <AccordionContent className="pl-4">
+          <div className="flex flex-col space-y-2">
+            {item.children.map(child => (
+              <Link key={child.id} href={child.url} className={cn("text-muted-foreground", linkClassName)}>
+                {child.label}
+              </Link>
+            ))}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    );
+  }
+
+  return (
+    <div>
+      <Link href={item.url} className={cn("block py-2", linkClassName)}>
+        {item.label}
+      </Link>
+    </div>
+  );
+};
+
 
 export function Menu({ locationId, className, linkClassName, orientation = "horizontal" }: MenuProps) {
   const firestore = useFirestore();
+  const isMobile = useIsMobile();
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -159,6 +194,16 @@ export function Menu({ locationId, className, linkClassName, orientation = "hori
     return null;
   }
   
+  if (isMobile) {
+    return (
+      <Accordion type="multiple" className={cn("w-full", className)}>
+        {menuTree.map(item => (
+          <MobileRecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} />
+        ))}
+      </Accordion>
+    )
+  }
+
   return (
     <NavigationMenu orientation={orientation} className={className}>
         <NavigationMenuList className={cn(orientation === 'vertical' && 'flex-col items-stretch space-x-0')}>
@@ -169,5 +214,3 @@ export function Menu({ locationId, className, linkClassName, orientation = "hori
     </NavigationMenu>
   );
 }
-
-  
