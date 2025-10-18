@@ -30,6 +30,7 @@ type Post = {
 };
 
 type Page = {
+  excerpt: string;
   id: string;
   title: string;
   content: string;
@@ -163,11 +164,19 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
               <div className="lg:col-span-9">
                   <article className="max-w-none">
-                  <header className="mb-8 border-b pb-4">
+
+                    <div className="text-muted-foreground text-sm mb-5">
+                        <span><Link href={`/archive/${format(new Date(), 'yyyy/MM/dd')}`} className="hover:underline">{format(new Date(), 'EEEE, d MMMM yyyy')}</Link></span>
+                    </div>
+                  
+                  {isPost ? (
+                    <>
+                    <header className="mb-8 border-b pb-4">
                       {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
                       <div className="text-muted-foreground text-sm">
                           <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
                       </div>
+                      <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
                   </header>
                   
                   {item.featuredImageUrl && (
@@ -180,12 +189,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       />
                       </div>
                   )}
-                  
-                  {isPost ? (
-                       <div
-                          className="prose dark:prose-invert lg:prose-lg max-w-none"
-                          dangerouslySetInnerHTML={{ __html: item.content }}
-                      />
+                        <div
+                            className="prose dark:prose-invert lg:prose-lg max-w-none"
+                            dangerouslySetInnerHTML={{ __html: item.content }}
+                        />
+                    </>
+                       
                   ) : (
                       <PageContent page={item as Page} />
                   )}

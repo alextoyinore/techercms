@@ -20,6 +20,7 @@ import { SearchForm } from '../SearchForm';
 import { MagazineProHeader, MagazineProFooter } from './HomePage';
 
 type Post = {
+  excerpt: string;
   id: string;
   title: string;
   content: string;
@@ -167,54 +168,62 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
         <meta name="description" content={metaDescription} />
     </Head>
     <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:max-w-7xl mx-auto">
-            <div className="lg:col-span-3">
-                <article className="max-w-none">
-                <header className="mb-8">
-                    {displayTitle && <h1 className="text-4xl font-extrabold font-headline tracking-tight lg:text-5xl mb-4">{item.title}</h1>}
-                    <div className="text-muted-foreground text-sm">
-                        <span>Published on <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PP') : ''}</Link></span>
-                    </div>
-                </header>
-                
-                {item.featuredImageUrl && (
-                    <div className="relative aspect-video w-full mb-8 rounded-lg overflow-hidden shadow-lg">
-                    <Image
-                        src={item.featuredImageUrl}
-                        alt={item.title}
-                        fill
-                        className="object-cover"
-                    />
-                    </div>
-                )}
-                
-                {isPost ? (
-                     <div
-                        className="prose dark:prose-invert lg:prose-lg max-w-none"
-                        dangerouslySetInnerHTML={{ __html: item.content }}
-                    />
-                ) : (
-                    <PageContent page={item as Page} />
-                )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+              <div className="lg:col-span-9">
+                  <article className="max-w-none">
 
-                {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                    <footer className="mt-12">
-                        <div className="flex flex-wrap gap-2">
-                            {(item as Post).tagIds!.map(tag => (
-                                <Link key={tag} href={`/tag/${tag}`}>
-                                    <Badge variant="secondary" className="hover:bg-primary/10">{tag}</Badge>
-                                </Link>
-                            ))}
-                        </div>
-                    </footer>
-                )}
-                </article>
-            </div>
-            <aside className="lg:col-span-1 space-y-8 lg:sticky lg:top-24 self-start">
-                <WidgetArea areaName="Sidebar" />
-                <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
-            </aside>
-        </div>
+                    <div className="text-muted-foreground text-sm mb-5">
+                        <span><Link href={`/archive/${format(new Date(), 'yyyy/MM/dd')}`} className="hover:underline">{format(new Date(), 'EEEE, d MMMM yyyy')}</Link></span>
+                    </div>
+                  
+                  {isPost ? (
+                    <>
+                    <header className="mb-8 border-b pb-4">
+                      {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
+                      <div className="text-muted-foreground text-sm">
+                          <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
+                      </div>
+                      <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
+                  </header>
+                  
+                  {item.featuredImageUrl && (
+                      <div className="relative aspect-video w-full mb-8">
+                      <Image
+                          src={item.featuredImageUrl}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                      />
+                      </div>
+                  )}
+                        <div
+                            className="prose dark:prose-invert lg:prose-lg max-w-none"
+                            dangerouslySetInnerHTML={{ __html: item.content }}
+                        />
+                    </>
+                       
+                  ) : (
+                      <PageContent page={item as Page} />
+                  )}
+
+                  {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                      <footer className="mt-12 pt-8 border-t">
+                          <div className="flex flex-wrap gap-2">
+                              {(item as Post).tagIds!.map(tag => (
+                                  <Link key={tag} href={`/tag/${tag}`}>
+                                      <Badge variant="secondary">{tag}</Badge>
+                                  </Link>
+                              ))}
+                          </div>
+                      </footer>
+                  )}
+                  </article>
+              </div>
+              <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
+                  <WidgetArea areaName="Sidebar" />
+                  <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
+              </aside>
+          </div>
     </ThemeLayout>
     </>
   );
