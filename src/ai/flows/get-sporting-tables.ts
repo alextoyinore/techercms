@@ -7,7 +7,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const GetSportingTablesInputSchema = z.object({
-  leagueId: z.string().default('4328').describe('The ID of the league to fetch the table for. Defaults to English Premier League.'),
+  leagueId: z.string().default('4328').describe('The ID of the league to fetch the table for.'),
+  season: z.string().default('2025-2026').describe('The season to fetch the table for, e.g., "2025-2026".'),
 });
 export type GetSportingTablesInput = z.infer<typeof GetSportingTablesInputSchema>;
 
@@ -32,13 +33,13 @@ const getSportingTablesFlow = ai.defineFlow(
     inputSchema: GetSportingTablesInputSchema,
     outputSchema: GetSportingTablesOutputSchema,
   },
-  async ({ leagueId }) => {
+  async ({ leagueId, season }) => {
     const apiKey = process.env.THESPORTSDB_API_KEY;
     if (!apiKey) {
       throw new Error('TheSportsDB API key is not configured.');
     }
     
-    const url = `https://www.thesportsdb.com/api/v1/json/${apiKey}/lookuptable.php?l=${leagueId}&s=2025-2026`;
+    const url = `https://www.thesportsdb.com/api/v1/json/${apiKey}/lookuptable.php?l=${leagueId}&s=${season}`;
 
     try {
       const response = await fetch(url);
