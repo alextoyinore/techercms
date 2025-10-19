@@ -140,7 +140,7 @@ export function PageBuilderRenderer({ pageId }: { pageId: string }) {
 
 
     if (isLoadingSections) {
-        return <div className="container mx-auto py-8"><p>Loading page structure...</p></div>
+        return <div className="container mx-auto py-8 text-xs text-muted-foreground"><p>Loading page structure...</p></div>
     }
 
     if (!sortedSections || sortedSections.length === 0) {

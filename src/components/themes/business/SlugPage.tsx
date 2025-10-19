@@ -71,7 +71,7 @@ function PageContent({ page }: { page: Page }) {
     const { data: contentWidgets, isLoading: isLoadingWidgets } = useCollection(contentWidgetsQuery);
     
     if (isLoadingAreas || isLoadingWidgets) {
-        return <div className="prose dark:prose-invert lg:prose-lg max-w-none"><p>Loading content...</p></div>
+        return <div className="prose dark:prose-invert lg:prose-lg max-w-none text-xs text-muted-foreground"><p>Loading content...</p></div>
     }
 
     if (contentWidgets && contentWidgets.length > 0) {
