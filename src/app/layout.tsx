@@ -9,7 +9,7 @@ import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
 export const metadata: Metadata = {
   title: "95News",
-  description: "Up-to-date news and information working professionals",
+  description: "Up-to-date news and information for workers and professionals",
 };
 
 export default async function RootLayout({
