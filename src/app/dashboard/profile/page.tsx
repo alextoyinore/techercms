@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -15,11 +16,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { Loader2, Upload } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { doc } from 'firebase/firestore';
 
 function getInitial(displayName?: string | null, email?: string | null) {
   if (displayName) return displayName.charAt(0).toUpperCase();
@@ -29,6 +31,7 @@ function getInitial(displayName?: string | null, email?: string | null) {
 
 export default function ProfilePage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const [user, loadingUser] = useAuthState(auth);
   const { toast } = useToast();
 
@@ -105,16 +108,24 @@ export default function ProfilePage() {
   };
 
   const handleProfileSave = async () => {
-    if (!user) return;
+    if (!user || !firestore) return;
     setIsSavingProfile(true);
 
     const newDisplayName = `${firstName} ${lastName}`.trim();
     
     try {
-      if (user.displayName !== newDisplayName) {
-        await updateProfile(user, { displayName: newDisplayName });
-      }
-      
+      // 1. Update Firebase Auth profile
+      await updateProfile(user, { displayName: newDisplayName, photoURL: photoURL });
+
+      // 2. Update Firestore user document
+      const userRef = doc(firestore, 'users', user.uid);
+      const userData = {
+        displayName: newDisplayName,
+        email: user.email,
+        photoURL: photoURL
+      };
+      setDocumentNonBlocking(userRef, userData, { merge: true });
+
       toast({
         title: 'Profile Updated',
         description: 'Your profile information has been successfully updated.',
