@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -39,6 +39,7 @@ import { Loading } from '@/components/loading';
 import { MediaLibrary } from '@/components/media-library';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
+import { Switch } from '@/components/ui/switch';
 
 
 type Category = {
@@ -62,6 +63,7 @@ type Post = {
     featuredImageUrl: string;
     slug: string;
     status: 'draft' | 'published' | 'archived';
+    isBreaking?: boolean;
     authorId: string;
     categoryIds: string[];
     tagIds: string[];
@@ -86,6 +88,7 @@ export default function EditPostPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  const [isBreaking, setIsBreaking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -135,6 +138,7 @@ export default function EditPostPage() {
       setFeaturedImageUrl(post.featuredImageUrl || '');
       setSelectedCategories(post.categoryIds || []);
       setTags(post.tagIds || []);
+      setIsBreaking(post.isBreaking || false);
     }
   }, [post]);
 
@@ -307,6 +311,7 @@ export default function EditPostPage() {
         metaDescription: finalMetaDescription,
         featuredImageUrl,
         status,
+        isBreaking,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
         tagIds: tags, 
@@ -413,27 +418,41 @@ export default function EditPostPage() {
             <CardHeader>
               <CardTitle className="font-headline">Publish</CardTitle>
             </CardHeader>
-            <CardContent className="border-t pt-6 flex justify-between gap-2">
-              <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
-                {isSubmitting && submissionStatus === 'draft' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Draft'
-                )}
-              </Button>
-              <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
-                 {isSubmitting && submissionStatus === 'published' ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update & Publish'
-                )}
-              </Button>
+            <CardContent className="grid gap-4 border-t pt-6">
+                <div className="flex items-center space-x-2">
+                    <Switch
+                        id="is-breaking"
+                        checked={isBreaking}
+                        onCheckedChange={setIsBreaking}
+                        disabled={isSubmitting}
+                    />
+                    <Label htmlFor="is-breaking" className="flex items-center gap-2">
+                        <Megaphone className="h-4 w-4" />
+                        Mark as Breaking News
+                    </Label>
+                </div>
+                <div className="flex justify-between gap-2">
+                    <Button variant="outline" onClick={() => handleSubmit('draft')} disabled={isSubmitting || isUploading}>
+                        {isSubmitting && submissionStatus === 'draft' ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                        </>
+                        ) : (
+                        'Save Draft'
+                        )}
+                    </Button>
+                    <Button onClick={() => handleSubmit('published')} disabled={isSubmitting || isUploading}>
+                        {isSubmitting && submissionStatus === 'published' ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                        </>
+                        ) : (
+                        'Update & Publish'
+                        )}
+                    </Button>
+                </div>
             </CardContent>
           </Card>
           <Card>
