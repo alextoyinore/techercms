@@ -8,8 +8,8 @@ import { TypographyProvider } from "@/components/TypographyProvider";
 import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
 export const metadata: Metadata = {
-  title: "Techer CMS",
-  description: "A modern, customizable Content Management System.",
+  title: "95News",
+  description: "Up-to-date news and information working professionals",
 };
 
 export default async function RootLayout({
