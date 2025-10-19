@@ -17,14 +17,14 @@ function PublicHeader({ siteName, HeaderComponent }: { siteName?: string, Header
     return (
         <header className="py-4 px-6 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
             <div className="container mx-auto flex justify-between items-center">
-                <Link href="/" className="text-2xl font-bold font-headline text-primary">
+                {/* <Link href="/" className="text-2xl font-bold font-headline text-primary">
                     {siteName || ''}
                 </Link>
                 <nav>
                     <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary">
                         Admin Login
                     </Link>
-                </nav>
+                </nav> */}
             </div>
         </header>
     );

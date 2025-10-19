@@ -72,13 +72,13 @@ function SearchResults() {
   }, [posts]);
 
   if (isLoadingPosts) {
-    return <p className="text-center">Searching...</p>;
+    return <p className="text-center text-muted-foreground">Searching...</p>;
   }
   
   return (
     <>
       <div className="mb-8 pb-4 border-b">
-          <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Search Results for: "{q}"</h1>
+          <h1 className="text-base tracking-tight lg:text-md">Search Results for: "{q}"</h1>
       </div>
 
       {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (

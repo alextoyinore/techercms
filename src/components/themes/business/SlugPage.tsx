@@ -30,7 +30,6 @@ type Post = {
 };
 
 type Page = {
-  excerpt: string;
   id: string;
   title: string;
   content: string;
