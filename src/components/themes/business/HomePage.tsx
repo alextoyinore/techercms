@@ -31,8 +31,8 @@ type SiteSettings = {
 
 export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
     return (
-        <header className="py-3 px-4 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
-            <div className="container mx-auto flex justify-between items-center">
+        <header className="pt-3 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
+            <div className="container px-4 mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
                         <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={120} height={40} className="object-contain h-10 w-auto" />
@@ -67,7 +67,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
              <div className="border-t mt-3">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="business-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <Menu locationId="business-subheader" className="flex items-center gap-4 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>
