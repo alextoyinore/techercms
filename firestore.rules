@@ -1,124 +1,165 @@
-
 /**
- * @fileoverview Firestore Security Rules for Techer CMS.
+ * @fileoverview Firestore Security Rules for the CMS.
  *
  * Core Philosophy:
- * This ruleset establishes a secure, role-based access control system.
- * - Publicly readable content is accessible to anyone.
- * - Write operations (create, update, delete) are restricted to authorized roles.
- * - Ownership is enforced for user-generated content.
+ * This ruleset implements role-based access control (RBAC).
+ * - Public content (published posts/pages) is readable by anyone.
+ * - All write operations (create, update, delete) are restricted to authorized roles.
+ * - A 'superuser' has full access to all data, including site settings and user roles.
+ * - A 'writer' can create and manage their own content.
  *
- * Roles:
- * - superuser: Can manage all content, settings, and user roles.
- * - writer: Can create and manage their own content.
- * - (Others can be added, e.g., editor, subscriber)
+ * Data Structure:
+ * - Roles: `/roles/{userId}`
+ * - Content: `/posts/{postId}`, `/pages/{pageId}`, `/media/{mediaId}`
+ * - Taxonomies: `/categories/{categoryId}`, `/tags/{tagId}`
+ * - Site Config: `/site_settings/config`, `/widget_areas/{areaId}`, etc.
+ *
+ * Key Security Decisions:
+ * - Read access for published content is public.
+ * - Write access is strictly controlled by `superuser` and `writer` roles.
+ * - Ownership (`authorId`) is enforced for writers editing their own content.
+ * - Superusers can bypass ownership checks to manage all content.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
     // ======================== Helper Functions ========================
 
     /**
-     * @description Checks if a user is signed in.
+     * @description Checks if the user is signed in.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the requesting user is the owner of a document.
+     * @description Checks if the user is the owner of the document.
      */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
     
     /**
+     * @description Checks if the user is the owner of an existing document.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
      * @description Checks if the current user has the role 'superuser'.
      */
-    function isSuperuser() {
+    function isSuperUser() {
       return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "superuser";
     }
-    
+
     /**
      * @description Checks if the current user has the role 'writer'.
      */
     function isWriter() {
       return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "writer";
     }
-
+    
     /**
-     * @description Checks if a user is authorized to edit content (superuser or writer).
+     * @description Checks if the user is an authorized content manager (superuser or writer).
      */
-    function isAuthorizedEditor() {
-      return isSuperuser() || isWriter();
+    function isContentManager() {
+      return isSuperUser() || isWriter();
     }
 
     // ======================== Collection Rules ========================
 
-  	// Public user profiles
-  	match /users/{userId} {
-    	allow read;
-      allow write: if isOwner(userId);
+    // User Profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId) || isSuperUser();
     }
-    
-    // User roles
+
+    // User Roles
     match /roles/{userId} {
-    	allow get: if isOwner(userId) || isSuperuser();
-      allow list, create, update, delete: if isSuperuser();
+      allow get: if isContentManager();
+      allow list, create, update, delete: if isSuperUser();
     }
 
-		// Pages, Posts, and Media Items (Content)
-    match /{collection=posts|pages|media}/{docId} {
-    	// Allow anyone to read published content, but only authorized editors can read drafts.
-      allow get: if resource.data.status == 'published' || isAuthorizedEditor();
-      allow list: if isAuthorizedEditor();
+    // Posts
+    match /posts/{postId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+    }
 
-      // Only authorized editors can create content, and they must be the author.
-      allow create: if isAuthorizedEditor() && isOwner(request.resource.data.authorId);
+    // Pages
+    match /pages/{pageId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+    }
 
-      // Only the author or a superuser can update/delete.
-      allow update, delete: if isAuthorizedEditor() && (isOwner(resource.data.authorId) || isSuperuser());
+    // Media
+    match /media/{mediaId} {
+      allow read: if isSignedIn();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
     }
     
     // Categories and Tags
-    match /{collection=categories|tags}/{docId} {
+    match /categories/{categoryId} {
       allow read;
-      allow write: if isAuthorizedEditor();
+      allow write: if isContentManager();
     }
-    
-    // Custom Themes created by users
-    match /custom_themes/{themeId} {
+    match /tags/{tagId} {
       allow read;
-      // Author must be the one creating it.
-      allow create: if isAuthorizedEditor() && isOwner(request.resource.data.authorId);
-      // Only the author or a superuser can modify/delete.
-      allow update, delete: if isAuthorizedEditor() && (isOwner(resource.data.authorId) || isSuperuser());
-    }
-    
-    // Page Builder: Layouts, Sections, and Blocks
-    match /{collection=page_layouts|block_layouts|page_sections|section_blocks}/{docId} {
-      allow read;
-      allow write: if isAuthorizedEditor();
-    }
-    
-    // Site-wide Settings
-    match /site_settings/config {
-      allow read;
-      // Only superusers can change site-wide settings.
-      allow write: if isSuperuser();
-    }
-    
-    // Navigation Menus and Items
-    match /{collection=navigation_menus|navigation_menu_items}/{docId} {
-      allow read;
-      allow write: if isSuperuser(); // Typically only admins manage menus.
+      allow write: if isContentManager();
     }
 
-    // Widget Areas and Instances
-    match /{collection=widget_areas|widget_instances}/{docId} {
+    // Custom Themes (user-generated)
+    match /custom_themes/{themeId} {
+      allow read: if isSignedIn();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+    }
+    
+    // Site-wide Layout and Widget Configurations
+    match /site_settings/config {
       allow read;
-      allow write: if isAuthorizedEditor();
+      allow write: if isSuperUser();
+    }
+    match /page_layouts/{pageLayoutId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+     match /block_layouts/{blockLayoutId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /widget_areas/{widgetAreaId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /widget_instances/{widgetInstanceId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    
+    // Page-specific layout sections
+    match /page_sections/{sectionId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /section_blocks/{blockId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+
+    // Navigation
+    match /navigation_menus/{menuId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /navigation_menu_items/{itemId} {
+      allow read;
+      allow write: if isSuperUser();
     }
   }
 }
