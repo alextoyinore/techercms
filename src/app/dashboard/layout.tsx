@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Sidebar, SidebarFooter, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -38,6 +39,7 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
+    // Wait until loading is complete and we are on the client
     if (authLoading || roleLoading || !isClient) return;
 
     if (!user) {
@@ -45,17 +47,10 @@ export default function DashboardLayout({
       return;
     }
     
-    if (user && userRole === null) {
-      // User exists but has no role document, deny access
-      router.push('/');
-      return;
-    }
-
-    if (userRole) {
-      const allowedRoles = ['superuser', 'writer'];
-      if (!allowedRoles.includes(userRole.role)) {
+    // After loading, if userRole is null (doc doesn't exist) or the role is not allowed, redirect.
+    const allowedRoles = ['superuser', 'writer'];
+    if (!userRole || !allowedRoles.includes(userRole.role)) {
         router.push('/');
-      }
     }
 
   }, [authLoading, roleLoading, user, userRole, router, isClient]);
