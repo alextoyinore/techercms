@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -184,10 +185,9 @@ export default function EditPagePage() {
         const mediaQuery = query(collection(firestore, 'media'), where('url', '==', featuredImageUrl));
         const querySnapshot = await getDocs(mediaQuery);
         if (querySnapshot.empty) {
-            const filename = featuredImageUrl.split('/').pop() || 'image.jpg';
             addDocumentNonBlocking(collection(firestore, "media"), {
                 url: featuredImageUrl,
-                filename: filename,
+                filename: featuredImageUrl.split('/').pop() || 'image.jpg',
                 authorId: auth.currentUser.uid,
                 createdAt: serverTimestamp(),
             });
@@ -196,7 +196,7 @@ export default function EditPagePage() {
     
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-    const updatedPage = {
+    const updatedPage: Partial<Page> = {
         title,
         content,
         featuredImageUrl,
@@ -207,6 +207,10 @@ export default function EditPagePage() {
         authorId: auth.currentUser.uid,
         updatedAt: serverTimestamp(),
     };
+    
+    if (!page?.authorId) {
+        updatedPage.authorId = auth.currentUser.uid;
+    }
 
     try {
         await setDocumentNonBlocking(pageRef, updatedPage, { merge: true });

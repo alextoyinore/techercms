@@ -289,10 +289,9 @@ export default function EditPostPage() {
         const mediaQuery = query(collection(firestore, 'media'), where('url', '==', featuredImageUrl));
         const querySnapshot = await getDocs(mediaQuery);
         if (querySnapshot.empty) {
-            const filename = featuredImageUrl.split('/').pop() || 'image.jpg';
             addDocumentNonBlocking(collection(firestore, "media"), {
                 url: featuredImageUrl,
-                filename: filename,
+                filename: featuredImageUrl.split('/').pop() || 'image.jpg',
                 authorId: auth.currentUser.uid,
                 createdAt: serverTimestamp(),
             });
@@ -302,7 +301,7 @@ export default function EditPostPage() {
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
 
-    const updatedPost = {
+    const updatedPost: Partial<Post> = {
         title,
         slug,
         titleKeywords,
@@ -317,6 +316,11 @@ export default function EditPostPage() {
         tagIds: tags, 
         updatedAt: serverTimestamp(),
     };
+    
+    if (!post?.authorId) {
+        updatedPost.authorId = auth.currentUser.uid;
+    }
+
 
     try {
         batch.set(postRef, updatedPost, { merge: true });
