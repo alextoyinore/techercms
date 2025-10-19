@@ -5,9 +5,14 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/firebase";
+import { useEffect, useState, useMemo } from "react";
+import { useAuth, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { Loading } from "@/components/loading";
+import { doc } from "firebase/firestore";
+
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
+};
 
 export default function DashboardLayout({
   children,
@@ -15,9 +20,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const auth = useAuth();
-  const [user, loading, error] = useAuthState(auth);
+  const firestore = useFirestore();
+  const [user, authLoading, authError] = useAuthState(auth);
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+
+  const roleRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'roles', user.uid);
+  }, [firestore, user]);
+
+  const { data: userRole, isLoading: roleLoading } = useDoc<UserRole>(roleRef);
 
   useEffect(() => {
     // This effect runs only on the client, after the component has mounted.
@@ -25,27 +38,47 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
-    // If auth state is not loading and there's no user,
-    // it means the user is not authenticated.
-    // Redirect them to the login page.
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [loading, user, router]);
+    if (authLoading || roleLoading || !isClient) return;
 
-  // While the authentication state is loading, or before the client has mounted,
-  // display the loading component. This prevents hydration errors by ensuring
-  // server and initial client renders are identical.
-  if (loading || !user || !isClient) {
+    if (!user) {
+      router.push('/');
+      return;
+    }
+    
+    if (user && userRole === null) {
+      // User exists but has no role document, deny access
+      router.push('/');
+      return;
+    }
+
+    if (userRole) {
+      const allowedRoles = ['superuser', 'writer'];
+      if (!allowedRoles.includes(userRole.role)) {
+        router.push('/');
+      }
+    }
+
+  }, [authLoading, roleLoading, user, userRole, router, isClient]);
+
+  const isLoading = authLoading || roleLoading || !isClient;
+  const isAuthorized = user && userRole && ['superuser', 'writer'].includes(userRole.role);
+
+
+  if (isLoading) {
+    return <Loading />;
+  }
+  
+  if (!isAuthorized) {
+    // Show loading while redirecting or if unauthorized to prevent content flash
     return <Loading />;
   }
 
-  // If there's an error fetching the auth state, display it.
-  if (error) {
-    return <div>Error: {error.message}</div>;
+  // If there's an auth error, display it.
+  if (authError) {
+    return <div>Error: {authError.message}</div>;
   }
   
-  // If we have a user and loading is complete, render the dashboard.
+  // If we have an authorized user, render the dashboard.
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
