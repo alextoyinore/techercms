@@ -8,7 +8,7 @@ import { TypographyProvider } from "@/components/TypographyProvider";
 import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
 export const metadata: Metadata = {
-  title: "95News",
+  title: "95news",
   description: "Up-to-date news and information for workers and professionals",
 };
 
