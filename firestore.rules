@@ -42,12 +42,15 @@ service cloud.firestore {
     
     /**
      * @description Checks if the user is the owner of an existing document.
-     * Also allows access if the document has no owner (for legacy data).
+     * If a document has no authorId, it is considered manageable by any content manager.
      */
-    function isOwnerOrLegacy(doc) {
-      return !('authorId' in doc.data) || isOwner(doc.data.authorId);
+    function isExistingOwner(userId) {
+      if (userId == null) {
+        return isContentManager();
+      }
+      return isSignedIn() && isOwner(userId);
     }
-
+    
     /**
      * @description Checks if the current user has the role 'superuser'.
      */
@@ -79,7 +82,8 @@ service cloud.firestore {
 
     // User Roles
     match /roles/{userId} {
-      allow get: if isContentManager();
+      // Allow users to read their own role. Superusers can list all roles.
+      allow get: if isOwner(userId) || isSuperUser();
       allow list, create, update, delete: if isSuperUser();
     }
 
@@ -87,21 +91,21 @@ service cloud.firestore {
     match /posts/{postId} {
       allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
     }
 
     // Pages
     match /pages/{pageId} {
       allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
     }
 
     // Media
     match /media/{mediaId} {
       allow read: if isSignedIn();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
     }
     
     // Categories and Tags
@@ -116,9 +120,9 @@ service cloud.firestore {
 
     // Custom Themes (user-generated)
     match /custom_themes/{themeId} {
-      allow get, list;
+      allow get, list: if isSuperUser();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
     }
     
     // Site-wide Layout and Widget Configurations
