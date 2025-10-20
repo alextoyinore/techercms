@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
 import { PublicHeader, PublicFooter } from './HomePage';
+import { WidgetArea } from '@/components/widgets/WidgetArea';
 
 type Post = {
   id: string;
@@ -77,21 +78,28 @@ export default function TagPage() {
 
   return (
     <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} className="bg-background text-foreground font-sans">
-        <div className="mb-8 pb-4 border-b">
-            <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {slug}</h1>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8">
+          <div className="mb-8 pb-4 border-b">
+              <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {slug}</h1>
+          </div>
 
-        {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (
-            <div className="text-center py-16">
-                <p className="text-muted-foreground">No posts found with this tag.</p>
-            </div>
-        )}
+          {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (
+              <div className="text-center py-16">
+                  <p className="text-muted-foreground">No posts found with this tag.</p>
+              </div>
+          )}
 
-        <div className="space-y-6">
-            {sortedPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-            ))}
+          <div className="space-y-6">
+              {sortedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+              ))}
+          </div>
         </div>
+        <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
+            <WidgetArea areaName="Sidebar" />
+        </aside>
+      </div>
     </ThemeLayout>
   );
 }

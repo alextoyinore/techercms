@@ -171,11 +171,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
               <div className="lg:col-span-9">
                   <article className="max-w-none">
-
-                    <div className="text-muted-foreground text-sm mb-5">
-                        <span><Link href={`/archive/${format(new Date(), 'yyyy/MM/dd')}`} className="hover:underline">{format(new Date(), 'EEEE, d MMMM yyyy')}</Link></span>
-                    </div>
-                  
                   {isPost ? (
                     <>
                     <header className="mb-8 border-b pb-4">
