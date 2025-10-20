@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { PostAuthor } from '../themes/PostAuthor';
 
 type Post = {
     id: string;
@@ -16,6 +17,7 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
 };
 
 type FeaturedTopAndGridWidgetProps = {
@@ -119,9 +121,11 @@ export function FeaturedTopAndGridWidget({
                             <Link href={`/${featuredPost.slug}`}>{featuredPost.title}</Link>
                         </h3>
                         <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{featuredPost.excerpt}</p>
-                        <time className="text-xs text-muted-foreground/80 mt-2 block">
-                            {format(featuredPost.createdAt.toDate(), 'MMMM d, yyyy')}
-                        </time>
+                        <div className="text-xs text-muted-foreground/80 mt-2">
+                           <PostAuthor authorId={featuredPost.authorId} />
+                           <span className='mx-1'>&middot;</span>
+                           <time>{format(featuredPost.createdAt.toDate(), 'MMMM d, yyyy')}</time>
+                        </div>
                     </div>
                 </div>
 
@@ -148,9 +152,11 @@ export function FeaturedTopAndGridWidget({
                                         <Link href={`/${post.slug}`}>{post.title}</Link>
                                     </h4>
                                     {showSmallExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>}
-                                    <time className="text-xs text-muted-foreground/80 mt-1 block">
-                                        {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
-                                    </time>
+                                    <div className="text-xs text-muted-foreground/80 mt-1">
+                                        <PostAuthor authorId={post.authorId} />
+                                        <span className='mx-1'>&middot;</span>
+                                        <time>{format(post.createdAt.toDate(), 'MMMM d')}</time>
+                                    </div>
                                 </div>
                             ))}
                         </div>

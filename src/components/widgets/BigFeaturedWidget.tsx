@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PostAuthor } from '../themes/PostAuthor';
 
 type Post = {
     id: string;
@@ -16,6 +17,7 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
 };
 
 type BigFeaturedWidgetProps = {
@@ -96,6 +98,9 @@ export function BigFeaturedWidget({
                     </div>
                 )}
                 <div className={cn("flex flex-col justify-center", contentOrder)}>
+                    <div className="text-sm text-muted-foreground/80 mt-2 mb-2">
+                        <PostAuthor authorId={post.authorId} />
+                    </div>
                     <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">
                         <Link href={`/${post.slug}`} className="hover:underline">{post.title}</Link>
                     </h2>
