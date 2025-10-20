@@ -7,6 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PostAuthor } from '../themes/PostAuthor';
+import { PostCategory } from '../themes/PostCategory';
 
 type Post = {
     id: string;
@@ -15,6 +17,8 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
+    categoryIds?: string[];
 };
 
 type PostGridWidgetProps = {
@@ -103,13 +107,18 @@ export function PostGridWidget({
                             </Link>
                         )}
                         <div className="flex flex-col">
+                             {post.categoryIds && post.categoryIds.length > 0 && (
+                                <div className="text-xs font-semibold text-primary mb-1">
+                                    <PostCategory categoryId={post.categoryIds[0]} />
+                                </div>
+                            )}
                             <h3 className="font-semibold leading-tight text-sm group-hover:underline">
                                 <Link href={`/${post.slug}`}>{post.title}</Link>
                             </h3>
                             {showExcerpts && <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{post.excerpt}</p>}
-                             <time className="text-xs text-muted-foreground mt-1">
-                                {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
-                            </time>
+                             <div className="text-xs text-muted-foreground mt-1">
+                                <PostAuthor authorId={post.authorId} /> &middot; <time>{format(post.createdAt.toDate(), 'MMMM d, yyyy')}</time>
+                            </div>
                         </div>
                     </div>
                 ))}

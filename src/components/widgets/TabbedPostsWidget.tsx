@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -8,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { PostAuthor } from '../themes/PostAuthor';
 
 type Post = {
     id: string;
@@ -16,6 +16,7 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
 };
 
 type TabConfig = {
@@ -83,6 +84,9 @@ function TabContent({ filter, postCount, showImages, showExcerpts }: { filter: T
                             <Link href={`/${post.slug}`}>{post.title}</Link>
                         </h4>
                         {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2">{post.excerpt}</p>}
+                         <div className="text-xs text-muted-foreground/80 mt-1">
+                            <PostAuthor authorId={post.authorId} />
+                        </div>
                     </div>
                 </div>
             ))}
