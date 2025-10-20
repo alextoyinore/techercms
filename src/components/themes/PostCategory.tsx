@@ -21,8 +21,8 @@ export const PostCategory: React.FC<{ categoryId: string, className?: string }> 
     if (!category) return null;
 
     return (
-        <Link href={`/category/${category.slug}`} className={className}>
+        <span className={className}>
             {category.name}
-        </Link>
+        </span>
     );
 };

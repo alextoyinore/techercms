@@ -20,8 +20,8 @@ export const PostAuthor: React.FC<{ authorId: string }> = ({ authorId }) => {
     if (!author) return null;
 
     return (
-        <Link href={`/author/${author.id}`} className="font-semibold hover:underline">
+        <span className="font-semibold hover:underline">
             {author.displayName || 'Anonymous'}
-        </Link>
+        </span>
     );
 };
