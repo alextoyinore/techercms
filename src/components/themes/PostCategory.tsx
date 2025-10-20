@@ -1,7 +1,6 @@
 'use client';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import Link from 'next/link';
 
 type Category = {
     id: string;

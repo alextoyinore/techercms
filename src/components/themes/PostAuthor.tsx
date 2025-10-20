@@ -1,7 +1,6 @@
 'use client';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import Link from 'next/link';
 
 type User = {
     id: string;
@@ -20,7 +19,7 @@ export const PostAuthor: React.FC<{ authorId: string }> = ({ authorId }) => {
     if (!author) return null;
 
     return (
-        <span className="font-semibold hover:underline">
+        <span className="font-semibold">
             {author.displayName || 'Anonymous'}
         </span>
     );

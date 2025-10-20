@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,19 +27,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/page-header";
 import { Loader2, PlusCircle, MoreHorizontal } from "lucide-react";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, query, orderBy } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import {
   setDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { PaginationControls } from "@/components/pagination-controls";
 
 type Tag = {
   id: string;
   name: string;
   slug: string;
 };
+
+const PAGE_SIZE = 10;
 
 export default function TagsPage() {
   const [name, setName] = useState("");
@@ -48,13 +51,26 @@ export default function TagsPage() {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const tagsCollection = useMemoFirebase(() => {
     if (!firestore) return null;
-    return collection(firestore, 'tags');
+    return query(collection(firestore, 'tags'), orderBy('name'));
   }, [firestore]);
 
-  const { data: tags, isLoading } = useCollection<Tag>(tagsCollection);
+  const { data: allTags, isLoading } = useCollection<Tag>(tagsCollection);
+
+  const paginatedTags = useMemo(() => {
+    if (!allTags) return [];
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return allTags.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [allTags, currentPage]);
+
+  const totalPages = useMemo(() => {
+    if (!allTags) return 1;
+    return Math.ceil(allTags.length / PAGE_SIZE);
+  }, [allTags]);
+
 
   const handleEditClick = (tag: Tag) => {
     setEditingTag(tag);
@@ -156,14 +172,14 @@ export default function TagsPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {!isLoading && tags?.length === 0 && (
+                  {!isLoading && paginatedTags.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={3} className="text-center">
                             No tags found. Add one to get started.
                         </TableCell>
                      </TableRow>
                   )}
-                  {tags?.map((tag) => (
+                  {paginatedTags.map((tag) => (
                     <TableRow key={tag.id}>
                       <TableCell className="font-medium">{tag.name}</TableCell>
                       <TableCell>{tag.slug}</TableCell>
@@ -187,6 +203,13 @@ export default function TagsPage() {
                 </TableBody>
               </Table>
             </CardContent>
+            {totalPages > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </Card>
         </div>
         <div className="md:col-span-2">

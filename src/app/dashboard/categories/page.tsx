@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,19 +27,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/page-header";
 import { Loader2, PlusCircle, MoreHorizontal } from "lucide-react";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, query, orderBy } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import {
   setDocumentNonBlocking,
   deleteDocumentNonBlocking,
 } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { PaginationControls } from "@/components/pagination-controls";
+
 
 type Category = {
   id: string;
   name: string;
   slug: string;
 };
+
+const PAGE_SIZE = 10;
 
 export default function CategoriesPage() {
   const [name, setName] = useState("");
@@ -48,13 +52,25 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [currentPage, setCurrentPage] = useState(1);
 
   const categoriesCollection = useMemoFirebase(() => {
     if (!firestore) return null;
-    return collection(firestore, 'categories');
+    return query(collection(firestore, 'categories'), orderBy('name'));
   }, [firestore]);
 
-  const { data: categories, isLoading } = useCollection<Category>(categoriesCollection);
+  const { data: allCategories, isLoading } = useCollection<Category>(categoriesCollection);
+
+  const paginatedCategories = useMemo(() => {
+    if (!allCategories) return [];
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return allCategories.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [allCategories, currentPage]);
+
+  const totalPages = useMemo(() => {
+    if (!allCategories) return 1;
+    return Math.ceil(allCategories.length / PAGE_SIZE);
+  }, [allCategories]);
 
   const handleEditClick = (category: Category) => {
     setEditingCategory(category);
@@ -156,14 +172,14 @@ export default function CategoriesPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {!isLoading && categories?.length === 0 && (
+                  {!isLoading && paginatedCategories.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={3} className="text-center">
                             No categories found. Add one to get started.
                         </TableCell>
                      </TableRow>
                   )}
-                  {categories?.map((category) => (
+                  {paginatedCategories.map((category) => (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell>{category.slug}</TableCell>
@@ -187,6 +203,13 @@ export default function CategoriesPage() {
                 </TableBody>
               </Table>
             </CardContent>
+            {totalPages > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </Card>
         </div>
         <div className="md:col-span-2">
