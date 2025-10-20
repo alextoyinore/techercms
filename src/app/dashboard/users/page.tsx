@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -32,7 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -67,14 +68,14 @@ export default function UsersPage() {
   const usersCollection = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
   const { data: users, isLoading: isLoadingUsers } = useCollection<User>(usersCollection);
   
-  const currentUserRoleQuery = useMemoFirebase(() => {
+  const currentUserDocRef = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
     return doc(firestore, 'users', currentUser.uid);
   }, [firestore, currentUser]);
   
-  const { data: currentUserData } = useCollection<User>(currentUserRoleQuery as any);
+  const { data: currentUserData } = useDoc<User>(currentUserDocRef);
 
-  if (currentUserData && (currentUserData as any).role !== 'superuser') {
+  if (currentUserData && currentUserData.role !== 'superuser') {
     router.push('/dashboard');
     return null;
   }
@@ -92,6 +93,7 @@ export default function UsersPage() {
       const newUser = userCredential.user;
 
       await setDoc(doc(firestore, 'users', newUser.uid), {
+        id: newUser.uid,
         email: newUser.email,
         role: newRole,
         displayName: '',
