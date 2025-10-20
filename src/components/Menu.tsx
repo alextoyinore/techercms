@@ -101,7 +101,7 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
 
     return (
         <NavigationMenuItem>
-            <Link href={item.url} legacyBehavior passHref>
+            <Link href={item.url} passHref>
                 <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)} active={isActive}>
                     {item.label}
                 </NavigationMenuLink>
