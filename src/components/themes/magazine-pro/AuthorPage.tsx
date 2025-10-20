@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
 import { MagazineProHeader, MagazineProFooter } from './HomePage';
-import { User } from 'firebase/auth';
 
 type Post = {
   id: string;
@@ -22,15 +21,22 @@ type Post = {
   createdAt: Timestamp;
 };
 
+type User = {
+    id: string;
+    displayName?: string;
+};
+
 export default function AuthorPage() {
   const firestore = useFirestore();
   const params = useParams();
   const authorId = params.id as string;
 
-  // Note: Firestore doesn't provide a direct way to fetch user by ID on the client
-  // without custom functions or another collection. We will just use the ID for now.
-  // In a real app, you'd fetch the user's profile from a 'users' collection.
-  
+  const authorRef = useMemoFirebase(() => {
+    if (!firestore || !authorId) return null;
+    return doc(firestore, 'users', authorId);
+  }, [firestore, authorId]);
+  const { data: author, isLoading: isLoadingAuthor } = useDoc<User>(authorRef);
+
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !authorId) return null;
     return query(
@@ -47,16 +53,14 @@ export default function AuthorPage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
-  if (isLoadingPosts) {
+  if (isLoadingPosts || isLoadingAuthor) {
     return <Loading />;
   }
 
   return (
     <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter}>
         <div className="text-center mb-12">
-            {/* A real app would fetch and display author's name */}
-            <h1 className="text-4xl font-bold font-headline tracking-tight lg:text-5xl">Posts by Author</h1>
-            <p className="text-sm text-muted-foreground mt-2">ID: {authorId}</p>
+            <h1 className="text-4xl font-bold font-headline tracking-tight lg:text-5xl">Posts by {author?.displayName || 'Author'}</h1>
         </div>
 
         {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (
