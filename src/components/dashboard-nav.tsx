@@ -17,6 +17,7 @@ import {
     Menu,
     LayoutGrid,
     Users,
+    User as UserIcon,
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -45,7 +46,7 @@ const navItems = [
     { href: "/dashboard/navigation", icon: Menu, label: "Navigation", requiredRole: null },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer", requiredRole: null },
     { href: "/dashboard/users", icon: Users, label: "Users", requiredRole: 'superuser' },
-    { href: "/dashboard/profile", icon: User, label: "Profile", requiredRole: null },
+    { href: "/dashboard/profile", icon: UserIcon, label: "Profile", requiredRole: null },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", requiredRole: null },
 ];
 
