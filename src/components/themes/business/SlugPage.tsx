@@ -156,7 +156,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   return (
     <>
       <Head>
-          <title>{siteTitle} - {pageTitle}</title>
+          <title>{pageTitle}</title>
           <meta name="description" content={metaDescription} />
       </Head>
       <div className="bg-background text-foreground font-sans">
