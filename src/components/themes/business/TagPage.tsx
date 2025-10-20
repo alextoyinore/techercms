@@ -78,8 +78,8 @@ export default function TagPage() {
 
   return (
     <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} className="bg-background text-foreground font-sans">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+        <div className="lg:col-span-9">
           <div className="mb-8 pb-4 border-b">
               <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {slug}</h1>
           </div>

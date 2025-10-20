@@ -170,8 +170,8 @@ export default function HomePage() {
                     <p className="text-muted-foreground mt-4">No stories have been published yet. Check back for the latest financial news.</p>
                 </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+                <div className="lg:col-span-9">
                     {heroPost && (
                         <div className="pb-6 border-b">
                             <h1 className="font-black font-headline text-4xl lg:text-5xl leading-tight mb-4 hover:underline">

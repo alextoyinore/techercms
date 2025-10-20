@@ -77,8 +77,8 @@ function SearchResults() {
   }
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <div className="lg:col-span-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+      <div className="lg:col-span-9">
         <div className="mb-8 pb-4 border-b">
             <h1 className="text-base tracking-tight lg:text-md">Search Results for: "{q}"</h1>
         </div>
