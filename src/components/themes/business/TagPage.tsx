@@ -81,7 +81,7 @@ export default function TagPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
         <div className="lg:col-span-9">
           <div className="mb-8 pb-4 border-b">
-              <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {slug}</h1>
+              <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">{slug}</h1>
           </div>
 
           {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (

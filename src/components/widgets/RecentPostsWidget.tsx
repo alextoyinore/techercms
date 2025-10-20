@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { PostAuthor } from '../themes/PostAuthor';
 
 type Post = {
     id: string;
@@ -14,6 +15,7 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
 }
 
 type RecentPostsWidgetProps = {
@@ -102,9 +104,11 @@ export function RecentPostsWidget({
                                     {post.title}
                                 </Link>
                                 {showExcerpts && <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{post.excerpt}</p>}
-                                <p className="text-xs text-muted-foreground/80 mt-1">
-                                    {post.createdAt ? format(post.createdAt.toDate(), 'MMM d, yyyy') : ''}
-                                </p>
+                                <div className="text-xs text-muted-foreground/80 mt-1">
+                                    <PostAuthor authorId={post.authorId} />
+                                    <span className='mx-1'>&middot;</span>
+                                    <time>{post.createdAt ? format(post.createdAt.toDate(), 'MMM d, yyyy') : ''}</time>
+                                </div>
                            </div>
                         </div>
                     )) : (

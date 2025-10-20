@@ -2,8 +2,8 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
@@ -18,11 +18,22 @@ type Post = {
   createdAt: Timestamp;
 };
 
+type User = {
+    id: string;
+    displayName?: string;
+};
+
 export default function AuthorPage() {
   const firestore = useFirestore();
   const params = useParams();
   const authorId = params.id as string;
   
+  const authorRef = useMemoFirebase(() => {
+    if (!firestore || !authorId) return null;
+    return doc(firestore, 'users', authorId);
+  }, [firestore, authorId]);
+  const { data: author, isLoading: isLoadingAuthor } = useDoc<User>(authorRef);
+
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !authorId) return null;
     return query(
@@ -39,15 +50,14 @@ export default function AuthorPage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
-  if (isLoadingPosts) {
+  if (isLoadingPosts || isLoadingAuthor) {
     return <Loading />;
   }
 
   return (
     <ThemeLayout HeaderComponent={MinimalistHeader} FooterComponent={MinimalistFooter}>
         <div className="text-center mb-12 max-w-3xl mx-auto">
-            <h1 className="text-4xl font-bold font-headline tracking-tight">Posts by Author</h1>
-            <p className="text-sm text-muted-foreground mt-2">ID: {authorId}</p>
+            <h1 className="text-4xl font-bold font-headline tracking-tight">Posts by {author?.displayName || 'Author'}</h1>
         </div>
 
         {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (

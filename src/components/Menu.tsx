@@ -5,14 +5,11 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Accordion,
   AccordionContent,
@@ -22,6 +19,8 @@ import {
 import { cn } from '@/lib/utils';
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from './ui/button';
+import { ChevronDown } from 'lucide-react';
 
 type NavigationMenuItemData = {
   id: string;
@@ -50,63 +49,36 @@ type MenuProps = {
   orientation?: "vertical" | "horizontal";
 };
 
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  )
-})
-ListItem.displayName = "ListItem"
-
-
 const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
     const pathname = usePathname();
     const isActive = pathname === item.url;
 
     if (item.children.length > 0) {
         return (
-            <NavigationMenuItem>
-                <NavigationMenuTrigger className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)} data-active={isActive}>
-                    {item.label}
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                        {item.children.map(child => (
-                           <ListItem key={child.id} href={child.url} title={child.label} data-active={pathname === child.url}>
-                           </ListItem>
-                        ))}
-                    </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className={cn('h-auto p-0 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0', linkClassName)} data-active={isActive}>
+                        {item.label}
+                        <ChevronDown className="relative top-[1px] ml-1 h-3 w-3 transition duration-200 group-data-[state=open]:rotate-180" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    {item.children.map(child => (
+                        <DropdownMenuItem key={child.id} asChild>
+                            <Link href={child.url} className={cn(pathname === child.url && "font-semibold text-primary")}>
+                                {child.label}
+                            </Link>
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         );
     }
 
     return (
-        <NavigationMenuItem>
-            <Link href={item.url} legacyBehavior passHref>
-                <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)} active={isActive}>
-                    {item.label}
-                </NavigationMenuLink>
-            </Link>
-        </NavigationMenuItem>
+        <Link href={item.url} className={cn(linkClassName, isActive && "font-bold text-primary")}>
+            {item.label}
+        </Link>
     );
 };
 
@@ -213,12 +185,10 @@ export function Menu({ locationId, className, linkClassName, orientation = "hori
   }
 
   return (
-    <NavigationMenu orientation={orientation} className={className}>
-        <NavigationMenuList className={cn(orientation === 'vertical' && 'flex-col items-stretch space-x-0')}>
-            {menuTree.map(item => (
-                <RecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} />
-            ))}
-        </NavigationMenuList>
-    </NavigationMenu>
+    <div className={cn("flex", orientation === 'horizontal' ? 'items-center' : 'flex-col items-stretch', className)}>
+        {menuTree.map(item => (
+            <RecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} />
+        ))}
+    </div>
   );
 }

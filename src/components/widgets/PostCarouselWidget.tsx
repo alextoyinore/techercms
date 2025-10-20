@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { PostAuthor } from '../themes/PostAuthor';
 
 type Post = {
     id: string;
@@ -16,6 +17,7 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
 };
 
 type PostCarouselWidgetProps = {
@@ -108,6 +110,9 @@ export function PostCarouselWidget({
                                             <div className="p-4 flex-grow flex flex-col">
                                                 <h3 className="font-semibold leading-tight line-clamp-2 flex-grow text-sm">{post.title}</h3>
                                                 {showExcerpts && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{post.excerpt}</p>}
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    <PostAuthor authorId={post.authorId} />
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>

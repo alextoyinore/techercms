@@ -15,6 +15,7 @@ import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
 import { ThemeLayout } from '../ThemeLayout';
+import { PostAuthor } from '../PostAuthor';
 
 type Post = {
   id: string;
@@ -155,7 +156,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   return (
     <>
       <Head>
-          <title>{siteTitle} - {pageTitle}</title>
+          <title>{pageTitle}</title>
           <meta name="description" content={metaDescription} />
       </Head>
       <div className="bg-background text-foreground font-sans">
@@ -174,6 +175,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
                       <div className="text-muted-foreground text-sm">
                           <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
+                          <span className='mx-1'>by</span>
+                          <PostAuthor authorId={item.authorId} />
                       </div>
                       <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
                   </header>
@@ -221,4 +224,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-

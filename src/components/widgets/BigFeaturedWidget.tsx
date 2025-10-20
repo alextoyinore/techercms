@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PostAuthor } from '../themes/PostAuthor';
+import { PostCategory } from '../themes/PostCategory';
 
 type Post = {
     id: string;
@@ -16,6 +18,8 @@ type Post = {
     excerpt: string;
     featuredImageUrl: string;
     createdAt: Timestamp;
+    authorId: string;
+    categoryIds?: string[];
 };
 
 type BigFeaturedWidgetProps = {
@@ -96,12 +100,19 @@ export function BigFeaturedWidget({
                     </div>
                 )}
                 <div className={cn("flex flex-col justify-center", contentOrder)}>
+                    {post.categoryIds && post.categoryIds.length > 0 && (
+                        <div className="text-sm font-semibold text-primary mb-2">
+                            <PostCategory categoryId={post.categoryIds[0]} />
+                        </div>
+                    )}
                     <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">
                         <Link href={`/${post.slug}`} className="hover:underline">{post.title}</Link>
                     </h2>
-                    <time className="text-sm text-muted-foreground/80 mt-2 block">
-                        {format(post.createdAt.toDate(), 'MMMM d, yyyy')}
-                    </time>
+                    <div className="text-sm text-muted-foreground/80 mt-2">
+                        <PostAuthor authorId={post.authorId} />
+                        <span className='mx-1'>&middot;</span>
+                        <time>{format(post.createdAt.toDate(), 'MMMM d, yyyy')}</time>
+                    </div>
                     {showExcerpt && <p className="text-sm text-muted-foreground mt-4 line-clamp-4">{post.excerpt}</p>}
                     {buttonText && (
                         <div className="mt-6">

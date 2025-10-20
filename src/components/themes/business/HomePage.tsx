@@ -35,7 +35,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             <div className="container px-4 mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
-                        <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={120} height={40} className="object-contain h-10 w-auto" />
+                        <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={120} height={32} className="object-contain h-8 w-auto" />
                     ) : (
                         siteName || ''
                     )}
