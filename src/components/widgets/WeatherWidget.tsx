@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Haze, Wind, Loader2 } from 'lucide-react';
 import { getWeather, type GetWeatherOutput } from '@/ai/flows/get-weather';
+import { getCityFromCoords } from '@/ai/flows/get-city-from-coords';
 
 const iconMap: Record<string, React.FC<any>> = {
   '01d': Sun, '01n': Sun,
@@ -29,7 +30,7 @@ export function WeatherWidget({ title = 'Weather', location: defaultLocation = "
     const [location, setLocation] = useState(defaultLocation);
 
     useEffect(() => {
-        const fetchWeather = async (loc: string) => {
+        const fetchWeatherForLocation = async (loc: string) => {
             setIsLoading(true);
             try {
                 const data = await getWeather({ location: loc });
@@ -46,8 +47,29 @@ export function WeatherWidget({ title = 'Weather', location: defaultLocation = "
             }
         };
 
-        fetchWeather(location);
-    }, [location]);
+        const fetchDynamicLocation = () => {
+             if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const { city } = await getCityFromCoords({ lat: position.coords.latitude, lon: position.coords.longitude });
+                        fetchWeatherForLocation(city);
+                    } catch (error) {
+                         console.error("Could not get city from coords, falling back to default.", error);
+                         fetchWeatherForLocation(defaultLocation);
+                    }
+                }, (error) => {
+                    console.error("Geolocation error, falling back to default.", error);
+                    fetchWeatherForLocation(defaultLocation);
+                });
+            } else {
+                 console.log("Geolocation is not supported by this browser, falling back to default.");
+                 fetchWeatherForLocation(defaultLocation);
+            }
+        }
+        
+        fetchDynamicLocation();
+        
+    }, [defaultLocation]);
 
     const Icon = weatherData ? (iconMap[weatherData.icon] || iconMap.default) : Loader2;
 
