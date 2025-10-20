@@ -9,7 +9,7 @@
  * - A 'writer' can create and manage their own content.
  *
  * Data Structure:
- * - Roles: `/roles/{userId}`
+ * - Users: `/users/{userId}` (contains user profile and role)
  * - Content: `/posts/{postId}`, `/pages/{pageId}`, `/media/{mediaId}`
  * - Taxonomies: `/categories/{categoryId}`, `/tags/{tagId}`
  * - Site Config: `/site_settings/config`, `/widget_areas/{areaId}`, etc.
@@ -42,27 +42,34 @@ service cloud.firestore {
     
     /**
      * @description Checks if the user is the owner of an existing document.
-     * If a document has no authorId, it is considered manageable by any content manager.
+     * If authorId is not present, allows any signed-in user to manage it (for legacy data).
      */
-    function isExistingOwner(userId) {
-      if (userId == null) {
-        return isContentManager();
-      }
-      return isSignedIn() && isOwner(userId);
+    function isOwnerOrLegacy(authorId) {
+        if (!('authorId' in resource.data)) {
+            return isSignedIn();
+        }
+        return isOwner(authorId);
     }
     
+    /**
+     * @description Checks if the current user has a specific role.
+     */
+    function hasRole(role) {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
     /**
      * @description Checks if the current user has the role 'superuser'.
      */
     function isSuperUser() {
-      return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "superuser";
+      return hasRole("superuser");
     }
     
     /**
      * @description Checks if the current user has the role 'writer'.
      */
     function isWriter() {
-      return isSignedIn() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == "writer";
+      return hasRole("writer");
     }
     
     /**
@@ -76,36 +83,32 @@ service cloud.firestore {
 
     // User Profiles
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isOwner(userId) || isSuperUser();
-    }
-
-    // User Roles
-    match /roles/{userId} {
-      // Allow users to read their own role. Superusers can list all roles.
-      allow get: if isOwner(userId) || isSuperUser();
-      allow list, create, update, delete: if isSuperUser();
+      allow get: if isSignedIn();
+      allow list: if isContentManager();
+      allow create: if isSuperUser();
+      allow update: if isOwner(userId) || isSuperUser();
+      allow delete: if isSuperUser();
     }
 
     // Posts
     match /posts/{postId} {
       allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource.data.authorId));
     }
 
     // Pages
     match /pages/{pageId} {
       allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource.data.authorId));
     }
 
     // Media
     match /media/{mediaId} {
       allow read: if isSignedIn();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource.data.authorId));
     }
     
     // Categories and Tags
@@ -122,7 +125,7 @@ service cloud.firestore {
     match /custom_themes/{themeId} {
       allow get, list: if isSuperUser();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
-      allow update, delete: if isSuperUser() || (isWriter() && isExistingOwner(resource.data.authorId));
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource.data.authorId));
     }
     
     // Site-wide Layout and Widget Configurations

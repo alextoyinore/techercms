@@ -12,11 +12,11 @@ import {
     Sparkles,
     Settings,
     Gem,
-    User,
     File,
     LayoutTemplate,
     Menu,
     LayoutGrid,
+    Users,
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -24,25 +24,42 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import type { User as FirebaseUser } from "firebase/auth";
+import { useDoc, useMemoFirebase, useFirestore } from "@/firebase";
+import { doc } from "firebase/firestore";
+
+type UserRole = {
+    role: 'superuser' | 'writer' | string;
+};
+
 
 const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/dashboard/pages", icon: File, label: "Pages" },
-    { href: "/dashboard/posts", icon: FileText, label: "Posts" },
-    { href: "/dashboard/media", icon: ImageIcon, label: "Media" },
-    { href: "/dashboard/categories", icon: Folder, label: "Categories" },
-    { href: "/dashboard/tags", icon: Tag, label: "Tags" },
-    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes" },
-    { href: "/dashboard/layouts", icon: LayoutGrid, label: "Layouts" },
-    { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets" },
-    { href: "/dashboard/navigation", icon: Menu, label: "Navigation" },
-    { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer" },
-    { href: "/dashboard/profile", icon: User, label: "Profile" },
-    { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", requiredRole: null },
+    { href: "/dashboard/pages", icon: File, label: "Pages", requiredRole: null },
+    { href: "/dashboard/posts", icon: FileText, label: "Posts", requiredRole: null },
+    { href: "/dashboard/media", icon: ImageIcon, label: "Media", requiredRole: null },
+    { href: "/dashboard/categories", icon: Folder, label: "Categories", requiredRole: null },
+    { href: "/dashboard/tags", icon: Tag, label: "Tags", requiredRole: null },
+    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes", requiredRole: null },
+    { href: "/dashboard/layouts", icon: LayoutGrid, label: "Layouts", requiredRole: null },
+    { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets", requiredRole: null },
+    { href: "/dashboard/navigation", icon: Menu, label: "Navigation", requiredRole: null },
+    { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer", requiredRole: null },
+    { href: "/dashboard/users", icon: Users, label: "Users", requiredRole: 'superuser' },
+    { href: "/dashboard/profile", icon: User, label: "Profile", requiredRole: null },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings", requiredRole: null },
 ];
 
 export function DashboardNav({ user }: { user: FirebaseUser | null }) {
     const pathname = usePathname();
+    const firestore = useFirestore();
+
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userData } = useDoc<UserRole>(userRef);
+    const userRole = userData?.role;
 
     return (
         <div className="flex flex-col h-full">
@@ -57,21 +74,26 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
 
             <div className="flex-1 overflow-y-auto">
                 <SidebarMenu className="px-2 md:px-4">
-                    {navItems.map((item) => (
-                        <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                className="w-full justify-start group-data-[state=collapsed]:justify-center"
-                                tooltip={item.label}
-                            >
-                                <Link href={item.href}>
-                                    <item.icon className="h-4 w-4" />
-                                    <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
+                    {navItems.map((item) => {
+                        if (item.requiredRole && item.requiredRole !== userRole) {
+                            return null;
+                        }
+                        return (
+                            <SidebarMenuItem key={item.href}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                                    className="w-full justify-start group-data-[state=collapsed]:justify-center"
+                                    tooltip={item.label}
+                                >
+                                    <Link href={item.href}>
+                                        <item.icon className="h-4 w-4" />
+                                        <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )
+                    })}
                 </SidebarMenu>
             </div>
         </div>

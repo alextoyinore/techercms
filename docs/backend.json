@@ -1,6 +1,41 @@
 
 {
   "entities": {
+    "User": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "User",
+        "type": "object",
+        "description": "Represents a user profile stored in Firestore.",
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Unique identifier for the User entity (matches Firebase Auth UID)."
+            },
+            "displayName": {
+                "type": "string",
+                "description": "The user's display name."
+            },
+            "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The user's email address."
+            },
+            "photoURL": {
+                "type": "string",
+                "description": "The URL for the user's profile picture."
+            },
+            "role": {
+              "type": "string",
+              "description": "The assigned role for the user.",
+              "enum": ["superuser", "writer", "editor", "subscriber"]
+            }
+        },
+        "required": [
+            "id",
+            "email",
+            "role"
+        ]
+    },
     "Page": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Page",
@@ -194,6 +229,11 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the page was last updated."
+        },
+        "isBreaking": {
+          "type": "boolean",
+          "description": "Marks the post as breaking news.",
+          "default": false
         }
       },
       "required": [
@@ -355,10 +395,14 @@
         "id": { "type": "string", "description": "Unique identifier for the menu item." },
         "menuId": { "type": "string", "description": "The ID of the NavigationMenu this item belongs to." },
         "label": { "type": "string", "description": "The text to display for the link." },
-        "url": { "type": "string", "description": "The URL the link points to." },
-        "order": { "type": "number", "description": "The display order of the link within its menu." }
+        "type": { "type": "string", "enum": ["custom", "page", "category"], "description": "The type of link." },
+        "url": { "type": "string", "description": "The URL the link points to (for custom links)." },
+        "objectId": { "type": "string", "description": "The ID of the linked Page or Category." },
+        "target": { "type": "string", "enum": ["_self", "_blank"], "description": "Link target attribute." },
+        "order": { "type": "number", "description": "The display order of the link within its menu." },
+        "parentId": { "type": "string", "description": "The ID of the parent menu item, for creating sub-menus." }
       },
-      "required": ["id", "menuId", "label", "url", "order"]
+      "required": ["id", "menuId", "label", "type", "order"]
     },
     "CustomTheme": {
         "title": "Custom Theme",
@@ -453,6 +497,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+            "entityName": "User",
+            "schema": {
+                "$ref": "#/backend/entities/User"
+            },
+            "description": "Stores public user profile information and role. `userId` matches the Firebase Auth UID.",
+            "params": [
+                {
+                    "name": "userId",
+                    "description": "The unique identifier of the user."
+                }
+            ]
+        }
+      },
       {
         "path": "/pages/{pageId}",
         "definition": {
@@ -616,6 +676,6 @@
         }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic."
   }
 }

@@ -26,20 +26,19 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
-  const roleRef = useMemoFirebase(() => {
+  const userRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return doc(firestore, 'roles', user.uid);
+    return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userRole, isLoading: roleLoading } = useDoc<UserRole>(roleRef);
+  const { data: userData, isLoading: roleLoading } = useDoc<UserRole>(userRef);
+  const userRole = userData?.role;
 
   useEffect(() => {
-    // This effect runs only on the client, after the component has mounted.
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    // Wait until loading is complete and we are on the client
     if (authLoading || roleLoading || !isClient) return;
 
     if (!user) {
@@ -47,16 +46,15 @@ export default function DashboardLayout({
       return;
     }
     
-    // After loading, if userRole is null (doc doesn't exist) or the role is not allowed, redirect.
-    const allowedRoles = ['superuser', 'writer'];
-    if (!userRole || !allowedRoles.includes(userRole.role)) {
+    const allowedRoles = ['superuser', 'writer', 'editor', 'subscriber'];
+    if (!userRole || !allowedRoles.includes(userRole)) {
         router.push('/');
     }
 
   }, [authLoading, roleLoading, user, userRole, router, isClient]);
 
   const isLoading = authLoading || roleLoading || !isClient;
-  const isAuthorized = user && userRole && ['superuser', 'writer'].includes(userRole.role);
+  const isAuthorized = user && userRole && ['superuser', 'writer', 'editor', 'subscriber'].includes(userRole);
 
 
   if (isLoading) {
@@ -64,16 +62,13 @@ export default function DashboardLayout({
   }
   
   if (!isAuthorized) {
-    // Show loading while redirecting or if unauthorized to prevent content flash
     return <Loading />;
   }
 
-  // If there's an auth error, display it.
   if (authError) {
     return <div>Error: {authError.message}</div>;
   }
   
-  // If we have an authorized user, render the dashboard.
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-background text-foreground flex">
