@@ -3,6 +3,7 @@ import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase
 import { collection, query, where, doc, orderBy } from 'firebase/firestore';
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -77,14 +78,19 @@ ListItem.displayName = "ListItem"
 
 
 const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
+    const pathname = usePathname();
+    const isActive = pathname === item.url;
+
     if (item.children.length > 0) {
         return (
             <NavigationMenuItem>
-                <NavigationMenuTrigger className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)}>{item.label}</NavigationMenuTrigger>
+                <NavigationMenuTrigger className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)} data-active={isActive}>
+                    {item.label}
+                </NavigationMenuTrigger>
                 <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                         {item.children.map(child => (
-                           <ListItem key={child.id} href={child.url} title={child.label}>
+                           <ListItem key={child.id} href={child.url} title={child.label} data-active={pathname === child.url}>
                            </ListItem>
                         ))}
                     </ul>
@@ -96,7 +102,7 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
     return (
         <NavigationMenuItem>
             <Link href={item.url} legacyBehavior passHref>
-                <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)}>
+                <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), 'bg-transparent', linkClassName)} active={isActive}>
                     {item.label}
                 </NavigationMenuLink>
             </Link>
@@ -105,6 +111,8 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
 };
 
 const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
+    const pathname = usePathname();
+    const isActive = pathname === item.url;
   if (item.children.length > 0) {
     return (
       <AccordionItem value={item.id} className="border-b-0">
@@ -112,7 +120,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
         <AccordionContent className="pl-4">
           <div className="flex flex-col space-y-2">
             {item.children.map(child => (
-              <Link key={child.id} href={child.url} className={cn("text-muted-foreground", linkClassName)}>
+              <Link key={child.id} href={child.url} className={cn("text-muted-foreground", linkClassName, pathname === child.url && "text-primary font-semibold")}>
                 {child.label}
               </Link>
             ))}
@@ -124,7 +132,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
 
   return (
     <div>
-      <Link href={item.url} className={cn("block py-2", linkClassName)}>
+      <Link href={item.url} className={cn("block py-2", linkClassName, isActive && "text-primary font-semibold")}>
         {item.label}
       </Link>
     </div>
