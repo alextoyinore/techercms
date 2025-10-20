@@ -96,7 +96,7 @@ export default function TagPage() {
               ))}
           </div>
         </div>
-        <aside className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
+        <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
             <WidgetArea areaName="Sidebar" />
         </aside>
       </div>
