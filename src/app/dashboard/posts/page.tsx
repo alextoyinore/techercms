@@ -2,6 +2,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,7 @@ type Post = {
     authorId: string;
     categoryIds: string[];
     createdAt: Timestamp;
+    featuredImageUrl?: string;
 };
 
 export default function PostsPage() {
@@ -148,6 +150,8 @@ export default function PostsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">S/N</TableHead>
+                <TableHead className="w-[80px]">Image</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -159,20 +163,36 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={6} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && paginatedPosts.map((post) => (
+              {!isLoading && paginatedPosts.map((post, index) => (
                 <TableRow key={post.id}>
+                   <TableCell className="font-medium">
+                        {(currentPage - 1) * pageSize + index + 1}
+                    </TableCell>
+                    <TableCell>
+                        {post.featuredImageUrl ? (
+                            <Image 
+                                src={post.featuredImageUrl} 
+                                alt={post.title} 
+                                width={60} 
+                                height={40} 
+                                className="rounded-sm object-cover aspect-[3/2]" 
+                            />
+                        ) : (
+                            <div className="h-10 w-[60px] bg-muted rounded-sm" />
+                        )}
+                    </TableCell>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
                     <Badge variant={post.status === "published" ? "default" : "secondary"}>
