@@ -62,7 +62,7 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
         </div>
          <div className="border-t mt-4">
             <ScrollArea className="container mx-auto px-6 w-full whitespace-nowrap">
-                <Menu locationId="creative-portfolio-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                <Menu locationId="creative-portfolio-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-foreground hover:text-primary py-2 inline-block" />
                 <ScrollBar orientation="horizontal" className="invisible md:visible" />
             </ScrollArea>
         </div>

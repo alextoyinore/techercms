@@ -87,7 +87,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
              <div className="border-t mt-4">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="vogue-subheader" className="flex justify-center items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <Menu locationId="vogue-subheader" className="flex justify-center items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="text-foreground hover:text-primary py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>

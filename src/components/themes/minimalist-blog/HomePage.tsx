@@ -49,7 +49,7 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
             </nav>
             <div className="border-t mt-6 pt-2">
                 <ScrollArea className="w-full whitespace-nowrap">
-                    <Menu locationId="minimalist-blog-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <Menu locationId="minimalist-blog-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-foreground hover:text-primary py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>

@@ -78,7 +78,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
             <div className="border-t">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="newspro-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <Menu locationId="newspro-subheader" className="flex items-center gap-6 text-sm" linkClassName="text-foreground hover:text-primary py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>
