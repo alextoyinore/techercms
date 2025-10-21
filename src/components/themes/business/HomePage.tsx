@@ -37,9 +37,9 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
                         isSvg ? (
-                            <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-12 w-auto" />
+                            <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto" />
                         ) : (
-                            <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={170} height={45} className="object-contain h-12 w-auto" />
+                            <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={170} height={40} className="object-contain h-10 w-auto" />
                         )
                     ) : (
                         siteName || ''
