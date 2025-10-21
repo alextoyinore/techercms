@@ -1,7 +1,7 @@
 
 'use client';
 
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { ThemeLayout } from './ThemeLayout';
 import { PublicHeader as BusinessHeader, PublicFooter as BusinessFooter } from './business/HomePage';
@@ -52,19 +52,18 @@ interface PostComponentProps {
 const PostComponent: React.FC<PostComponentProps> = memo(({ post, isLast, onLastPostInView, themeName = 'Business' }) => {
   const { ref, inView } = useInView({
     threshold: 0.5,
-    triggerOnce: true, 
   });
 
-  if (inView && isLast) {
-    onLastPostInView();
-  }
+  useEffect(() => {
+    if (inView && isLast) {
+      onLastPostInView();
+    }
+  }, [inView, isLast, onLastPostInView]);
 
-  // Set a different ref for the last post to trigger loading more
-  const postRef = isLast ? ref : null;
   const { Header, Footer } = themeMap[themeName] || themeMap['Business'];
 
   return (
-    <div ref={postRef} id={post.slug}>
+    <div ref={ref} id={post.slug}>
       <ThemeLayout HeaderComponent={Header} FooterComponent={Footer}>
         <SlugPage preloadedItem={post} />
       </ThemeLayout>
