@@ -74,9 +74,9 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                                 <MenuIcon className="text-cyan-400"/>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="bg-gray-900 text-gray-200 border-l-gray-800">
+                        <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                            <div className="py-6">
+                            <div className="py-6 px-6">
                                <Menu locationId="tech-today-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-cyan-300 transition-colors" />
                                 <div className="mt-6 border-t border-gray-700 pt-6">
                                      <SearchForm />
