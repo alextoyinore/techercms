@@ -48,7 +48,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                 </Link>
                  <div className="hidden md:flex items-center gap-4">
                     <nav>
-                        <Menu locationId="business-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:text-primary transition-colors text-muted-foreground" />
+                        <Menu locationId="business-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="hover:text-primary transition-colors text-muted-foreground" />
                     </nav>
                     <PublicAuthNav />
                     <SearchForm />

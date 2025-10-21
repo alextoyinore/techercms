@@ -49,7 +49,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
                     <nav>
-                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
+                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="hover:underline" />
                     </nav>
                     <PublicAuthNav />
                     <SearchForm />
@@ -80,7 +80,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
              <div className="border-t border-primary-foreground/20">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="sports-subheader" className="flex items-center gap-6 text-xs font-semibold uppercase" linkClassName="text-primary-foreground/80 hover:text-primary-foreground py-2 inline-block" />
+                    <Menu locationId="sports-subheader" className="flex items-center gap-6 text-xs font-semibold" linkClassName="text-primary-foreground/80 hover:text-primary-foreground py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>
@@ -93,7 +93,7 @@ export function PublicFooter({ siteName }: { siteName?: string }) {
         <footer className="py-12 px-6 border-t mt-16 bg-card">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || ''}</p>
+                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || 'Sports Now'}</p>
                 </div>
                  <div className="space-y-4">
                     <WidgetArea areaName="Footer Column 1" />

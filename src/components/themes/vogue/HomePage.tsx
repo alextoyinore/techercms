@@ -44,9 +44,9 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
         <header className="py-6 px-4 sticky top-0 bg-background/90 backdrop-blur-md z-20 border-b">
             <div className="container mx-auto flex justify-between items-center">
                  <div className="flex-1 hidden md:flex">
-                     <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                     <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </div>
-                <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
+                <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] text-center flex-1">
                      {siteLogoUrl ? (
                         isSvg ? (
                             <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto mx-auto" />
@@ -74,7 +74,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                             <SheetContent side="right">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="py-6">
-                                   <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg font-headline uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                                   <Menu locationId="vogue-header" className="flex flex-col space-y-4 text-lg font-headline tracking-wider" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
                                     <SearchForm />
                                      <Separator className="my-4" />
@@ -87,7 +87,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
              <div className="border-t mt-4">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="vogue-subheader" className="flex justify-center items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
+                    <Menu locationId="vogue-subheader" className="flex justify-center items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="text-muted-foreground hover:text-foreground py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>
@@ -125,7 +125,7 @@ const PostCategory: React.FC<{ categoryId: string }> = ({ categoryId }) => {
     if (!category) return null;
 
     return (
-        <Link href={`/category/${category.slug}`} className="text-xs font-semibold uppercase tracking-widest text-primary hover:underline">
+        <Link href={`/category/${category.slug}`} className="text-xs font-semibold tracking-widest text-primary hover:underline">
             {category.name}
         </Link>
     );
@@ -218,7 +218,7 @@ export default function HomePage() {
                     <Separator />
 
                     <div className="space-y-4">
-                        <h3 className="text-center font-bold font-headline text-2xl uppercase tracking-widest">The Latest</h3>
+                        <h3 className="text-center font-bold font-headline text-2xl tracking-widest">The Latest</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                              {latestPosts.map(post => (
                                 <div key={post.id} className="group">

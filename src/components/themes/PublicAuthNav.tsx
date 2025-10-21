@@ -36,24 +36,22 @@ export function PublicAuthNav({ className, linkClassName, orientation = 'horizon
     : <Separator className="my-2" />;
 
   return (
-    <div className={cn("flex items-center text-sm", orientation === 'vertical' ? 'flex-col items-stretch space-y-2' : 'gap-1', className)}>
+    <div className={cn("flex items-center text-sm", orientation === 'vertical' ? 'flex-col items-stretch space-y-2' : 'gap-2', className)}>
       {user ? (
         <>
-          <Button variant="ghost" asChild className={linkClassName}>
+          <Button variant="ghost" asChild className={cn('text-muted-foreground hover:text-primary hover:bg-transparent', linkClassName)}>
             <Link href="/dashboard">Dashboard</Link>
           </Button>
-          {separator}
-          <Button variant="ghost" onClick={handleLogout} className={linkClassName}>
+          <Button variant="ghost" onClick={handleLogout} className={cn('text-muted-foreground hover:text-primary hover:bg-transparent', linkClassName)}>
             Logout
           </Button>
         </>
       ) : (
         <>
-          <Button variant="ghost" asChild className={linkClassName}>
+          <Button variant="ghost" asChild className={cn('text-muted-foreground hover:text-primary hover:bg-transparent', linkClassName)}>
             <Link href="/login">Login</Link>
           </Button>
-          {separator}
-          <Button variant="ghost" asChild className={linkClassName}>
+          <Button variant="ghost" asChild className={cn('text-muted-foreground hover:text-primary hover:bg-transparent', linkClassName)}>
             <Link href="/signup">Create Account</Link>
           </Button>
         </>

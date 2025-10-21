@@ -61,7 +61,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                 </Link>
                  <div className="hidden md:flex items-center gap-4">
                     <nav>
-                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
+                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="hover:underline" />
                     </nav>
                     <SearchForm />
                 </div>
@@ -229,7 +229,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
               <div className="lg:col-span-8">
                   <article className="max-w-none">
                       <header className="mb-8">
-                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 uppercase">{item.title}</h1>}
+                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
                           <div className="text-muted-foreground text-sm font-semibold">
                               <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                   <span>{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
