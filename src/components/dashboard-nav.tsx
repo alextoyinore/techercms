@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -83,6 +84,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                             <SidebarMenuItem key={item.href}>
                                 <SidebarMenuButton
                                     asChild
+                                    size="default"
                                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                                     className="w-full justify-start group-data-[state=collapsed]:justify-center"
                                     tooltip={item.label}
