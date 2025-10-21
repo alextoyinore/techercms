@@ -1,3 +1,4 @@
+
 'use client';
 import {
   GoogleAuthProvider,
@@ -17,7 +18,8 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Eye, EyeOff, Gem, Loader2 } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { useAuth, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -55,15 +57,27 @@ function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => voi
   );
 }
 
+type SiteSettings = {
+  siteName?: string;
+}
+
 export function AuthForm() {
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
   const onUserAuthenticated = (user: User) => {
     router.push('/dashboard');
@@ -97,7 +111,7 @@ export function AuthForm() {
         <CardHeader className="text-center p-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Gem className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-headline font-bold">Techer CMS</h1>
+            <h1 className="text-2xl font-headline font-bold">{settings?.siteName || 'Techer CMS'}</h1>
           </div>
           <CardDescription>
             Enter your credentials to {isRegister ? 'join' : 'access your account'}
