@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -171,16 +172,18 @@ const flattenTree = (tree: MenuItemWithChildren[]): NavigationMenuItem[] => {
 const RecursiveSortableList = ({ items, onEdit, onDelete }: { items: MenuItemWithChildren[], onEdit: (item: NavigationMenuItem) => void, onDelete: (itemId: string) => void }) => {
   return (
     <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-      {items.map(item => (
-        <div key={item.id} className="space-y-1">
-          <SortableMenuItem item={item} onEdit={onEdit} onDelete={onDelete} />
-          {item.children.length > 0 && (
-            <div className="ml-6">
-              <RecursiveSortableList items={item.children} onEdit={onEdit} onDelete={onDelete} />
-            </div>
-          )}
-        </div>
-      ))}
+      <div className="space-y-1">
+        {items.map(item => (
+          <div key={item.id} className="space-y-1">
+            <SortableMenuItem item={item} onEdit={onEdit} onDelete={onDelete} />
+            {item.children.length > 0 && (
+              <div className="ml-6">
+                <RecursiveSortableList items={item.children} onEdit={onEdit} onDelete={onDelete} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </SortableContext>
   )
 }
@@ -272,7 +275,7 @@ function MenuItemsManager({
 
   const handleSaveItem = async () => {
     if (!firestore) return;
-    const itemToSave = editingItem as Partial<NavigationMenuItem>;
+    let itemToSave = editingItem as Partial<NavigationMenuItem>;
 
     if (!itemToSave.label || !itemToSave.url) {
       toast({
@@ -282,6 +285,11 @@ function MenuItemsManager({
       });
       return;
     }
+    
+    // Ensure parentId is either a string or null/undefined for Firestore
+    if (itemToSave.parentId === '') {
+        itemToSave = { ...itemToSave, parentId: undefined };
+    }
 
     try {
       if (itemToSave.id) {
@@ -290,6 +298,11 @@ function MenuItemsManager({
           'navigation_menu_items',
           itemToSave.id
         );
+        // If parent changed, we might need to re-order siblings
+        const originalItem = localMenuItems.find(i => i.id === itemToSave.id);
+        if (originalItem?.parentId !== itemToSave.parentId) {
+            itemToSave.order = getOrderForNewItem(itemToSave.parentId);
+        }
         await setDocumentNonBlocking(itemRef, { ...itemToSave }, { merge: true });
         toast({ title: 'Item Updated' });
       } else {
@@ -385,78 +398,44 @@ function MenuItemsManager({
         distance: 8,
     },
   }));
-
+  
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over, delta } = event;
+      const { active, over } = event;
+      if (!over || active.id === over.id || !localMenuItems) return;
+  
+      const activeItem = localMenuItems.find(i => i.id === active.id);
+      const overItem = localMenuItems.find(i => i.id === over.id);
+  
+      if (!activeItem || !overItem || activeItem.parentId !== overItem.parentId) {
+          toast({ variant: 'destructive', title: 'Move failed', description: 'Can only reorder items at the same level.' });
+          return;
+      }
+  
+      const oldIndex = localMenuItems.findIndex(i => i.id === active.id);
+      const newIndex = localMenuItems.findIndex(i => i.id === over.id);
+  
+      const newLocalItems = arrayMove(localMenuItems, oldIndex, newIndex);
+      setLocalMenuItems(newLocalItems);
+  
+      const batch = writeBatch(firestore);
+      const siblings = newLocalItems.filter(i => i.parentId === activeItem.parentId).sort((a,b) => {
+        // Find their new order in the moved array to determine sort
+        return newLocalItems.indexOf(a) - newLocalItems.indexOf(b);
+      });
 
-    if (!over || active.id === over.id || !localMenuItems) return;
-    
-    const activeItem = localMenuItems.find(i => i.id === active.id);
-    if (!activeItem) return;
-
-    let newItems = [...localMenuItems];
-    const oldIndex = newItems.findIndex(i => i.id === active.id);
-    let newIndex = newItems.findIndex(i => i.id === over.id);
-
-    const isNesting = delta.x > 30; // Indent
-    const isUnNesting = delta.x < -30; // Un-indent
-    
-    if (isNesting && newIndex > 0) {
-        const newParent = newItems[newIndex - 1];
-        if (newParent.id !== activeItem.parentId && newParent.id !== active.id) {
-           newItems[oldIndex] = { ...activeItem, parentId: newParent.id };
-        }
-    } else if (isUnNesting && activeItem.parentId) {
-        const oldParent = newItems.find(i => i.id === activeItem.parentId);
-        newItems[oldIndex] = { ...activeItem, parentId: oldParent?.parentId };
-    } else {
-        newItems = arrayMove(newItems, oldIndex, newIndex);
-    }
-    
-    // Re-calculate orders after any structural change
-    const roots = buildTree(newItems);
-    const finalItems: NavigationMenuItem[] = [];
-    let orderCounter = 0;
-    
-    function reorder(items: MenuItemWithChildren[], parentId?: string) {
-        for(let i = 0; i < items.length; i++) {
-            const {children, ...item} = items[i];
-            const updatedItem: NavigationMenuItem = {
-                ...item,
-                order: i,
-                parentId: parentId
-            };
-            finalItems.push(updatedItem);
-            if(children && children.length > 0) {
-                reorder(children, item.id);
-            }
-        }
-    }
-
-    reorder(roots);
-
-    setLocalMenuItems(finalItems);
-    
-    const batch = writeBatch(firestore);
-    finalItems.forEach(item => {
-        const docRef = doc(firestore, 'navigation_menu_items', item.id);
-        const originalItem = menuItems?.find(i => i.id === item.id);
-        if (item.order !== originalItem?.order || item.parentId !== originalItem?.parentId) {
-            batch.update(docRef, { order: item.order, parentId: item.parentId || null });
-        }
-    });
-
-    try {
-        await batch.commit();
-        toast({ title: 'Menu updated' });
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Update failed', description: error.message });
-        setLocalMenuItems(menuItems || []); // Revert on failure
-    }
-
+      siblings.forEach((item, index) => {
+          const docRef = doc(firestore, 'navigation_menu_items', item.id);
+          batch.update(docRef, { order: index });
+      });
+  
+      try {
+          await batch.commit();
+          toast({ title: 'Menu reordered' });
+      } catch (error: any) {
+          toast({ variant: 'destructive', title: 'Update failed', description: error.message });
+          setLocalMenuItems(menuItems || []); // Revert on failure
+      }
   }, [localMenuItems, firestore, toast, menuItems]);
-
-  const flattenedItems = flattenTree(menuTree);
 
   return (
     <div>
@@ -477,9 +456,7 @@ function MenuItemsManager({
           {isLoading && <p className="text-sm text-center text-muted-foreground p-4">Loading items...</p>}
           
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="space-y-1">
-              <RecursiveSortableList items={menuTree} onEdit={handleEditClick} onDelete={handleDeleteItem} />
-            </div>
+            <RecursiveSortableList items={menuTree} onEdit={handleEditClick} onDelete={handleDeleteItem} />
           </DndContext>
           
           {!isLoading && menuTree.length === 0 && (
@@ -596,6 +573,29 @@ function MenuItemsManager({
                   placeholder="The text to display"
                 />
               </div>
+
+               <div className="grid gap-2">
+                  <Label htmlFor="parent-select">Parent</Label>
+                  <Select
+                    value={(editingItem as Partial<NavigationMenuItem>).parentId || ''}
+                    onValueChange={(value) => setEditingItem({ ...editingItem, parentId: value })}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger id="parent-select">
+                      <SelectValue placeholder="No Parent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Parent</SelectItem>
+                      {localMenuItems
+                        .filter(item => item.id !== (editingItem as NavigationMenuItem).id) // Can't be its own parent
+                        .map(item => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
             </div>
             <SheetFooter>
               <SheetClose asChild>
