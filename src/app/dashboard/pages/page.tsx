@@ -1,11 +1,13 @@
+
 'use client';
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardHeader,
 } from "@/components/ui/card";
 import {
   Table,
@@ -15,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -30,6 +33,7 @@ import { useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
+import { PaginationControls } from "@/components/pagination-controls";
 
 type Page = {
     id: string;
@@ -46,6 +50,10 @@ export default function PagesPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [filter, setFilter] = useState('');
+
     const pagesCollection = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'pages');
@@ -56,18 +64,36 @@ export default function PagesPage() {
         return doc(firestore, 'site_settings', 'config');
     }, [firestore]);
 
-    const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesCollection);
+    const { data: allPages, isLoading: isLoadingPages } = useCollection<Page>(pagesCollection);
     const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
     
-    // Sort pages by creation date, newest first
     const sortedPages = useMemo(() => {
-      if (!pages) return [];
-      return [...pages].sort((a, b) => {
+      if (!allPages) return [];
+      return [...allPages].sort((a, b) => {
         const dateA = a.createdAt?.toDate() ?? new Date(0);
         const dateB = b.createdAt?.toDate() ?? new Date(0);
         return dateB.getTime() - dateA.getTime();
       });
-    }, [pages]);
+    }, [allPages]);
+    
+    const filteredPages = useMemo(() => {
+      if (!sortedPages) return [];
+      if (!filter) return sortedPages;
+      return sortedPages.filter(page =>
+        page.title.toLowerCase().includes(filter.toLowerCase())
+      );
+    }, [sortedPages, filter]);
+
+    const paginatedPages = useMemo(() => {
+        if (!filteredPages) return [];
+        const startIndex = (currentPage - 1) * pageSize;
+        return filteredPages.slice(startIndex, startIndex + pageSize);
+    }, [filteredPages, currentPage, pageSize]);
+
+    const totalPages = useMemo(() => {
+        if (!filteredPages) return 1;
+        return Math.ceil(filteredPages.length / pageSize);
+    }, [filteredPages, pageSize]);
 
     const isLoading = isLoadingPages || isLoadingSettings;
 
@@ -99,6 +125,16 @@ export default function PagesPage() {
         </Button>
       </PageHeader>
       <Card>
+        <CardHeader className="p-4 border-b">
+            <Input 
+                placeholder="Filter pages..."
+                value={filter}
+                onChange={(e) => {
+                    setFilter(e.target.value);
+                    setCurrentPage(1);
+                }}
+            />
+        </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -119,14 +155,14 @@ export default function PagesPage() {
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && sortedPages.length === 0 && (
+              {!isLoading && paginatedPages.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center">
-                        No pages found. Create one to get started.
+                        No pages found.
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && sortedPages.map((page) => {
+              {!isLoading && paginatedPages.map((page) => {
                 const isHomepage = page.id === settings?.homepagePageId;
                 return (
                     <TableRow key={page.id}>
@@ -167,6 +203,16 @@ export default function PagesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalPages > 1 && (
+            <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredPages.length}
+            />
+        )}
       </Card>
     </div>
   );

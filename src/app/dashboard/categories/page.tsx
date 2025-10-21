@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from "react";
@@ -43,8 +44,6 @@ type Category = {
   slug: string;
 };
 
-const PAGE_SIZE = 10;
-
 export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -52,7 +51,10 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filter, setFilter] = useState('');
 
   const categoriesCollection = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -61,16 +63,25 @@ export default function CategoriesPage() {
 
   const { data: allCategories, isLoading } = useCollection<Category>(categoriesCollection);
 
-  const paginatedCategories = useMemo(() => {
+  const filteredCategories = useMemo(() => {
     if (!allCategories) return [];
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return allCategories.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [allCategories, currentPage]);
+    if (!filter) return allCategories;
+    return allCategories.filter(category =>
+      category.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [allCategories, filter]);
+
+  const paginatedCategories = useMemo(() => {
+    if (!filteredCategories) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredCategories.slice(startIndex, startIndex + pageSize);
+  }, [filteredCategories, currentPage, pageSize]);
 
   const totalPages = useMemo(() => {
-    if (!allCategories) return 1;
-    return Math.ceil(allCategories.length / PAGE_SIZE);
-  }, [allCategories]);
+    if (!filteredCategories) return 1;
+    return Math.ceil(filteredCategories.length / pageSize);
+  }, [filteredCategories, pageSize]);
+
 
   const handleEditClick = (category: Category) => {
     setEditingCategory(category);
@@ -155,6 +166,16 @@ export default function CategoriesPage() {
       <div className="grid gap-4 md:grid-cols-5">
         <div className="md:col-span-3">
           <Card>
+            <CardHeader className="p-4 border-b">
+                <Input 
+                    placeholder="Filter categories..."
+                    value={filter}
+                    onChange={(e) => {
+                        setFilter(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
@@ -175,7 +196,7 @@ export default function CategoriesPage() {
                   {!isLoading && paginatedCategories.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={3} className="text-center">
-                            No categories found. Add one to get started.
+                            No categories found.
                         </TableCell>
                      </TableRow>
                   )}
@@ -208,6 +229,9 @@ export default function CategoriesPage() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredCategories.length}
               />
             )}
           </Card>

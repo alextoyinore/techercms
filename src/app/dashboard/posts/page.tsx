@@ -1,11 +1,13 @@
+
 'use client';
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardHeader,
 } from "@/components/ui/card";
 import {
   Table,
@@ -25,11 +27,14 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { collection, doc, Timestamp } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
+import { PaginationControls } from "@/components/pagination-controls";
 
 type Post = {
     id: string;
@@ -44,22 +49,46 @@ export default function PostsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [filter, setFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+
     const postsCollection = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'posts');
     }, [firestore]);
 
-    const { data: posts, isLoading } = useCollection<Post>(postsCollection);
+    const { data: allPosts, isLoading } = useCollection<Post>(postsCollection);
     
-    // Sort posts by creation date, newest first
     const sortedPosts = useMemo(() => {
-      if (!posts) return [];
-      return [...posts].sort((a, b) => {
+      if (!allPosts) return [];
+      return [...allPosts].sort((a, b) => {
         const dateA = a.createdAt?.toDate() ?? new Date(0);
         const dateB = b.createdAt?.toDate() ?? new Date(0);
         return dateB.getTime() - dateA.getTime();
       });
-    }, [posts]);
+    }, [allPosts]);
+
+    const filteredPosts = useMemo(() => {
+        if (!sortedPosts) return [];
+        return sortedPosts.filter(post => {
+            const titleMatch = post.title.toLowerCase().includes(filter.toLowerCase());
+            const statusMatch = statusFilter === 'all' || post.status === statusFilter;
+            return titleMatch && statusMatch;
+        });
+    }, [sortedPosts, filter, statusFilter]);
+
+    const paginatedPosts = useMemo(() => {
+        if (!filteredPosts) return [];
+        const startIndex = (currentPage - 1) * pageSize;
+        return filteredPosts.slice(startIndex, startIndex + pageSize);
+    }, [filteredPosts, currentPage, pageSize]);
+
+    const totalPages = useMemo(() => {
+        if (!filteredPosts) return 1;
+        return Math.ceil(filteredPosts.length / pageSize);
+    }, [filteredPosts, pageSize]);
 
 
     const handleDelete = (postId: string, postTitle: string) => {
@@ -90,6 +119,31 @@ export default function PostsPage() {
         </Button>
       </PageHeader>
       <Card>
+        <CardHeader className="p-4 border-b flex-row gap-4">
+            <Input 
+                placeholder="Filter posts..."
+                className="flex-1"
+                value={filter}
+                onChange={(e) => {
+                    setFilter(e.target.value);
+                    setCurrentPage(1);
+                }}
+            />
+            <Select value={statusFilter} onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+            }}>
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+            </Select>
+        </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -110,14 +164,14 @@ export default function PostsPage() {
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && sortedPosts.length === 0 && (
+              {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={4} className="text-center">
-                        No posts found. Create one to get started.
+                        No posts found.
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && sortedPosts.map((post) => (
+              {!isLoading && paginatedPosts.map((post) => (
                 <TableRow key={post.id}>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
@@ -152,6 +206,16 @@ export default function PostsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalPages > 1 && (
+            <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredPosts.length}
+            />
+        )}
       </Card>
     </div>
   );

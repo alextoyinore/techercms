@@ -32,15 +32,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
+import { PaginationControls } from '@/components/pagination-controls';
 
 type User = {
   id: string;
@@ -65,8 +66,12 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<User['role']>('writer');
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filter, setFilter] = useState('');
+
   const usersCollection = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
-  const { data: users, isLoading: isLoadingUsers } = useCollection<User>(usersCollection);
+  const { data: allUsers, isLoading: isLoadingUsers } = useCollection<User>(usersCollection);
   
   const currentUserDocRef = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
@@ -74,6 +79,27 @@ export default function UsersPage() {
   }, [firestore, currentUser]);
   
   const { data: currentUserData } = useDoc<User>(currentUserDocRef);
+
+  const filteredUsers = useMemo(() => {
+    if (!allUsers) return [];
+    if (!filter) return allUsers;
+    return allUsers.filter(user =>
+      user.displayName?.toLowerCase().includes(filter.toLowerCase()) ||
+      user.email.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [allUsers, filter]);
+
+  const paginatedUsers = useMemo(() => {
+    if (!filteredUsers) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(startIndex, startIndex + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
+
+  const totalPages = useMemo(() => {
+    if (!filteredUsers) return 1;
+    return Math.ceil(filteredUsers.length / pageSize);
+  }, [filteredUsers, pageSize]);
+
 
   if (currentUserData && currentUserData.role !== 'superuser') {
     router.push('/dashboard');
@@ -171,54 +197,81 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       </PageHeader>
-      <div className="border rounded-lg w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoadingUsers && (
+      <Card>
+        <CardHeader className="p-4 border-b">
+            <Input 
+                placeholder="Filter users by name or email..."
+                value={filter}
+                onChange={(e) => {
+                    setFilter(e.target.value);
+                    setCurrentPage(1);
+                }}
+            />
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={3} className="text-center">Loading users...</TableCell>
+                <TableHead>User</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
               </TableRow>
-            )}
-            {users?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.photoURL} />
-                      <AvatarFallback>{user.displayName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{user.displayName || 'No Name'}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                    <Select 
-                        value={user.role} 
-                        onValueChange={(value) => handleRoleChange(user.id, value as User['role'])}
-                        disabled={user.id === currentUser?.uid}
-                    >
-                        <SelectTrigger className="w-32">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableRoles.map((role) => (
-                                <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {isLoadingUsers && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">Loading users...</TableCell>
+                </TableRow>
+              )}
+              {!isLoadingUsers && paginatedUsers.length === 0 && (
+                 <TableRow>
+                    <TableCell colSpan={3} className="text-center">No users found.</TableCell>
+                 </TableRow>
+              )}
+              {paginatedUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL} />
+                        <AvatarFallback>{user.displayName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{user.displayName || 'No Name'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                      <Select 
+                          value={user.role} 
+                          onValueChange={(value) => handleRoleChange(user.id, value as User['role'])}
+                          disabled={user.id === currentUser?.uid}
+                      >
+                          <SelectTrigger className="w-32">
+                              <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {availableRoles.map((role) => (
+                                  <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+         {totalPages > 1 && (
+            <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredUsers.length}
+            />
+        )}
+      </Card>
     </div>
   );
 }

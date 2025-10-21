@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from "react";
@@ -42,8 +43,6 @@ type Tag = {
   slug: string;
 };
 
-const PAGE_SIZE = 10;
-
 export default function TagsPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -51,7 +50,10 @@ export default function TagsPage() {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filter, setFilter] = useState('');
 
   const tagsCollection = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -60,16 +62,24 @@ export default function TagsPage() {
 
   const { data: allTags, isLoading } = useCollection<Tag>(tagsCollection);
 
-  const paginatedTags = useMemo(() => {
+  const filteredTags = useMemo(() => {
     if (!allTags) return [];
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return allTags.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [allTags, currentPage]);
+    if (!filter) return allTags;
+    return allTags.filter(tag =>
+      tag.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [allTags, filter]);
+
+  const paginatedTags = useMemo(() => {
+    if (!filteredTags) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredTags.slice(startIndex, startIndex + pageSize);
+  }, [filteredTags, currentPage, pageSize]);
 
   const totalPages = useMemo(() => {
-    if (!allTags) return 1;
-    return Math.ceil(allTags.length / PAGE_SIZE);
-  }, [allTags]);
+    if (!filteredTags) return 1;
+    return Math.ceil(filteredTags.length / pageSize);
+  }, [filteredTags, pageSize]);
 
 
   const handleEditClick = (tag: Tag) => {
@@ -155,6 +165,16 @@ export default function TagsPage() {
       <div className="grid gap-4 md:grid-cols-5">
         <div className="md:col-span-3">
           <Card>
+            <CardHeader className="p-4 border-b">
+                <Input 
+                    placeholder="Filter tags..."
+                    value={filter}
+                    onChange={(e) => {
+                        setFilter(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
@@ -175,7 +195,7 @@ export default function TagsPage() {
                   {!isLoading && paginatedTags.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={3} className="text-center">
-                            No tags found. Add one to get started.
+                            No tags found.
                         </TableCell>
                      </TableRow>
                   )}
@@ -208,6 +228,9 @@ export default function TagsPage() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                totalItems={filteredTags.length}
               />
             )}
           </Card>
