@@ -287,7 +287,7 @@ function MenuItemsManager({
     }
     
     // Ensure parentId is either a string or null/undefined for Firestore
-    if (itemToSave.parentId === '') {
+    if (itemToSave.parentId === 'none' || itemToSave.parentId === '') {
         itemToSave = { ...itemToSave, parentId: undefined };
     }
 
@@ -577,7 +577,7 @@ function MenuItemsManager({
                <div className="grid gap-2">
                   <Label htmlFor="parent-select">Parent</Label>
                   <Select
-                    value={(editingItem as Partial<NavigationMenuItem>).parentId || ''}
+                    value={(editingItem as Partial<NavigationMenuItem>).parentId || 'none'}
                     onValueChange={(value) => setEditingItem({ ...editingItem, parentId: value })}
                     disabled={isLoading}
                   >
@@ -585,7 +585,7 @@ function MenuItemsManager({
                       <SelectValue placeholder="No Parent" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Parent</SelectItem>
+                      <SelectItem value="none">No Parent</SelectItem>
                       {localMenuItems
                         .filter(item => item.id !== (editingItem as NavigationMenuItem).id) // Can't be its own parent
                         .map(item => (
