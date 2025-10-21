@@ -18,6 +18,7 @@ import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -67,13 +68,17 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
                                 <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
+                                <div className="mt-6 pt-6 border-t">
+                                    <PublicAuthNav orientation="vertical" />
+                                </div>
                             </div>
                         </SheetContent>
                     </Sheet>
                 </div>
             </div>
-             <nav className="hidden md:flex justify-center mt-6">
+             <nav className="hidden md:flex justify-center items-center gap-6 mt-6">
                 <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
+                <PublicAuthNav />
             </nav>
             <div className="mt-6 flex justify-center">
                 <SearchForm />

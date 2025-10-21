@@ -71,14 +71,14 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                                     <Separator className="my-4" />
                                     <SearchForm />
                                      <Separator className="my-4" />
-                                    <PublicAuthNav orientation="vertical" />
+                                     <PublicAuthNav orientation="vertical" />
                                 </div>
                             </SheetContent>
                         </Sheet>
                     </div>
                 </div>
                 <nav className="hidden sm:flex justify-center items-center gap-6 py-3 text-sm font-semibold tracking-wider">
-                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 text-sm font-semibold tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                    <Menu locationId="newspaper-main-nav" className="flex justify-center items-center gap-6 text-sm font-semibold tracking-wider" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
                 </nav>
                  <div className="border-t">
                     <ScrollArea className="w-full whitespace-nowrap">

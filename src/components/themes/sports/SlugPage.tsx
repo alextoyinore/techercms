@@ -19,6 +19,8 @@ import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { PublicHeader, PublicFooter } from './HomePage';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -52,64 +54,6 @@ type SiteSettings = {
     homepagePageId?: string;
 }
 
-function PublicHeader({ siteName }: { siteName?: string }) {
-    return (
-        <header className="py-4 px-4 sticky top-0 bg-primary text-primary-foreground z-20 shadow-lg">
-            <div className="container mx-auto flex justify-between items-center">
-                <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
-                    {siteName || 'ESPN'}
-                </Link>
-                 <div className="hidden md:flex items-center gap-4">
-                    <nav>
-                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="hover:underline" />
-                    </nav>
-                    <SearchForm />
-                </div>
-                 <div className="md:hidden">
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:bg-white/20">
-                                <MenuIcon />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="bg-primary text-primary-foreground border-l-0">
-                            <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                            <div className="py-6">
-                               <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:underline" />
-                                <div className="mt-6 border-t border-white/20 pt-6">
-                                    <Link href="/login" className="text-lg font-semibold uppercase hover:underline">
-                                        Login
-                                    </Link>
-                                    <div className="mt-4">
-                                        <SearchForm />
-                                    </div>
-                                </div>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                </div>
-            </div>
-        </header>
-    )
-}
-
-function PublicFooter({ siteName }: { siteName?: string }) {
-    return (
-        <footer className="py-12 px-6 border-t mt-16 bg-card">
-            <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">© {new Date().getFullYear()} {siteName || 'Sports Now'}</p>
-                </div>
-                 <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 1" />
-                </div>
-                <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 2" />
-                </div>
-            </div>
-        </footer>
-    )
-}
 
 function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();

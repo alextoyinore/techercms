@@ -49,9 +49,9 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
                     <nav>
-                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="hover:underline" />
+                         <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-primary-foreground/80 hover:text-primary-foreground hover:underline" />
                     </nav>
-                    <PublicAuthNav />
+                    <PublicAuthNav linkClassName="text-primary-foreground/80 hover:text-primary-foreground hover:bg-transparent" />
                     <SearchForm />
                 </div>
                  <div className="md:hidden">
@@ -70,7 +70,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                                         <SearchForm />
                                     </div>
                                     <div className="mt-4 border-t border-white/20 pt-4">
-                                        <PublicAuthNav orientation="vertical" />
+                                        <PublicAuthNav orientation="vertical" linkClassName="text-primary-foreground/80 hover:text-primary-foreground" />
                                     </div>
                                 </div>
                             </div>
@@ -80,7 +80,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             </div>
              <div className="border-t border-primary-foreground/20">
                 <ScrollArea className="container mx-auto px-4 w-full whitespace-nowrap">
-                    <Menu locationId="sports-subheader" className="flex items-center gap-6 text-xs font-semibold" linkClassName="text-primary-foreground/80 hover:text-primary-foreground py-2 inline-block" />
+                    <Menu locationId="sports-subheader" className="flex items-center gap-6 text-xs font-semibold" linkClassName="text-foreground hover:text-primary py-2 inline-block" />
                     <ScrollBar orientation="horizontal" className="invisible md:visible" />
                 </ScrollArea>
             </div>

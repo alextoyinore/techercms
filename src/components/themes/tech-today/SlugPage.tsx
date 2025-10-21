@@ -19,6 +19,7 @@ import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -63,6 +64,7 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                     <nav>
                         <Menu locationId="tech-today-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="text-gray-400 hover:text-cyan-300 transition-colors" />
                     </nav>
+                    <PublicAuthNav />
                     <SearchForm />
                  </div>
                  <div className="md:hidden">
@@ -75,10 +77,13 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                         <SheetContent side="right" className="bg-gray-900 text-gray-200 border-l-gray-800">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
-                               <Menu locationId="tech-today-header" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-cyan-300 transition-colors" />
+                               <Menu locationId="tech-today-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-cyan-300 transition-colors" />
                                 <div className="mt-6 border-t border-gray-700 pt-6">
                                      <SearchForm />
                                 </div>
+                                <div className="mt-6 border-t border-gray-700 pt-6">
+                                     <PublicAuthNav orientation="vertical" />
+                                 </div>
                             </div>
                         </SheetContent>
                     </Sheet>
@@ -88,12 +93,12 @@ function PublicHeader({ siteName }: { siteName?: string }) {
     )
 }
 
-function PublicFooter() {
+function PublicFooter({siteName}: {siteName?: string}) {
     return (
         <footer className="py-12 px-6 border-t border-gray-800 mt-16 bg-gray-900">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-gray-400">
                 <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-cyan-400 text-lg">Tech Today</p>
+                    <p className="font-bold font-headline text-cyan-400 text-lg">{siteName || ''}</p>
                     <p className="text-sm text-gray-500 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
                 </div>
                  <div className="space-y-4">

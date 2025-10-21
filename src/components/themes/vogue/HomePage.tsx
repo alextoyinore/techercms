@@ -44,7 +44,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
         <header className="py-6 px-4 sticky top-0 bg-background/90 backdrop-blur-md z-20 border-b">
             <div className="container mx-auto flex justify-between items-center">
                  <div className="flex-1 hidden md:flex">
-                     <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="hover:text-primary transition-colors" />
+                     <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold tracking-wider" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
                 </div>
                 <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] text-center flex-1">
                      {siteLogoUrl ? (

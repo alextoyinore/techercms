@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { SearchForm } from '../SearchForm';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -79,7 +80,8 @@ const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
                     <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || 'The Daily Chronicle'}
                     </Link>
-                    <div className="text-sm hidden sm:flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2">
+                        <PublicAuthNav />
                         <SearchForm />
                     </div>
                     <div className="sm:hidden">
@@ -93,6 +95,8 @@ const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
                                     <SearchForm />
+                                    <Separator className="my-4" />
+                                     <PublicAuthNav orientation="vertical" />
                                 </div>
                             </SheetContent>
                         </Sheet>

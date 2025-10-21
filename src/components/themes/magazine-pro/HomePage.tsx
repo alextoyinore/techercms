@@ -34,7 +34,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
             </Link>
             <div className="hidden md:flex items-center gap-4">
                 <nav>
-                    <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
+                    <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
                 </nav>
                 <PublicAuthNav />
                 <SearchForm />
