@@ -107,8 +107,8 @@ export function AuthForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="mx-auto w-full max-w-[350px]">
-        <CardHeader className="text-center p-4">
+      <Card className="mx-auto w-full max-w-[380px]">
+        <CardHeader className="text-center p-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Gem className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-headline font-bold">{settings?.siteName || 'Techer CMS'}</h1>
@@ -118,7 +118,7 @@ export function AuthForm() {
           </CardDescription>
         </CardHeader>
         <Separator />
-        <CardContent className="p-4">
+        <CardContent className="p-6">
           <div className="grid gap-3">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -156,7 +156,7 @@ export function AuthForm() {
               </button>
             </div>
             {authError && <p className="text-sm text-destructive">{authError}</p>}
-            <Button onClick={handleEmailAuth} className="w-full" disabled={isAuthenticating}>
+            <Button onClick={handleEmailAuth} className="w-full mt-2" disabled={isAuthenticating}>
               {isAuthenticating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -168,7 +168,7 @@ export function AuthForm() {
                 'Sign In'
               )}
             </Button>
-            <div className="relative">
+            <div className="relative mt-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -181,7 +181,7 @@ export function AuthForm() {
             <GoogleSignInButton onAuthStart={() => setIsAuthenticating(true)} onSuccess={onUserAuthenticated} />
           </div>
         </CardContent>
-        <CardFooter className="justify-center p-4">
+        <CardFooter className="justify-center p-4 pt-0">
           <Button variant="link" onClick={() => setIsRegister(!isRegister)} disabled={isAuthenticating}>
             {isRegister
               ? 'Already have an account? Sign In'
