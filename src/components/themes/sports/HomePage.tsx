@@ -27,14 +27,24 @@ type Post = {
 
 type SiteSettings = {
   siteName?: string;
+  siteLogoUrl?: string;
 }
 
-export function PublicHeader({ siteName }: { siteName?: string }) {
+export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
+    const isSvg = siteLogoUrl?.endsWith('.svg');
     return (
         <header className="sticky top-0 bg-primary text-primary-foreground z-20 shadow-lg">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <Link href="/" className="text-3xl font-black font-headline tracking-tighter uppercase">
-                    {siteName || ''}
+                     {siteLogoUrl ? (
+                        isSvg ? (
+                            <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto" />
+                        ) : (
+                            <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={180} height={40} className="object-contain h-10 w-auto" />
+                        )
+                    ) : (
+                        siteName || ''
+                    )}
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
                     <nav>
@@ -159,7 +169,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-background text-foreground font-sans">
-        {hasContent && <PublicHeader siteName={settings?.siteName} />}
+        {hasContent && <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />}
         <main className="container mx-auto py-6 px-4">
             {!hasContent ? (
                 <div className="text-center py-24">

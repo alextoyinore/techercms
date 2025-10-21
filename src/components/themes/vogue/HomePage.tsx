@@ -34,9 +34,11 @@ type Category = {
 
 type SiteSettings = {
   siteName?: string;
+  siteLogoUrl?: string;
 }
 
-export function PublicHeader({ siteName }: { siteName?: string }) {
+export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
+    const isSvg = siteLogoUrl?.endsWith('.svg');
     return (
         <header className="py-6 px-4 sticky top-0 bg-background/90 backdrop-blur-md z-20 border-b">
             <div className="container mx-auto flex justify-between items-center">
@@ -44,7 +46,15 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                      <Menu locationId="vogue-header" className="flex items-center gap-6 text-xs font-semibold uppercase tracking-wider" linkClassName="hover:text-primary transition-colors" />
                 </div>
                 <Link href="/" className="text-4xl md:text-5xl font-black font-headline tracking-[0.2em] uppercase text-center flex-1">
-                    {siteName || ''}
+                     {siteLogoUrl ? (
+                        isSvg ? (
+                            <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto mx-auto" />
+                        ) : (
+                            <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={180} height={40} className="object-contain h-10 w-auto mx-auto" />
+                        )
+                    ) : (
+                        siteName || ''
+                    )}
                 </Link>
                 <div className="flex-1 text-right flex justify-end items-center gap-4">
                     <div className="hidden md:block">
@@ -151,7 +161,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-background text-foreground font-serif">
-        {hasContent && <PublicHeader siteName={settings?.siteName} />}
+        {hasContent && <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />}
         <main className="container mx-auto py-8 px-4">
             {!hasContent ? (
                  <div className="text-center py-24">

@@ -30,12 +30,17 @@ type SiteSettings = {
 }
 
 export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
+    const isSvg = siteLogoUrl?.endsWith('.svg');
     return (
         <header className="pt-3 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
             <div className="container px-4 mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
-                        <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={150} height={40} className="object-contain h-10 w-auto" />
+                        isSvg ? (
+                            <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-12 w-auto" />
+                        ) : (
+                            <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={170} height={45} className="object-contain h-12 w-auto" />
+                        )
                     ) : (
                         siteName || ''
                     )}
