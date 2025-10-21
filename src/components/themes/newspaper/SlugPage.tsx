@@ -179,12 +179,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     if (!firestore || !slug || preloadedItem) return null;
     return query(collection(firestore, 'pages'), where('slug', '==', slug), where('status', '==', 'published'));
   }, [firestore, slug, preloadedItem]);
-
+  
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return doc(firestore, 'site_settings', 'config');
   }, [firestore]);
-  
+
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
   const { data: pages, isLoading: isLoadingPages } = useCollection<Page>(pagesQuery);
   const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
