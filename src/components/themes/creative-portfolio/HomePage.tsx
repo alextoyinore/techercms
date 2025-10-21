@@ -69,12 +69,13 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
     </header>
 );
 
-export const CreativeFooter: React.FC<{siteName?: string}> = ({ siteName }) => (
+export const CreativeFooter: React.FC<{siteName?: string, siteDescription?: string, companyName?: string}> = ({ siteName, siteDescription, companyName }) => (
     <footer className="py-12 px-6 border-t mt-16 bg-foreground text-background">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
                 <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
-                <p className="text-sm text-background/60 mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                {siteDescription && <p className="text-sm text-background/60 mt-2">{siteDescription}</p>}
+                <p className="text-sm text-background/60 mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All Rights Reserved.</p>
                 <div className="mt-4">
                      <Menu locationId="creative-portfolio-social" className="flex items-center gap-4" linkClassName="text-background/60 hover:text-white" />
                 </div>

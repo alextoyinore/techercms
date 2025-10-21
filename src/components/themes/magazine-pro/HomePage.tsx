@@ -70,12 +70,13 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
     </header>
 )};
 
-export const MagazineProFooter: React.FC<{ siteName?: string }> = ({ siteName }) => (
+export const MagazineProFooter: React.FC<{ siteName?: string, siteDescription?: string, companyName?: string }> = ({ siteName, siteDescription, companyName }) => (
      <footer className="py-12 px-6 border-t mt-12 bg-muted/20">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-2">
                 <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
-                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
+                <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All Rights Reserved.</p>
                 <Menu locationId="magazine-pro-footer" className="mt-4 flex flex-col space-y-2" linkClassName="text-sm text-muted-foreground hover:text-primary" />
             </div>
             <div className="space-y-4">

@@ -63,12 +63,13 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
     </header>
 );
 
-export const MinimalistFooter: React.FC<{siteName?:string}> = ({siteName}) => (
+export const MinimalistFooter: React.FC<{siteName?:string, siteDescription?: string, companyName?: string}> = ({siteName, siteDescription, companyName}) => (
     <footer className="py-12 px-6 mt-16 border-t">
         <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
                  <p className="font-semibold font-headline text-foreground">{siteName || ''}</p>
-                 <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All rights reserved.</p>
+                 {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
+                 <p className="text-xs text-muted-foreground mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All rights reserved.</p>
             </div>
             <div className="space-y-4">
                 <WidgetArea areaName="Footer Column 1" />

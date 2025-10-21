@@ -294,6 +294,14 @@
             "type": "string",
             "description": "The public name of the website."
         },
+        "siteDescription": {
+            "type": "string",
+            "description": "A short description or tagline for the website."
+        },
+        "companyName": {
+            "type": "string",
+            "description": "The name of the company for the copyright notice."
+        },
         "siteLogoUrl": {
             "type": "string",
             "description": "The URL for the website's logo."

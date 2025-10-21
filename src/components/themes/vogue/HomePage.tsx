@@ -36,6 +36,8 @@ type Category = {
 type SiteSettings = {
   siteName?: string;
   siteLogoUrl?: string;
+  siteDescription?: string;
+  companyName?: string;
 }
 
 export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
@@ -97,12 +99,14 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
     )
 }
 
-export function PublicFooter({ siteName }: { siteName?: string }) {
+export function PublicFooter({ siteName, siteDescription, companyName }: { siteName?: string, siteDescription?: string, companyName?: string }) {
     return (
         <footer className="py-12 px-6 border-t mt-16 bg-background">
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-4 text-center">
-                    <p className="font-bold font-headline text-lg">© {new Date().getFullYear()} {siteName || ''}</p>
+                    <p className="font-bold font-headline text-lg">{siteName || ''}</p>
+                    {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
+                    <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All Rights Reserved.</p>
                 </div>
                  <div className="lg:col-span-2 space-y-4">
                     <WidgetArea areaName="Footer Column 1" />
@@ -242,7 +246,7 @@ export default function HomePage() {
                 </div>
             )}
         </main>
-        {hasContent && <PublicFooter siteName={settings?.siteName} />}
+        {hasContent && <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />}
     </div>
   );
 }

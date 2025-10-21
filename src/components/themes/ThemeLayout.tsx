@@ -1,3 +1,4 @@
+
 'use client';
 import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
@@ -7,6 +8,8 @@ import { Menu } from '@/components/Menu';
 
 type SiteSettings = {
     siteName?: string;
+    siteDescription?: string;
+    companyName?: string;
 }
 
 function PublicHeader({ siteName, HeaderComponent }: { siteName?: string, HeaderComponent?: React.FC<{siteName?: string}> }) {
@@ -30,9 +33,9 @@ function PublicHeader({ siteName, HeaderComponent }: { siteName?: string, Header
     );
 }
 
-function PublicFooter({ siteName, FooterComponent }: { siteName?: string, FooterComponent?: React.FC<{siteName?: string}> }) {
+function PublicFooter({ siteName, siteDescription, companyName, FooterComponent }: { siteName?: string, siteDescription?: string, companyName?: string, FooterComponent?: React.FC<any> }) {
     if (FooterComponent) {
-        return <FooterComponent siteName={siteName} />;
+        return <FooterComponent siteName={siteName} siteDescription={siteDescription} companyName={companyName} />;
     }
 
     return (
@@ -40,7 +43,8 @@ function PublicFooter({ siteName, FooterComponent }: { siteName?: string, Footer
             <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-2">
                     <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
-                    <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} All Rights Reserved.</p>
+                    {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
+                    <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All Rights Reserved.</p>
                 </div>
                 <div className="space-y-4">
                     <WidgetArea areaName="Footer Column 1" />
@@ -56,8 +60,8 @@ function PublicFooter({ siteName, FooterComponent }: { siteName?: string, Footer
 
 type ThemeLayoutProps = {
     children: React.ReactNode;
-    HeaderComponent?: React.FC<{ siteName?: string }>;
-    FooterComponent?: React.FC<{ siteName?: string }>;
+    HeaderComponent?: React.FC<any>;
+    FooterComponent?: React.FC<any>;
     pageId?: string;
     className?: string;
 };
@@ -81,7 +85,7 @@ export function ThemeLayout({ children, HeaderComponent, FooterComponent, pageId
                 {children}
             </main>
              <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
-            <PublicFooter siteName={settings?.siteName} FooterComponent={FooterComponent} />
+            <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} FooterComponent={FooterComponent} />
         </div>
     )
 }

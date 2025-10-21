@@ -32,10 +32,13 @@ import { languages } from '@/lib/languages';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { MediaLibrary } from '@/components/media-library';
+import { Textarea } from '@/components/ui/textarea';
 
 type SiteSettings = {
   activeTheme?: string;
   siteName?: string;
+  siteDescription?: string;
+  companyName?: string;
   siteLogoUrl?: string;
   homepageType?: 'latest' | 'static';
   homepagePageId?: string;
@@ -57,6 +60,8 @@ export default function SettingsPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   
   const [siteName, setSiteName] = useState('');
+  const [siteDescription, setSiteDescription] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [siteLogoUrl, setSiteLogoUrl] = useState('');
   const [homepageType, setHomepageType] = useState<'latest' | 'static'>('latest');
   const [homepagePageId, setHomepagePageId] = useState<string | undefined>(undefined);
@@ -80,6 +85,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (settings) {
       setSiteName(settings.siteName || '');
+      setSiteDescription(settings.siteDescription || '');
+      setCompanyName(settings.companyName || '');
       setSiteLogoUrl(settings.siteLogoUrl || '');
       setHomepageType(settings.homepageType || 'latest');
       setHomepagePageId(settings.homepagePageId);
@@ -108,6 +115,8 @@ export default function SettingsPage() {
     setIsSavingSettings(true);
     const settingsToSave: Partial<SiteSettings> = {
         siteName,
+        siteDescription,
+        companyName,
         siteLogoUrl,
         homepageType,
         homepagePageId: homepageType === 'static' ? homepagePageId : '',
@@ -144,7 +153,6 @@ export default function SettingsPage() {
                     <div className="grid gap-2 max-w-sm">
                         <Label htmlFor="siteName">Site Name</Label>
                         <Input id="siteName" value={siteName} onChange={(e) => setSiteName(e.target.value)} />
-                        <p className="text-sm text-muted-foreground">This name is displayed publicly on your site.</p>
                     </div>
                      <div className="grid gap-2 max-w-sm">
                         <Label>Site Logo</Label>
@@ -165,6 +173,15 @@ export default function SettingsPage() {
                                 </Button>
                             </MediaLibrary>
                         </div>
+                    </div>
+                    <div className="grid gap-2 max-w-sm">
+                        <Label htmlFor="siteDescription">Site Description</Label>
+                        <Textarea id="siteDescription" value={siteDescription} onChange={(e) => setSiteDescription(e.target.value)} rows={3} />
+                    </div>
+                    <div className="grid gap-2 max-w-sm">
+                        <Label htmlFor="companyName">Company Name</Label>
+                        <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                        <p className="text-sm text-muted-foreground">Used for the copyright notice in the footer.</p>
                     </div>
                 </div>
                  <div className="flex items-center space-x-2">
