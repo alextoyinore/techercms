@@ -12,6 +12,7 @@ type Post = {
   title: string;
   slug: string;
   featuredImageUrl: string;
+  excerpt?: string;
   categoryIds?: string[];
   tagIds?: string[];
 };
@@ -83,6 +84,9 @@ export const RelatedPosts = ({ currentPost }: RelatedPostsProps) => {
               <h4 className="font-semibold text-lg leading-tight group-hover:underline">
                 {post.title}
               </h4>
+              {post.excerpt && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
+              )}
             </Link>
           </div>
         ))}
