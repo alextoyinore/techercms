@@ -179,6 +179,7 @@ export default function TagsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">S/N</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -187,20 +188,21 @@ export default function TagsPage() {
                 <TableBody>
                   {isLoading && (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center">
+                      <TableCell colSpan={4} className="text-center">
                         Loading tags...
                       </TableCell>
                     </TableRow>
                   )}
                   {!isLoading && paginatedTags.length === 0 && (
                      <TableRow>
-                        <TableCell colSpan={3} className="text-center">
+                        <TableCell colSpan={4} className="text-center">
                             No tags found.
                         </TableCell>
                      </TableRow>
                   )}
-                  {paginatedTags.map((tag) => (
+                  {paginatedTags.map((tag, index) => (
                     <TableRow key={tag.id}>
+                      <TableCell className="font-medium">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                       <TableCell className="font-medium">{tag.name}</TableCell>
                       <TableCell>{tag.slug}</TableCell>
                       <TableCell className="text-right">

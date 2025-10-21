@@ -180,6 +180,7 @@ export default function CategoriesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">S/N</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -188,20 +189,21 @@ export default function CategoriesPage() {
                 <TableBody>
                   {isLoading && (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center">
+                      <TableCell colSpan={4} className="text-center">
                         Loading categories...
                       </TableCell>
                     </TableRow>
                   )}
                   {!isLoading && paginatedCategories.length === 0 && (
                      <TableRow>
-                        <TableCell colSpan={3} className="text-center">
+                        <TableCell colSpan={4} className="text-center">
                             No categories found.
                         </TableCell>
                      </TableRow>
                   )}
-                  {paginatedCategories.map((category) => (
+                  {paginatedCategories.map((category, index) => (
                     <TableRow key={category.id}>
+                      <TableCell className="font-medium">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell>{category.slug}</TableCell>
                       <TableCell className="text-right">

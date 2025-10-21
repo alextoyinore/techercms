@@ -212,6 +212,7 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">S/N</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
@@ -220,16 +221,17 @@ export default function UsersPage() {
             <TableBody>
               {isLoadingUsers && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">Loading users...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Loading users...</TableCell>
                 </TableRow>
               )}
               {!isLoadingUsers && paginatedUsers.length === 0 && (
                  <TableRow>
-                    <TableCell colSpan={3} className="text-center">No users found.</TableCell>
+                    <TableCell colSpan={4} className="text-center">No users found.</TableCell>
                  </TableRow>
               )}
-              {paginatedUsers.map((user) => (
+              {paginatedUsers.map((user, index) => (
                 <TableRow key={user.id}>
+                   <TableCell className="font-medium">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">

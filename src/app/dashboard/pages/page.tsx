@@ -139,6 +139,7 @@ export default function PagesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">S/N</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -150,22 +151,23 @@ export default function PagesPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={5} className="text-center">
                         Loading pages...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPages.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={5} className="text-center">
                         No pages found.
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && paginatedPages.map((page) => {
+              {!isLoading && paginatedPages.map((page, index) => {
                 const isHomepage = page.id === settings?.homepagePageId;
                 return (
                     <TableRow key={page.id}>
+                        <TableCell className="font-medium">{(currentPage - 1) * pageSize + index + 1}</TableCell>
                         <TableCell className="font-medium">
                             {page.title}
                             {isHomepage && <span className="text-muted-foreground ml-2">— Homepage</span>}
