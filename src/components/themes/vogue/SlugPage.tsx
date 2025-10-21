@@ -87,7 +87,7 @@ function PageContent({ page }: { page: Page }) {
     
     return (
         <div
-            className="prose lg:prose-xl max-w-none mx-auto"
+            className="prose lg:prose-xl max-w-none mx-auto lg:leading-relaxed"
             dangerouslySetInnerHTML={{ __html: page.content }}
         />
     );
@@ -188,7 +188,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
               {isPost ? (
                   <>
                   <div
-                      className="prose lg:prose-xl max-w-none mx-auto"
+                      className="prose lg:prose-xl max-w-none mx-auto lg:leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: item.content }}
                   />
                   <ShareButtons title={item.title} />
