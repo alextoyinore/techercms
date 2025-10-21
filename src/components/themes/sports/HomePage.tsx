@@ -15,6 +15,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/s
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -50,6 +51,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                     <nav>
                          <Menu locationId="sports-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:underline" />
                     </nav>
+                    <PublicAuthNav />
                     <SearchForm />
                 </div>
                  <div className="md:hidden">
@@ -64,11 +66,11 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                             <div className="py-6">
                                <Menu locationId="sports-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:underline" />
                                 <div className="mt-6 border-t border-white/20 pt-6">
-                                    <Link href="/login" className="text-lg font-semibold uppercase hover:underline">
-                                        Login
-                                    </Link>
                                     <div className="mt-4">
                                         <SearchForm />
+                                    </div>
+                                    <div className="mt-4 border-t border-white/20 pt-4">
+                                        <PublicAuthNav orientation="vertical" />
                                     </div>
                                 </div>
                             </div>

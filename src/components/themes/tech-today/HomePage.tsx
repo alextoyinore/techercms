@@ -15,6 +15,7 @@ import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/s
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -40,6 +41,7 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                     <nav>
                         <Menu locationId="tech-today-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="text-gray-400 hover:text-cyan-300 transition-colors" />
                     </nav>
+                    <PublicAuthNav />
                     <SearchForm />
                  </div>
                  <div className="md:hidden">
@@ -56,6 +58,9 @@ export function PublicHeader({ siteName }: { siteName?: string }) {
                                 <div className="mt-6 border-t border-gray-700 pt-6">
                                      <SearchForm />
                                 </div>
+                                 <div className="mt-6 border-t border-gray-700 pt-6">
+                                    <PublicAuthNav orientation="vertical" />
+                                 </div>
                             </div>
                         </SheetContent>
                     </Sheet>

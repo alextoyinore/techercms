@@ -14,6 +14,7 @@ import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -34,6 +35,7 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                 <nav>
                     <Menu locationId="creative-portfolio-header" className="flex items-center gap-6 text-sm font-semibold" linkClassName="text-muted-foreground hover:text-primary transition-colors" />
                 </nav>
+                <PublicAuthNav />
                 <SearchForm />
             </div>
              <div className="md:hidden">
@@ -49,6 +51,9 @@ export const CreativeHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                            <Menu locationId="creative-portfolio-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                            <div className="mt-6 pt-6 border-t">
                                 <SearchForm />
+                           </div>
+                           <div className="mt-6 pt-6 border-t">
+                                <PublicAuthNav orientation="vertical" />
                            </div>
                         </div>
                     </SheetContent>

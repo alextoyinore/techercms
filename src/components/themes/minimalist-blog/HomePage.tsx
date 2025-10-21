@@ -14,6 +14,7 @@ import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 
 export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
@@ -34,13 +35,17 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6">
                                 <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
+                                <div className="mt-6 pt-6 border-t">
+                                    <PublicAuthNav orientation="vertical" />
+                                </div>
                             </div>
                         </SheetContent>
                     </Sheet>
                 </div>
             </div>
-             <nav className="hidden md:flex justify-center mt-6">
+             <nav className="hidden md:flex justify-center items-center gap-6 mt-6">
                 <Menu locationId="minimalist-blog-header" className="flex items-center gap-6 text-sm" linkClassName="text-muted-foreground hover:text-foreground transition-colors"/>
+                <PublicAuthNav />
             </nav>
             <div className="border-t mt-6 pt-2">
                 <ScrollArea className="w-full whitespace-nowrap">
@@ -55,7 +60,7 @@ export const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) =>
     </header>
 );
 
-export const MinimalistFooter: React.FC<{siteName?: string}> = ({siteName}) => (
+export const MinimalistFooter: React.FC<{siteName?:string}> = ({siteName}) => (
     <footer className="py-12 px-6 mt-16 border-t">
         <div className="container mx-auto max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>

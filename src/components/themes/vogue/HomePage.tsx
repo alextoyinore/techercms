@@ -15,6 +15,7 @@ import { MenuIcon } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -58,6 +59,9 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                 </Link>
                 <div className="flex-1 text-right flex justify-end items-center gap-4">
                     <div className="hidden md:block">
+                        <PublicAuthNav />
+                    </div>
+                    <div className="hidden md:block">
                         <SearchForm />
                     </div>
                     <div className="md:hidden">
@@ -74,7 +78,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                                     <Separator className="my-4" />
                                     <SearchForm />
                                      <Separator className="my-4" />
-                                     <Link href="/login" className="text-lg font-medium hover:text-primary">Admin Login</Link>
+                                     <PublicAuthNav orientation="vertical" />
                                 </div>
                             </SheetContent>
                         </Sheet>

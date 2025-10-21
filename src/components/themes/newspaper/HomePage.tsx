@@ -16,6 +16,7 @@ import { MenuIcon, Search } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -54,7 +55,8 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                     <Link href="/" className="text-2xl sm:text-4xl font-black font-headline text-center flex-1">
                         {siteName || ''}
                     </Link>
-                    <div className="text-sm hidden sm:flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2">
+                        <PublicAuthNav />
                         <SearchForm />
                     </div>
                     <div className="sm:hidden">
@@ -68,6 +70,8 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                                     <Separator className="my-4" />
                                     <SearchForm />
+                                     <Separator className="my-4" />
+                                    <PublicAuthNav orientation="vertical" />
                                 </div>
                             </SheetContent>
                         </Sheet>

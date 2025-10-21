@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { MenuIcon } from 'lucide-react';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 
 export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
@@ -35,6 +36,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                 <nav>
                     <Menu locationId="magazine-pro-header" className="flex items-center gap-6 text-sm font-medium" linkClassName="hover:text-primary transition-colors" />
                 </nav>
+                <PublicAuthNav />
                 <SearchForm />
             </div>
             <div className="md:hidden">
@@ -50,6 +52,9 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                            <Menu locationId="magazine-pro-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                            <div className="mt-6 pt-6 border-t">
                                 <SearchForm />
+                           </div>
+                           <div className="mt-6 pt-6 border-t">
+                                <PublicAuthNav orientation="vertical" />
                            </div>
                         </div>
                     </SheetContent>

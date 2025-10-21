@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { PublicAuthNav } from '../PublicAuthNav';
 
 type Post = {
   id: string;
@@ -49,6 +50,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                     <nav>
                         <Menu locationId="business-header" className="flex items-center gap-6 text-sm font-semibold uppercase" linkClassName="hover:text-primary transition-colors text-muted-foreground" />
                     </nav>
+                    <PublicAuthNav />
                     <SearchForm />
                 </div>
                  <div className="md:hidden">
@@ -64,6 +66,9 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                                <Menu locationId="business-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
                                 <div className="mt-6 pt-6 border-t">
                                     <SearchForm />
+                                </div>
+                                 <div className="mt-6 pt-6 border-t">
+                                    <PublicAuthNav orientation="vertical" />
                                 </div>
                             </div>
                         </SheetContent>
