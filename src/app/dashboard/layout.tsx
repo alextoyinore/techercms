@@ -74,12 +74,6 @@ export default function DashboardLayout({
       <div className="min-h-screen w-full bg-background text-foreground flex">
         <Sidebar collapsible="icon" className="flex flex-col border-r">
           <DashboardNav user={user} />
-          <div className="mt-auto hidden md:block">
-            <div className="p-4">
-              <UserNav user={user} />
-            </div>
-            <SidebarFooter />
-          </div>
         </Sidebar>
         <div className="flex flex-col flex-1">
           <header className="p-2 md:p-4 border-b flex items-center justify-between lg:hidden sticky top-0 bg-background z-10">

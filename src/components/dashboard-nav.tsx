@@ -24,10 +24,12 @@ import {
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
+    SidebarFooter,
 } from "@/components/ui/sidebar";
 import type { User as FirebaseUser } from "firebase/auth";
 import { useDoc, useMemoFirebase, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { UserNav } from "@/components/user-nav";
 
 type UserRole = {
     role: 'superuser' | 'writer' | string;
@@ -98,6 +100,12 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                         )
                     })}
                 </SidebarMenu>
+            </div>
+             <div className="mt-auto hidden md:block">
+                <div className="p-4">
+                    <UserNav user={user} />
+                </div>
+                <SidebarFooter />
             </div>
         </div>
     );
