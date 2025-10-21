@@ -36,7 +36,6 @@ import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
 import { Switch } from '@/components/ui/switch';
 
@@ -64,6 +63,7 @@ export default function NewPostPage() {
   const [metaDescription, setMetaDescription] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categorySearch, setCategorySearch] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isBreaking, setIsBreaking] = useState(false);
@@ -93,6 +93,14 @@ export default function NewPostPage() {
   }, [firestore]);
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
 
+  const filteredCategories = useMemo(() => {
+    if (!categories) return [];
+    if (!categorySearch) return categories;
+    return categories.filter(category =>
+        category.name.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+  }, [categories, categorySearch]);
+
   const filteredTags = useMemo(() => {
     if (!newTag || !allTags) return [];
     return allTags.filter(tag => 
@@ -107,11 +115,11 @@ export default function NewPostPage() {
   };
 
   const handleAddTag = (tag: string) => {
-    const newTag = tag.trim();
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
-      setNewTag('');
+    const newTagValue = tag.trim();
+    if (newTagValue && !tags.includes(newTagValue)) {
+      setTags([...tags, newTagValue]);
     }
+    setNewTag('');
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
@@ -487,10 +495,15 @@ export default function NewPostPage() {
             <CardHeader>
               <CardTitle className="font-headline">Categories</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-2">
-                <div className="flex flex-row flex-wrap gap-x-4 gap-y-2 max-h-32 overflow-y-auto">
+            <CardContent className="grid gap-4">
+                <Input
+                    placeholder="Search categories..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                />
+                <div className="flex flex-col gap-2 max-h-32 overflow-y-auto border p-2 rounded-md">
                     {isLoadingCategories && <p>Loading categories...</p>}
-                    {categories?.map((category) => (
+                    {filteredCategories?.map((category) => (
                         <div key={category.id} className="flex items-center space-x-2">
                         <Checkbox 
                             id={category.id} 
@@ -502,6 +515,9 @@ export default function NewPostPage() {
                         </Label>
                         </div>
                     ))}
+                    {!isLoadingCategories && filteredCategories?.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center p-2">No categories found.</p>
+                    )}
                 </div>
                  <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
                     <DialogTrigger asChild>
@@ -553,38 +569,36 @@ export default function NewPostPage() {
                     </Badge>
                 ))}
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-2 relative">
                 <Label htmlFor="tags">Add Tags</Label>
-                <Popover open={newTag.length > 0 && filteredTags.length > 0} >
-                    <PopoverTrigger asChild>
-                        <div className="flex gap-2">
-                            <Input
-                                id="tags"
-                                placeholder="New tag"
-                                value={newTag}
-                                onChange={(e) => setNewTag(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
-                                disabled={isSubmitting}
-                            />
-                            <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
-                                <PlusCircle className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <ul className='max-h-48 overflow-y-auto'>
+                 <div className="flex gap-2">
+                    <Input
+                        id="tags"
+                        placeholder="New tag"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
+                        disabled={isSubmitting}
+                    />
+                    <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
+                        <PlusCircle className="h-4 w-4" />
+                    </Button>
+                </div>
+                 {newTag.length > 0 && filteredTags.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-10 mt-1 border bg-background shadow-md rounded-md">
+                         <ul className='max-h-48 overflow-y-auto p-1'>
                             {filteredTags.map(tag => (
                                 <li 
                                     key={tag.id}
-                                    className="p-2 text-sm hover:bg-accent cursor-pointer"
+                                    className="p-2 text-sm hover:bg-accent cursor-pointer rounded-sm"
                                     onClick={() => handleAddTag(tag.name)}
                                 >
                                     {tag.name}
                                 </li>
                             ))}
                         </ul>
-                    </PopoverContent>
-                </Popover>
+                    </div>
+                )}
               </div>
             </CardContent>
           </Card>
