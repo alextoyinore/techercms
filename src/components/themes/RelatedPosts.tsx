@@ -6,6 +6,9 @@ import { collection, query, where, orderBy, limit, Timestamp } from 'firebase/fi
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { PostAuthor } from './PostAuthor';
+import { PostCategory } from './PostCategory';
+import { format } from 'date-fns';
 
 type Post = {
   id: string;
@@ -15,6 +18,8 @@ type Post = {
   excerpt?: string;
   categoryIds?: string[];
   tagIds?: string[];
+  authorId: string;
+  createdAt: Timestamp;
 };
 
 type RelatedPostsProps = {
@@ -81,13 +86,23 @@ export const RelatedPosts = ({ currentPost }: RelatedPostsProps) => {
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              <h4 className="font-semibold text-lg leading-tight group-hover:underline">
-                {post.title}
-              </h4>
-              {post.excerpt && (
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
-              )}
             </Link>
+            {post.categoryIds && post.categoryIds.length > 0 && (
+                <div className="text-sm font-semibold text-primary mb-1">
+                    <PostCategory categoryId={post.categoryIds[0]} />
+                </div>
+            )}
+            <h4 className="font-semibold text-lg leading-tight group-hover:underline">
+              <Link href={`/${post.slug}`}>{post.title}</Link>
+            </h4>
+            <div className="text-xs text-muted-foreground/80 mt-1">
+                <PostAuthor authorId={post.authorId} />
+                <span className='mx-1'>&middot;</span>
+                <time>{format(post.createdAt.toDate(), 'MMMM d, yyyy')}</time>
+            </div>
+            {post.excerpt && (
+              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{post.excerpt}</p>
+            )}
           </div>
         ))}
       </div>
