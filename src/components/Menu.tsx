@@ -1,3 +1,4 @@
+
 'use client';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, orderBy } from 'firebase/firestore';
@@ -65,7 +66,7 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
                 <DropdownMenuContent>
                     {item.children.map(child => (
                         <DropdownMenuItem key={child.id} asChild>
-                            <Link href={child.url} className={cn(pathname === child.url && "font-semibold text-primary")}>
+                            <Link href={child.url} className={cn("cursor-pointer", pathname === child.url && "font-semibold text-primary")}>
                                 {child.label}
                             </Link>
                         </DropdownMenuItem>
@@ -92,7 +93,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
         <AccordionContent className="pl-4">
           <div className="flex flex-col space-y-2">
             {item.children.map(child => (
-              <Link key={child.id} href={child.url} className={cn("text-muted-foreground", linkClassName, pathname === child.url && "text-primary font-semibold")}>
+              <Link key={child.id} href={child.url} className={cn("text-lg text-background/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
                 {child.label}
               </Link>
             ))}
