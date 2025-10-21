@@ -35,7 +35,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
             <div className="container px-4 mx-auto flex justify-between items-center">
                 <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
-                        <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={120} height={32} className="object-contain h-8 w-auto" />
+                        <Image src={siteLogoUrl} alt={siteName || 'Site Logo'} width={150} height={40} className="object-contain h-10 w-auto" />
                     ) : (
                         siteName || ''
                     )}
@@ -162,7 +162,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-background text-foreground font-sans">
-        {hasContent && <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />}
+        <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />
         <main className="container mx-auto py-8 px-4">
             
             {!hasContent ? (
@@ -240,7 +240,7 @@ export default function HomePage() {
               </div>
             )}
         </main>
-        {hasContent && <PublicFooter siteName={settings?.siteName} />}
+        <PublicFooter siteName={settings?.siteName} />
     </div>
   );
 }

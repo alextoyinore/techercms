@@ -3,8 +3,8 @@ import { useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
@@ -19,6 +19,11 @@ type Post = {
   featuredImageUrl: string;
   createdAt: Timestamp;
 };
+
+type SiteSettings = {
+    siteName?: string;
+    siteLogoUrl?: string;
+}
 
 function PostCard({ post }: { post: Post }) {
     return (
@@ -103,8 +108,23 @@ function SearchResults() {
 }
 
 export default function SearchPage() {
+  const firestore = useFirestore();
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
+
+  if (isLoadingSettings) {
+      return <Loading />;
+  }
+
   return (
-    <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} className="bg-background text-foreground font-sans">
+    <ThemeLayout 
+        HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
+        FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} 
+        className="bg-background text-foreground font-sans"
+    >
       <Suspense fallback={<Loading />}>
         <SearchResults />
       </Suspense>

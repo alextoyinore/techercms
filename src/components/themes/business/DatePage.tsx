@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, orderBy } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, orderBy, doc } from 'firebase/firestore';
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
@@ -19,6 +19,11 @@ type Post = {
   featuredImageUrl: string;
   createdAt: Timestamp;
 };
+
+type SiteSettings = {
+    siteName?: string;
+    siteLogoUrl?: string;
+}
 
 function PostCard({ post }: { post: Post }) {
     return (
@@ -99,12 +104,22 @@ export default function DatePage() {
 
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
 
-  if (isLoadingPosts) {
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
+
+  if (isLoadingPosts || isLoadingSettings) {
     return <Loading />;
   }
 
   return (
-    <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} className="bg-background text-foreground font-sans">
+    <ThemeLayout 
+        HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
+        FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} 
+        className="bg-background text-foreground font-sans"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
         <div className="lg:col-span-9">
           <div className="mb-8 pb-4 border-b">

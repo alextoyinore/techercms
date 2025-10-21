@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { ThemeLayout } from '../ThemeLayout';
@@ -25,6 +25,11 @@ type Category = {
     id: string;
     name: string;
     slug: string;
+}
+
+type SiteSettings = {
+    siteName?: string;
+    siteLogoUrl?: string;
 }
 
 function PostCard({ post }: { post: Post }) {
@@ -81,19 +86,29 @@ export default function CategoryPage() {
 
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
 
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  const { data: settings, isLoading: isLoadingSettings } = useDoc<SiteSettings>(settingsRef);
+
   const sortedPosts = useMemo(() => {
     if (!posts) return [];
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
-  const isLoading = isLoadingCategories || isLoadingPosts;
+  const isLoading = isLoadingCategories || isLoadingPosts || isLoadingSettings;
 
   if (isLoading) {
     return <Loading />;
   }
 
   return (
-    <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter} className="bg-background text-foreground font-sans">
+    <ThemeLayout 
+        HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
+        FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} 
+        className="bg-background text-foreground font-sans"
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
         <div className="lg:col-span-9">
           <div className="mb-8 pb-4 border-b">
