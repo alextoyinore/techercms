@@ -84,13 +84,13 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                             <SidebarMenuItem key={item.href}>
                                 <SidebarMenuButton
                                     asChild
-                                    size="default"
+                                    size="lg"
                                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                    className="w-full justify-start group-data-[state=collapsed]:justify-center"
+                                    className="w-full justify-start group-data-[state=collapsed]:justify-center text-base font-semibold md:text-sm md:font-medium"
                                     tooltip={item.label}
                                 >
                                     <Link href={item.href}>
-                                        <item.icon className="h-4 w-4" />
+                                        <item.icon className="h-5 w-5 md:h-4 md:w-4" />
                                         <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
                                     </Link>
                                 </SidebarMenuButton>

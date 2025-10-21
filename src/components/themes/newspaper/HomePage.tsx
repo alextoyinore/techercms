@@ -64,14 +64,16 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon"><MenuIcon /></Button>
                             </SheetTrigger>
-                             <SheetContent side="right">
+                             <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                                <div className="py-6">
-                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
-                                    <Separator className="my-4" />
+                                <div className="p-6">
                                     <SearchForm />
-                                     <Separator className="my-4" />
-                                     <PublicAuthNav orientation="vertical" />
+                                </div>
+                                <ScrollArea className="flex-1 px-6">
+                                   <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
+                                </ScrollArea>
+                                <div className="p-6 mt-auto border-t border-gray-700">
+                                     <PublicAuthNav orientation="vertical" linkClassName="text-muted-foreground hover:text-primary" />
                                 </div>
                             </SheetContent>
                         </Sheet>
