@@ -17,6 +17,8 @@ import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
 import { ThemeLayout } from '../ThemeLayout';
 import { PostAuthor } from '../PostAuthor';
+import { ShareButtons } from '../ShareButtons';
+import { RelatedPosts } from '../RelatedPosts';
 
 type Post = {
   id: string;
@@ -29,6 +31,7 @@ type Post = {
   tagIds?: string[];
   metaDescription?: string;
   excerpt?: string;
+  categoryIds?: string[];
 };
 
 type Page = {
@@ -165,10 +168,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
               <div className="lg:col-span-9">
                   <article className="max-w-none">
-
-                    <div className="text-muted-foreground text-sm mb-5">
-                        <span><Link href={`/archive/${format(new Date(), 'yyyy/MM/dd')}`} className="hover:underline">{format(new Date(), 'EEEE, d MMMM yyyy')}</Link></span>
-                    </div>
                   
                   {isPost ? (
                     <>
@@ -196,6 +195,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                             className="prose dark:prose-invert lg:prose-lg max-w-none"
                             dangerouslySetInnerHTML={{ __html: item.content }}
                         />
+
+                        <ShareButtons title={item.title} />
+
+                        <RelatedPosts currentPost={item} />
                     </>
                        
                   ) : (

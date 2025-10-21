@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Head from 'next/head';
@@ -14,6 +15,8 @@ import { ArrowLeft } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { CreativeHeader, CreativeFooter } from './HomePage';
+import { ShareButtons } from '../ShareButtons';
+import { RelatedPosts } from '../RelatedPosts';
 
 type Post = {
   id: string;
@@ -27,6 +30,7 @@ type Post = {
   tagIds?: string[];
   metaDescription?: string;
   excerpt?: string;
+  categoryIds?: string[];
 };
 
 type Page = {
@@ -184,10 +188,16 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
             
             <div className="max-w-3xl mx-auto">
               {isPost ? (
+                <>
                 <div
                     className="prose dark:prose-invert lg:prose-xl max-w-none"
                     dangerouslySetInnerHTML={{ __html: item.content }}
                 />
+
+                <ShareButtons title={item.title} />
+
+                <RelatedPosts currentPost={item as Post} />
+                </>
               ) : (
                   <PageContent page={item as Page} />
               )}
@@ -215,5 +225,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

@@ -16,6 +16,8 @@ import { ThemeLayout } from '../ThemeLayout';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
+import { ShareButtons } from '../ShareButtons';
+import { RelatedPosts } from '../RelatedPosts';
 
 type Post = {
   id: string;
@@ -26,6 +28,8 @@ type Post = {
   createdAt: Timestamp;
   metaDescription?: string;
   excerpt?: string;
+  categoryIds?: string[];
+  tagIds?: string[];
 };
 
 type Page = {
@@ -215,10 +219,14 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
               </header>
               
               {isPost ? (
+                  <>
                   <div
                       className="prose dark:prose-invert lg:prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ __html: item.content }}
                   />
+                  <ShareButtons title={item.title} />
+                  <RelatedPosts currentPost={item as Post} />
+                  </>
               ) : (
                    <PageContent page={item as Page} />
               )}
@@ -232,5 +240,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

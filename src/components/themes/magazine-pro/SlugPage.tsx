@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Head from 'next/head';
@@ -19,6 +20,8 @@ import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { SearchForm } from '../SearchForm';
 import { MagazineProHeader, MagazineProFooter } from './HomePage';
 import { PostAuthor } from '../PostAuthor';
+import { ShareButtons } from '../ShareButtons';
+import { RelatedPosts } from '../RelatedPosts';
 
 type Post = {
   excerpt: string;
@@ -32,6 +35,7 @@ type Post = {
   createdAt: Timestamp;
   tagIds?: string[];
   metaDescription?: string;
+  categoryIds?: string[];
 };
 
 type Page = {
@@ -198,6 +202,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                             className="prose dark:prose-invert lg:prose-lg max-w-none"
                             dangerouslySetInnerHTML={{ __html: item.content }}
                         />
+                        
+                        <ShareButtons title={item.title} />
+
+                        <RelatedPosts currentPost={item} />
                     </>
                        
                   ) : (
@@ -226,5 +234,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    
