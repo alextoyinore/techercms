@@ -96,12 +96,20 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
     handleConfigChange({ tabs: newTabs });
   }
 
-  const handleCategoryChange = (categoryId: string, checked: boolean, tabIndex: number) => {
+  const handleCategoryChangeForTabs = (categoryId: string, checked: boolean, tabIndex: number) => {
     const tab = (config.tabs || [])[tabIndex];
     if (!tab) return;
     const currentIds = tab.sourceIds || [];
     const newIds = checked ? [...currentIds, categoryId] : currentIds.filter((id: string) => id !== categoryId);
     handleTabChange(tabIndex, 'sourceIds', newIds);
+  };
+
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    const currentIds = config.sourceIds || [];
+    const newIds = checked
+        ? [...currentIds, categoryId]
+        : currentIds.filter((id: string) => id !== categoryId);
+    handleConfigChange({ sourceIds: newIds });
   };
   
   const renderContentFilterFields = () => {
@@ -162,7 +170,7 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
                                             <Checkbox
                                                 id={`cat-tab-${index}-${cat.id}`}
                                                 checked={(tab.sourceIds || []).includes(cat.id)}
-                                                onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, index)}
+                                                onCheckedChange={(checked) => handleCategoryChangeForTabs(cat.id, checked as boolean, index)}
                                             />
                                             <Label htmlFor={`cat-tab-${index}-${cat.id}`} className="font-normal">{cat.name}</Label>
                                         </div>
@@ -223,7 +231,7 @@ export function BlockInstanceConfig({ isOpen, setIsOpen, block, layouts, onSave 
                                 <Checkbox
                                     id={`cat-${cat.id}`}
                                     checked={(config.sourceIds || []).includes(cat.id)}
-                                    onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean, -1)}
+                                    onCheckedChange={(checked) => handleCategoryChange(cat.id, checked as boolean)}
                                 />
                                 <Label htmlFor={`cat-${cat.id}`} className="font-normal">{cat.name}</Label>
                             </div>
