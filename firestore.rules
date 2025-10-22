@@ -1,93 +1,173 @@
-
+/**
+ * @fileoverview Firestore Security Rules for the CMS.
+ *
+ * Core Philosophy:
+ * This ruleset implements role-based access control (RBAC).
+ * - Public content (published posts/pages) is readable by anyone.
+ * - All write operations (create, update, delete) are restricted to authorized roles.
+ * - A 'superuser' has full access to all data, including site settings and user roles.
+ * - A 'writer' can create and manage their own content.
+ *
+ * Data Structure:
+ * - Roles: `/roles/{userId}`
+ * - Content: `/posts/{postId}`, `/pages/{pageId}`, `/media/{mediaId}`
+ * - Taxonomies: `/categories/{categoryId}`, `/tags/{tagId}`
+ * - Site Config: `/site_settings/config`, `/widget_areas/{areaId}`, etc.
+ *
+ * Key Security Decisions:
+ * - Read access for published content is public.
+ * - Write access is strictly controlled by `superuser` and `writer` roles.
+ * - Ownership (`authorId`) is enforced for writers editing their own content.
+ * - Superusers can bypass ownership checks to manage all content.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
+    // ======================== Helper Functions ========================
+
+    /**
+     * @description Checks if the user is signed in.
+     */
+    function isSignedIn() {
       return request.auth != null;
     }
 
-    function isAuthor(userId) {
+    /**
+     * @description Checks if the user is the owner of the document.
+     */
+    function isOwner(userId) {
       return request.auth.uid == userId;
     }
-
-    // Default deny all
-    match /{document=**} {
-      allow read, write: if false;
+    
+    /**
+     * @description Checks if the user is the owner of an existing document.
+     * Also allows access if the document has no owner (for legacy data).
+     */
+    function isOwnerOrLegacy(doc) {
+      return !('authorId' in doc.data) || isOwner(doc.data.authorId);
     }
 
-    // Allow public read for published posts
-    match /posts/{postId} {
-      allow get: if resource.data.status == 'published';
-      allow list: if resource.data.status == 'published';
-
-      // Rules for the 'comments' subcollection
-      match /comments/{commentId} {
-        allow read: if true;
-
-        // Allow create only for authenticated users who are the author
-        allow create: if isAuthenticated() && isAuthor(request.resource.data.authorId);
-
-        // Allow update/delete only for the author of the comment
-        allow update, delete: if isAuthenticated() && isAuthor(resource.data.authorId);
-      }
-
-      // Rules for the 'likes' subcollection
-      match /likes/{userId} {
-        allow read: if true;
-
-        // Allow create/delete only if the user is acting on their own like document
-        allow create, delete: if isAuthenticated() && isAuthor(userId);
-      }
+    /**
+     * @description Checks if the current user has the role 'superuser'.
+     */
+    function isSuperUser() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "superuser";
     }
     
-    // Read-only access for public collections
-    match /categories/{categoryId} {
-      allow read: if true;
+    /**
+     * @description Checks if the current user has the role 'writer'.
+     */
+    function isWriter() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "writer";
     }
     
-    match /tags/{tagId} {
-      allow read: if true;
+    /**
+     * @description Checks if the user is an authorized content manager (superuser or writer).
+     */
+    function isContentManager() {
+      return isSuperUser() || isWriter();
     }
 
+    // ======================== Collection Rules ========================
+
+    // User Profiles
     match /users/{userId} {
-      allow read: if true;
+      allow read;
+      allow write: if isOwner(userId) || isSuperUser();
     }
 
-    // Allow read for public site settings
-    match /site_settings/config {
-        allow read: if true;
+    // Posts
+    match /posts/{postId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      
+      // Comments Subcollection
+      match /comments/{commentId} {
+        allow read;
+        allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
+        allow update, delete: if isSuperUser() || (isWriter() && isOwner(resource.data.authorId));
+      }
+      
+      // Likes Subcollection
+      match /likes/{userId} {
+        allow read;
+        allow create, delete: if isOwner(userId);
+      }
+    }
+
+    // Pages
+    match /pages/{pageId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+    }
+
+    // Media
+    match /media/{mediaId} {
+      allow read: if isSignedIn();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
     }
     
-    // Allow read for public widget and navigation data
-    match /widget_areas/{areaId} {
-        allow read: if true;
+    // Categories and Tags
+    match /categories/{categoryId} {
+      allow read;
+      allow write: if isContentManager();
     }
-    match /widget_instances/{instanceId} {
-        allow read: if true;
+    match /tags/{tagId} {
+      allow read;
+      allow write: if isContentManager();
     }
-    match /navigation_menus/{menuId} {
-        allow read: if true;
+
+    // Custom Themes (user-generated)
+    match /custom_themes/{themeId} {
+      allow get, list;
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
     }
-    match /navigation_menu_items/{itemId} {
-        allow read: if true;
+    
+    // Site-wide Layout and Widget Configurations
+    match /site_settings/config {
+      allow read;
+      allow write: if isSuperUser();
     }
-    match /block_layouts/{layoutId} {
-        allow read: if true;
+    match /page_layouts/{pageLayoutId} {
+      allow read;
+      allow write: if isSuperUser();
     }
+     match /block_layouts/{blockLayoutId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /widget_areas/{widgetAreaId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /widget_instances/{widgetInstanceId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    
+    // Page-specific layout sections
     match /page_sections/{sectionId} {
-        allow read: if true;
+      allow read;
+      allow write: if isContentManager();
     }
     match /section_blocks/{blockId} {
-        allow read: if true;
-    }
-    
-     // Allow read for published pages
-    match /pages/{pageId} {
-        allow read: if resource.data.status == 'published';
+      allow read;
+      allow write: if isContentManager();
     }
 
+    // Navigation
+    match /navigation_menus/{menuId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /navigation_menu_items/{itemId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
   }
 }
