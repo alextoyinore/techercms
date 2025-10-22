@@ -1,3 +1,4 @@
+
 {
   "indexes": [
     {
@@ -111,6 +112,16 @@
         {
           "fieldPath": "titleKeywords",
           "arrayConfig": "CONTAINS"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         }
       ]
     }
