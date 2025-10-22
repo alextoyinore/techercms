@@ -68,13 +68,16 @@ service cloud.firestore {
     function isContentManager() {
       return isSuperUser() || isWriter();
     }
-
-    // ======================== Collection Rules ========================
     
-    // Collection Group for all comments
-    match /comments/{commentId} {
+    // ================== Collection Group Rules (for cross-collection queries) ===================
+    
+    // Allows superusers to query all comments across all posts for the dashboard
+    match /{path=**}/comments/{commentId} {
       allow get, list: if isSuperUser();
     }
+
+
+    // ======================== Collection Rules ========================
 
     // User Profiles
     match /users/{userId} {
@@ -88,7 +91,7 @@ service cloud.firestore {
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
       allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
       
-      // Comments Subcollection
+      // Comments Subcollection (for single post view)
       match /comments/{commentId} {
         allow read;
         allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
@@ -102,9 +105,8 @@ service cloud.firestore {
       }
 
       // Views Subcollection
-      match /views/{viewIp} {
+      match /views/{viewId} {
         allow read, create;
-        allow update, delete: if false;
       }
     }
 
