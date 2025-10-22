@@ -26,13 +26,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/page-header";
 import { MoreHorizontal, Trash2 } from "lucide-react";
-import { collectionGroup, doc, Timestamp, query, orderBy, getDoc } from "firebase/firestore";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collectionGroup, doc, Timestamp, query, orderBy, getDoc, onSnapshot } from "firebase/firestore";
+import { useFirestore, useMemoFirebase } from "@/firebase";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { PaginationControls } from "@/components/pagination-controls";
 import Link from 'next/link';
+import type { WithId } from '@/firebase/firestore/use-collection';
+
 
 type Comment = {
   id: string;
@@ -52,20 +54,47 @@ export default function CommentsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState('');
   const [commentsWithPosts, setCommentsWithPosts] = useState<CommentWithPost[]>([]);
+  const [allComments, setAllComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const commentsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collectionGroup(firestore, 'comments'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
-  const { data: allComments, isLoading } = useCollection<Comment>(commentsQuery);
+  useEffect(() => {
+    if (!commentsQuery) return;
+    
+    setIsLoading(true);
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+        const fetchedComments = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const pathSegments = doc.ref.path.split('/');
+            const postId = pathSegments[pathSegments.length - 3];
+            return {
+                id: doc.id,
+                postId,
+                ...data
+            } as Comment;
+        });
+        setAllComments(fetchedComments);
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching comments:", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [commentsQuery]);
+
 
   useEffect(() => {
     if (allComments) {
         const fetchPostTitles = async () => {
+            if (!firestore) return;
             const enrichedComments = await Promise.all(
                 allComments.map(async (comment) => {
-                    if (!comment.postId || !firestore) return { ...comment, postTitle: 'Unknown Post' };
+                    if (!comment.postId) return { ...comment, postTitle: 'Unknown Post' };
                     try {
                         const postRef = doc(firestore, 'posts', comment.postId);
                         const postSnap = await getDoc(postRef);
