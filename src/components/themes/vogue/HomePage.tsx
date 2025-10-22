@@ -73,7 +73,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                                     <MenuIcon />
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
+                            <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="p-6">
                                     <SearchForm />
@@ -81,8 +81,8 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                                 <ScrollArea className="flex-1 px-6">
                                    <Menu locationId="vogue-header" className="flex flex-col space-y-2 text-xl font-headline tracking-wider" linkClassName="hover:text-primary transition-colors" />
                                 </ScrollArea>
-                                <div className="p-6 mt-auto border-t border-gray-700">
-                                     <PublicAuthNav orientation="vertical" linkClassName="text-muted-foreground hover:text-primary" />
+                                <div className="p-6 mt-auto border-t border-gray-200">
+                                     <PublicAuthNav orientation="vertical" linkClassName="text-foreground hover:text-primary" />
                                  </div>
                             </SheetContent>
                         </Sheet>

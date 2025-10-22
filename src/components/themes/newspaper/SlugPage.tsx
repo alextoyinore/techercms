@@ -89,7 +89,7 @@ const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon"><MenuIcon /></Button>
                             </SheetTrigger>
-                             <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
+                             <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="py-6 px-6">
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-4 text-lg" linkClassName="hover:text-primary transition-colors" />

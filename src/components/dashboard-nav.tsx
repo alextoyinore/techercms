@@ -30,6 +30,7 @@ import type { User as FirebaseUser } from "firebase/auth";
 import { useDoc, useMemoFirebase, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { UserNav } from "@/components/user-nav";
+import { ScrollArea } from "./ui/scroll-area";
 
 type UserRole = {
     role: 'superuser' | 'writer' | string;
@@ -76,7 +77,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                 </Link>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <ScrollArea className="flex-1">
                 <SidebarMenu className="px-2 md:px-4">
                     {navItems.map((item) => {
                         if (item.requiredRole && item.requiredRole !== userRole) {
@@ -88,7 +89,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                                     asChild
                                     size="lg"
                                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                    className="w-full justify-start group-data-[state=collapsed]:justify-center text-base font-semibold md:text-sm md:font-medium"
+                                    className="w-full justify-start text-xl md:text-sm font-bold md:font-medium group-data-[state=collapsed]:justify-center"
                                     tooltip={item.label}
                                 >
                                     <Link href={item.href}>
@@ -100,8 +101,8 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                         )
                     })}
                 </SidebarMenu>
-            </div>
-             <div className="hidden md:block">
+            </ScrollArea>
+             <div className="hidden md:block mt-auto">
                 <div className="p-4">
                     <UserNav user={user} />
                 </div>

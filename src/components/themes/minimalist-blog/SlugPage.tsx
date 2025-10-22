@@ -64,11 +64,11 @@ const MinimalistHeader: React.FC<{siteName?: string}> = ({ siteName }) => (
                                 <MenuIcon />
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
+                        <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6 px-6">
                                 <Menu locationId="minimalist-blog-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-primary transition-colors" />
-                                <div className="mt-6 pt-6 border-t border-gray-700">
+                                <div className="mt-6 border-t border-gray-200 pt-6">
                                      <PublicAuthNav orientation="vertical" />
                                 </div>
                             </div>

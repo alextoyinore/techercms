@@ -66,7 +66,7 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon"><MenuIcon /></Button>
                             </SheetTrigger>
-                             <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
+                             <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <div className="p-6">
                                     <SearchForm />
@@ -74,8 +74,8 @@ export const NewspaperHeader: React.FC<{ siteName?: string }> = ({ siteName }) =
                                 <ScrollArea className="flex-1 px-6">
                                    <Menu locationId="newspaper-main-nav" className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
                                 </ScrollArea>
-                                <div className="p-6 mt-auto border-t border-gray-700">
-                                     <PublicAuthNav orientation="vertical" linkClassName="text-muted-foreground hover:text-primary" />
+                                <div className="p-6 mt-auto border-t border-gray-200">
+                                     <PublicAuthNav orientation="vertical" linkClassName="text-foreground hover:text-primary" />
                                 </div>
                             </SheetContent>
                         </Sheet>

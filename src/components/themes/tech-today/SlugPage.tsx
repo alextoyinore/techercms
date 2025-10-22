@@ -74,14 +74,14 @@ function PublicHeader({ siteName }: { siteName?: string }) {
                                 <MenuIcon className="text-cyan-400"/>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="bg-foreground text-background flex flex-col p-0">
+                        <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                             <div className="py-6 px-6">
                                <Menu locationId="tech-today-header" className="flex flex-col space-y-4 text-lg font-headline" linkClassName="hover:text-cyan-300 transition-colors" />
-                                <div className="mt-6 border-t border-gray-700 pt-6">
+                                <div className="mt-6 border-t border-gray-200 pt-6">
                                      <SearchForm />
                                 </div>
-                                <div className="mt-6 border-t border-gray-700 pt-6">
+                                <div className="mt-6 border-t border-gray-200 pt-6">
                                      <PublicAuthNav orientation="vertical" />
                                  </div>
                             </div>
