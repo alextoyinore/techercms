@@ -19,6 +19,7 @@ import {
     LayoutGrid,
     Users,
     User as UserIcon,
+    MessageSquare,
 } from "lucide-react";
 import {
     SidebarMenu,
@@ -41,6 +42,7 @@ const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", requiredRole: null },
     { href: "/dashboard/pages", icon: File, label: "Pages", requiredRole: null },
     { href: "/dashboard/posts", icon: FileText, label: "Posts", requiredRole: null },
+    { href: "/dashboard/comments", icon: MessageSquare, label: "Comments", requiredRole: null },
     { href: "/dashboard/media", icon: ImageIcon, label: "Media", requiredRole: null },
     { href: "/dashboard/categories", icon: Folder, label: "Categories", requiredRole: null },
     { href: "/dashboard/tags", icon: Tag, label: "Tags", requiredRole: null },

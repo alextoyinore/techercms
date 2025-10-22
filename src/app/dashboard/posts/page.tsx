@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
     DropdownMenu,
@@ -30,7 +30,7 @@ import {
   } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { collection, doc, Timestamp } from "firebase/firestore";
+import { collection, doc, Timestamp, getDocs } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,7 @@ export default function PostsPage() {
     const [pageSize, setPageSize] = useState(10);
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [viewCounts, setViewCounts] = useState<Record<string, number | null>>({});
 
     const postsCollection = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -91,6 +92,22 @@ export default function PostsPage() {
         if (!filteredPosts) return 1;
         return Math.ceil(filteredPosts.length / pageSize);
     }, [filteredPosts, pageSize]);
+    
+    useEffect(() => {
+        if (paginatedPosts && firestore) {
+            paginatedPosts.forEach(post => {
+                if (viewCounts[post.id] === undefined) { // Check if not already fetched or fetching
+                    setViewCounts(prev => ({ ...prev, [post.id]: null })); // Mark as fetching
+                    const viewsCollection = collection(firestore, `posts/${post.id}/views`);
+                    getDocs(viewsCollection).then(snapshot => {
+                        setViewCounts(prev => ({ ...prev, [post.id]: snapshot.size }));
+                    }).catch(() => {
+                         setViewCounts(prev => ({ ...prev, [post.id]: 0 })); // Set to 0 on error
+                    });
+                }
+            });
+        }
+    }, [paginatedPosts, firestore, viewCounts]);
 
 
     const handleDelete = (postId: string, postTitle: string) => {
@@ -154,6 +171,7 @@ export default function PostsPage() {
                 <TableHead className="w-[80px]">Image</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Views</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -163,14 +181,14 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
@@ -199,6 +217,13 @@ export default function PostsPage() {
                       {post.status}
                     </Badge>
                   </TableCell>
+                   <TableCell>
+                        {viewCounts[post.id] === null ? (
+                           <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                           viewCounts[post.id]
+                        )}
+                    </TableCell>
                   <TableCell>
                     {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
                   </TableCell>
