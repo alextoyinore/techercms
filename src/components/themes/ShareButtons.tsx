@@ -15,7 +15,7 @@ import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/no
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Hand } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ShareButtonsProps = {
@@ -56,7 +56,7 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
         toast({
             variant: "destructive",
             title: "Authentication Required",
-            description: "You must be logged in to clap for a post.",
+            description: "You must be logged in to like a post.",
         });
         return;
     }
@@ -90,9 +90,9 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
             disabled={!user}
             className="flex items-center gap-2 px-2 hover:bg-transparent"
         >
-            <Hand className={cn("h-5 w-5 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
-            <span className="font-semibold">{likeCount}</span>
-            <span className="sr-only">Claps</span>
+            <ThumbsUp className={cn("h-6 w-6 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
+            <span className="font-semibold">Like</span>
+            <span className="font-semibold text-muted-foreground">({likeCount})</span>
         </Button>
         <div className="flex items-center gap-2">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground hidden sm:block">Share This</p>
