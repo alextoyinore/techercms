@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -173,7 +173,7 @@ export default function CommentsPage() {
                         {comment.postTitle}
                       </Link>
                     </TableCell>
-                  <TableCell>{formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true })}</TableCell>
+                  <TableCell>{comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : ''}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
