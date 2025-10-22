@@ -35,7 +35,7 @@ function CommentItem({ comment }: { comment: CommentWithChildren }) {
                 <div className="flex items-center gap-2">
                     <p className="font-semibold">{comment.authorName}</p>
                     <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true })}
+                        {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'just now'}
                     </p>
                 </div>
                 <p className="text-sm text-foreground/90">{comment.content}</p>
