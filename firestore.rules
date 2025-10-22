@@ -70,18 +70,16 @@ service cloud.firestore {
     }
 
     // ======================== Collection Rules ========================
+    
+    // Collection Group for all comments
+    match /comments/{commentId} {
+      allow get, list: if isSuperUser();
+    }
 
     // User Profiles
     match /users/{userId} {
       allow read;
       allow write: if isOwner(userId) || isSuperUser();
-    }
-    
-    // --- Collection Group Queries ---
-    // This rule allows a superuser to read from the 'comments' collection group,
-    // which is necessary for the comment management page.
-    match /comments/{commentId} {
-      allow read: if isSuperUser();
     }
 
     // Posts
@@ -90,7 +88,7 @@ service cloud.firestore {
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
       allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
       
-      // Comments Subcollection (for individual post pages)
+      // Comments Subcollection
       match /comments/{commentId} {
         allow read;
         allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
@@ -104,8 +102,9 @@ service cloud.firestore {
       }
 
       // Views Subcollection
-      match /views/{ipAddress} {
+      match /views/{viewIp} {
         allow read, create;
+        allow update, delete: if false;
       }
     }
 
