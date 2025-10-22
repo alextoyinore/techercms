@@ -39,44 +39,14 @@ const builtInWebsiteThemes = [
       imageHintId: 'theme-1'
     },
     {
-      name: 'Minimalist Blog',
-      description: 'A clean and simple theme for writers who want their content to shine.',
-      imageHintId: 'theme-2'
-    },
-    {
-      name: 'Creative Portfolio',
-      description: 'A visually-driven theme to showcase your creative work and projects.',
-      imageHintId: 'theme-3'
-    },
-    {
-      name: 'Newspaper',
-      description: 'A traditional, information-dense theme for news organizations.',
-      imageHintId: 'theme-9'
-    },
-    {
-      name: 'Tech Today',
-      description: 'A modern, sleek theme for tech blogs and review sites.',
-      imageHintId: 'theme-10'
-    },
-    {
       name: 'Business',
       description: 'A professional, data-driven theme for financial news.',
       imageHintId: 'theme-business'
     },
     {
-      name: 'Sports',
-      description: 'A dynamic, action-oriented theme for sports news.',
-      imageHintId: 'theme-sports'
-    },
-    {
       name: 'NewsPro',
       description: 'A serious, authoritative theme for global news.',
       imageHintId: 'theme-newspro'
-    },
-    {
-      name: 'Vogue',
-      description: 'A chic, high-fashion theme for style and culture.',
-      imageHintId: 'theme-vogue'
     },
 ];
 

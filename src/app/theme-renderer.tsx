@@ -1,3 +1,4 @@
+
 'use client';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, where, Timestamp } from 'firebase/firestore';
@@ -17,42 +18,6 @@ const themes: Record<string, Record<string, any>> = {
     SearchPage: dynamic(() => import('@/components/themes/magazine-pro/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/magazine-pro/DatePage')),
   },
-  'Minimalist Blog': {
-    HomePage: dynamic(() => import('@/components/themes/minimalist-blog/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/minimalist-blog/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/minimalist-blog/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/minimalist-blog/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/minimalist-blog/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/minimalist-blog/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/minimalist-blog/DatePage')),
-  },
-  'Creative Portfolio': {
-    HomePage: dynamic(() => import('@/components/themes/creative-portfolio/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/creative-portfolio/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/creative-portfolio/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/creative-portfolio/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/creative-portfolio/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/creative-portfolio/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/creative-portfolio/DatePage')),
-  },
-  'Newspaper': {
-    HomePage: dynamic(() => import('@/components/themes/newspaper/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/newspaper/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/newspaper/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/newspaper/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/newspaper/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/newspaper/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/newspaper/DatePage')),
-  },
-  'Tech Today': {
-    HomePage: dynamic(() => import('@/components/themes/tech-today/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/tech-today/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/tech-today/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/tech-today/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/tech-today/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/tech-today/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/tech-today/DatePage')),
-  },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/business/SlugPage')),
@@ -62,15 +27,6 @@ const themes: Record<string, Record<string, any>> = {
     SearchPage: dynamic(() => import('@/components/themes/business/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/business/DatePage')),
   },
-  'Sports': {
-    HomePage: dynamic(() => import('@/components/themes/sports/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/sports/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/sports/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/sports/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/sports/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/sports/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/sports/DatePage')),
-  },
   'NewsPro': {
     HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/newspro/SlugPage')),
@@ -79,15 +35,6 @@ const themes: Record<string, Record<string, any>> = {
     AuthorPage: dynamic(() => import('@/components/themes/newspro/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/newspro/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/newspro/DatePage')),
-  },
-  'Vogue': {
-    HomePage: dynamic(() => import('@/components/themes/vogue/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/vogue/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/vogue/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/vogue/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/vogue/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/vogue/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/vogue/DatePage')),
   },
 };
 
