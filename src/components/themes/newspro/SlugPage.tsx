@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
@@ -19,6 +19,7 @@ import { ThemeLayout } from '../ThemeLayout';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
+import { trackView } from '@/app/actions/track-view';
 
 type Post = {
   id: string;
@@ -125,6 +126,22 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     return null;
   }, [preloadedItem, posts, pages]);
 
+  const isPost = item ? 'tagIds' in item : false;
+  
+  const viewsQuery = useMemoFirebase(() => {
+    if (!firestore || !isPost || !item) return null;
+    return collection(firestore, `posts/${item.id}/views`);
+  }, [firestore, isPost, item]);
+
+  const { data: views } = useCollection(viewsQuery);
+  
+  useEffect(() => {
+    if (isPost && item?.id) {
+      trackView(item.id);
+    }
+  }, [isPost, item?.id]);
+
+
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
   }
@@ -144,7 +161,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     );
   }
   
-  const isPost = 'tagIds' in item;
   const pageId = !isPost ? item.id : undefined;
 
   // Determine if the title should be shown
@@ -170,10 +186,16 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <article className="max-w-none">
                       <header className="mb-8">
                           {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
-                          <div className="text-muted-foreground text-sm font-semibold">
-                              <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
-                                  <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
-                              </Link>
+                          <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4">
+                            <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
+                                <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
+                            </Link>
+                            {views && (
+                                <div className="flex items-center gap-1">
+                                    <Eye className="h-4 w-4" />
+                                    <span>{views.length} views</span>
+                                </div>
+                            )}
                           </div>
                       </header>
                       

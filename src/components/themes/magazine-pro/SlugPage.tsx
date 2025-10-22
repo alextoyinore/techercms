@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,18 +11,16 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MenuIcon } from 'lucide-react';
+import { ArrowLeft, Eye } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { ThemeLayout } from '../ThemeLayout';
-import { Menu } from '@/components/Menu';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
-import { SearchForm } from '../SearchForm';
 import { MagazineProHeader, MagazineProFooter } from './HomePage';
 import { PostAuthor } from '../PostAuthor';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
+import { trackView } from '@/app/actions/track-view';
 
 type Post = {
   excerpt: string;
@@ -134,6 +132,21 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     if (pages && pages.length > 0) return pages[0];
     return null;
   }, [preloadedItem, posts, pages, isLoadingPosts, isLoadingPages]);
+  
+  const isPost = item ? 'tagIds' in item : false;
+  
+  const viewsQuery = useMemoFirebase(() => {
+    if (!firestore || !isPost || !item) return null;
+    return collection(firestore, `posts/${item.id}/views`);
+  }, [firestore, isPost, item]);
+
+  const { data: views } = useCollection(viewsQuery);
+  
+  useEffect(() => {
+    if (isPost && item?.id) {
+      trackView(item.id);
+    }
+  }, [isPost, item?.id]);
 
   if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
     return <Loading />;
@@ -154,7 +167,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     );
   }
   
-  const isPost = 'tagIds' in item;
   const pageId = !isPost ? item.id : undefined;
 
   // Determine if the title should be shown
@@ -181,10 +193,18 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     <>
                     <header className="mb-8 border-b pb-4">
                       {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
-                      <div className="text-muted-foreground text-sm">
-                          <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
-                          <span className='mx-1'>by</span>
-                          <PostAuthor authorId={item.authorId} />
+                      <div className="text-muted-foreground text-sm flex items-center gap-4">
+                          <div>
+                            <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
+                            <span className='mx-1'>by</span>
+                            <PostAuthor authorId={item.authorId} />
+                          </div>
+                          {views && (
+                            <div className="flex items-center gap-1">
+                                <Eye className="h-4 w-4" />
+                                <span>{views.length} views</span>
+                            </div>
+                          )}
                       </div>
                       <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
                   </header>

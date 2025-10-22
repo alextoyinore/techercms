@@ -9,14 +9,13 @@ import {
   TwitterIcon,
   LinkedinIcon,
 } from 'react-share';
-import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { ThumbsUp } from 'lucide-react';
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Hand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ShareButtonsProps = {
@@ -57,7 +56,7 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
         toast({
             variant: "destructive",
             title: "Authentication Required",
-            description: "You must be logged in to like a post.",
+            description: "You must be logged in to clap for a post.",
         });
         return;
     }
@@ -91,13 +90,13 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
             disabled={!user}
             className="flex items-center gap-2 px-2 hover:bg-transparent"
         >
-            <ThumbsUp className={cn("h-5 w-5", hasLiked && "fill-primary text-primary")} />
+            <Hand className={cn("h-5 w-5 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
             <span className="font-semibold">{likeCount}</span>
-            <span className="sr-only">Likes</span>
+            <span className="sr-only">Claps</span>
         </Button>
         <div className="flex items-center gap-2">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground hidden sm:block">Share This</p>
-            <FacebookShareButton url={currentUrl} title={title}>
+            <FacebookShareButton url={currentUrl} quote={title}>
                 <FacebookIcon size={32} round />
             </FacebookShareButton>
             <TwitterShareButton url={currentUrl} title={title}>

@@ -1,0 +1,179 @@
+/**
+ * @fileoverview Firestore Security Rules for the CMS.
+ *
+ * Core Philosophy:
+ * This ruleset implements role-based access control (RBAC).
+ * - Public content (published posts/pages) is readable by anyone.
+ * - All write operations (create, update, delete) are restricted to authorized roles.
+ * - A 'superuser' has full access to all data, including site settings and user roles.
+ * - A 'writer' can create and manage their own content.
+ *
+ * Data Structure:
+ * - Roles: `/roles/{userId}`
+ * - Content: `/posts/{postId}`, `/pages/{pageId}`, `/media/{mediaId}`
+ * - Taxonomies: `/categories/{categoryId}`, `/tags/{tagId}`
+ * - Site Config: `/site_settings/config`, `/widget_areas/{areaId}`, etc.
+ *
+ * Key Security Decisions:
+ * - Read access for published content is public.
+ * - Write access is strictly controlled by `superuser` and `writer` roles.
+ * - Ownership (`authorId`) is enforced for writers editing their own content.
+ * - Superusers can bypass ownership checks to manage all content.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ======================== Helper Functions ========================
+
+    /**
+     * @description Checks if the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user is the owner of the document.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    /**
+     * @description Checks if the user is the owner of an existing document.
+     * Also allows access if the document has no owner (for legacy data).
+     */
+    function isOwnerOrLegacy(doc) {
+      return !('authorId' in doc.data) || isOwner(doc.data.authorId);
+    }
+
+    /**
+     * @description Checks if the current user has the role 'superuser'.
+     */
+    function isSuperUser() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "superuser";
+    }
+    
+    /**
+     * @description Checks if the current user has the role 'writer'.
+     */
+    function isWriter() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "writer";
+    }
+    
+    /**
+     * @description Checks if the user is an authorized content manager (superuser or writer).
+     */
+    function isContentManager() {
+      return isSuperUser() || isWriter();
+    }
+
+    // ======================== Collection Rules ========================
+
+    // User Profiles
+    match /users/{userId} {
+      allow read;
+      allow write: if isOwner(userId) || isSuperUser();
+    }
+
+    // Posts Collection & Subcollections
+    match /posts/{postId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+      
+      // Comments Subcollection
+      match /comments/{commentId} {
+        allow read;
+        allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
+        allow update, delete: if isSuperUser() || (isWriter() && isOwner(resource.data.authorId));
+      }
+      
+      // Likes Subcollection
+      match /likes/{userId} {
+        allow read;
+        allow create, delete: if isOwner(userId);
+      }
+      
+      // Views Subcollection
+      match /views/{viewId} {
+        allow read;
+        allow create; // Anyone can create a view record
+      }
+    }
+
+    // Pages
+    match /pages/{pageId} {
+      allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+    }
+
+    // Media
+    match /media/{mediaId} {
+      allow read: if isSignedIn();
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+    }
+    
+    // Categories and Tags
+    match /categories/{categoryId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /tags/{tagId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+
+    // Custom Themes (user-generated)
+    match /custom_themes/{themeId} {
+      allow get, list;
+      allow create: if isContentManager() && isOwner(request.resource.data.authorId);
+      allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
+    }
+    
+    // Site-wide Layout and Widget Configurations
+    match /site_settings/config {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /page_layouts/{pageLayoutId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+     match /block_layouts/{blockLayoutId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /widget_areas/{widgetAreaId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /widget_instances/{widgetInstanceId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    
+    // Page-specific layout sections
+    match /page_sections/{sectionId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+    match /section_blocks/{blockId} {
+      allow read;
+      allow write: if isContentManager();
+    }
+
+    // Navigation
+    match /navigation_menus/{menuId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+    match /navigation_menu_items/{itemId} {
+      allow read;
+      allow write: if isSuperUser();
+    }
+  }
+}
