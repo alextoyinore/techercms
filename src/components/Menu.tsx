@@ -91,7 +91,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
       <AccordionItem value={item.id} className="border-b-0">
         <AccordionTrigger className={cn("py-2 hover:no-underline", linkClassName)}>{item.label}</AccordionTrigger>
         <AccordionContent className="pl-4">
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-4">
             {item.children.map(child => (
               <Link key={child.id} href={child.url} className={cn("text-lg text-foreground/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
                 {child.label}
