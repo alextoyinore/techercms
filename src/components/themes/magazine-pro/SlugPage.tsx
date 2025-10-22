@@ -22,6 +22,7 @@ import { MagazineProHeader, MagazineProFooter } from './HomePage';
 import { PostAuthor } from '../PostAuthor';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { CommentsSection } from '@/components/comments/CommentsSection';
 
 type Post = {
   excerpt: string;
@@ -205,23 +206,24 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                         
                         <ShareButtons title={item.title} postId={item.id}/>
 
+                        {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                            <footer className="mt-12 pt-8 border-t">
+                                <div className="flex flex-wrap gap-2">
+                                    {(item as Post).tagIds!.map(tag => (
+                                        <Link key={tag} href={`/tag/${tag}`}>
+                                            <Badge variant="secondary">{tag}</Badge>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </footer>
+                        )}
+
+                        <CommentsSection postId={item.id} />
                         <RelatedPosts currentPost={item} />
                     </>
                        
                   ) : (
                       <PageContent page={item as Page} />
-                  )}
-
-                  {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                      <footer className="mt-12 pt-8 border-t">
-                          <div className="flex flex-wrap gap-2">
-                              {(item as Post).tagIds!.map(tag => (
-                                  <Link key={tag} href={`/tag/${tag}`}>
-                                      <Badge variant="secondary">{tag}</Badge>
-                                  </Link>
-                              ))}
-                          </div>
-                      </footer>
                   )}
                   </article>
               </div>

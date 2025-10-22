@@ -19,6 +19,7 @@ import { SearchForm } from '../SearchForm';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { PublicAuthNav } from '../PublicAuthNav';
+import { CommentsSection } from '@/components/comments/CommentsSection';
 
 type Post = {
   id: string;
@@ -230,6 +231,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       dangerouslySetInnerHTML={{ __html: item.content }}
                   />
                   <ShareButtons title={item.title} postId={item.id}/>
+                  <CommentsSection postId={item.id} />
                   <RelatedPosts currentPost={item as Post} />
                   </>
               ) : (

@@ -17,6 +17,7 @@ import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { CreativeHeader, CreativeFooter } from './HomePage';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { CommentsSection } from '@/components/comments/CommentsSection';
 
 type Post = {
   id: string;
@@ -196,22 +197,24 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
                 <ShareButtons title={item.title} postId={item.id}/>
 
+                {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                    <footer className="mt-12 text-center">
+                        <div className="flex flex-wrap gap-2 justify-center">
+                            {(item as Post).tagIds!.map(tag => (
+                                <Link key={tag} href={`/tag/${tag}`}>
+                                    <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
+                                </Link>
+                            ))}
+                        </div>
+                    </footer>
+                  )}
+                
+                <CommentsSection postId={item.id} />
+
                 <RelatedPosts currentPost={item as Post} />
                 </>
               ) : (
                   <PageContent page={item as Page} />
-              )}
-
-              {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                <footer className="mt-12 text-center">
-                    <div className="flex flex-wrap gap-2 justify-center">
-                        {(item as Post).tagIds!.map(tag => (
-                            <Link key={tag} href={`/tag/${tag}`}>
-                                <Badge variant="secondary" className="text-sm px-4 py-1">{tag}</Badge>
-                            </Link>
-                        ))}
-                    </div>
-                </footer>
               )}
             </div>
           </article>

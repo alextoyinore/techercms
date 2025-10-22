@@ -11,7 +11,7 @@ import {
 } from 'react-share';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Heart } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -28,7 +28,6 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   const [currentUrl, setCurrentUrl] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
-  const firestore = useFirestore();
   const user = auth?.currentUser;
 
   // Set URL on client-side mount
@@ -83,21 +82,21 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   }
 
   return (
-    <div className="my-8 py-6 border-y">
+    <div className="my-8">
       <div className="flex items-center justify-between gap-4">
         <Button 
-            variant="outline"
+            variant="ghost"
             onClick={handleLike}
             disabled={!user}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-2 hover:bg-transparent"
         >
-            <Heart className={cn("h-5 w-5", hasLiked && "fill-destructive text-destructive")} />
+            <ThumbsUp className={cn("h-5 w-5", hasLiked && "fill-primary text-primary")} />
             <span className="font-semibold">{likeCount}</span>
             <span className="sr-only">Likes</span>
         </Button>
         <div className="flex items-center gap-2">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground hidden sm:block">Share This</p>
-            <FacebookShareButton url={currentUrl} quote={title}>
+            <FacebookShareButton url={currentUrl} title={title}>
                 <FacebookIcon size={32} round />
             </FacebookShareButton>
             <TwitterShareButton url={currentUrl} title={title}>

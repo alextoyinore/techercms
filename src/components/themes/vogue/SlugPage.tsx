@@ -18,6 +18,7 @@ import { PublicHeader, PublicFooter } from './HomePage';
 import { ThemeLayout } from '../ThemeLayout';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { CommentsSection } from '@/components/comments/CommentsSection';
 
 type Post = {
   id: string;
@@ -192,22 +193,24 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       dangerouslySetInnerHTML={{ __html: item.content }}
                   />
                   <ShareButtons title={item.title} postId={item.id}/>
+                  
+                  {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                      <footer className="mt-12 pt-8 border-t">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                              {(item as Post).tagIds!.map(tag => (
+                                  <Link key={tag} href={`/tag/${tag}`}>
+                                      <Badge variant="outline" className="rounded-none uppercase tracking-wider">{tag}</Badge>
+                                  </Link>
+                              ))}
+                          </div>
+                      </footer>
+                  )}
+                  
+                  <CommentsSection postId={item.id} />
                   <RelatedPosts currentPost={item as Post} />
                   </>
               ) : (
                   <PageContent page={item as Page} />
-              )}
-
-              {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                  <footer className="mt-12 pt-8 border-t">
-                      <div className="flex flex-wrap gap-2 justify-center">
-                          {(item as Post).tagIds!.map(tag => (
-                              <Link key={tag} href={`/tag/${tag}`}>
-                                  <Badge variant="outline" className="rounded-none uppercase tracking-wider">{tag}</Badge>
-                              </Link>
-                          ))}
-                      </div>
-                  </footer>
               )}
               </article>
           </main>

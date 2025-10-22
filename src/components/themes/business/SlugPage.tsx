@@ -19,6 +19,7 @@ import { ThemeLayout } from '../ThemeLayout';
 import { PostAuthor } from '../PostAuthor';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
+import { CommentsSection } from '@/components/comments/CommentsSection';
 
 type Post = {
   id: string;
@@ -198,6 +199,19 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
                         <ShareButtons title={item.title} postId={item.id}/>
 
+                        {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
+                            <footer className="mt-12 pt-8 border-t">
+                                <div className="flex flex-wrap gap-2">
+                                    {(item as Post).tagIds!.map(tag => (
+                                        <Link key={tag} href={`/tag/${tag}`}>
+                                            <Badge variant="secondary">{tag}</Badge>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </footer>
+                        )}
+
+                        <CommentsSection postId={item.id} />
                         <RelatedPosts currentPost={item} />
                     </>
                        
@@ -205,17 +219,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <PageContent page={item as Page} />
                   )}
 
-                  {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
-                      <footer className="mt-12 pt-8 border-t">
-                          <div className="flex flex-wrap gap-2">
-                              {(item as Post).tagIds!.map(tag => (
-                                  <Link key={tag} href={`/tag/${tag}`}>
-                                      <Badge variant="secondary">{tag}</Badge>
-                                  </Link>
-                              ))}
-                          </div>
-                      </footer>
-                  )}
                   </article>
               </div>
               <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
