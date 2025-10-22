@@ -27,6 +27,16 @@ export async function getTickerData(input: GetTickerDataInput): Promise<GetTicke
   return getTickerDataFlow(input);
 }
 
+const majors = new Set(['USD', 'CAD', 'JPY', 'GBP', 'EUR', 'CHF', 'AUD', 'NZD', 'XAU']);
+
+function isMajorPair(ticker: string): boolean {
+    const cleanTicker = ticker.startsWith('C:') ? ticker.substring(2) : ticker;
+    if (cleanTicker.length !== 6) return false;
+    const base = cleanTicker.substring(0, 3);
+    const quote = cleanTicker.substring(3);
+    return majors.has(base) && majors.has(quote);
+}
+
 const getTickerDataFlow = ai.defineFlow(
   {
     name: 'getTickerDataFlow',
@@ -40,7 +50,7 @@ const getTickerDataFlow = ai.defineFlow(
     }
     
     // 1. Fetch a list of tickers for the market
-    const tickersUrl = `https://api.polygon.io/v3/reference/tickers?market=${market}&active=true&limit=20&apiKey=${apiKey}`;
+    const tickersUrl = `https://api.polygon.io/v3/reference/tickers?market=${market}&active=true&limit=1000&apiKey=${apiKey}`;
     let tickers: { ticker: string }[] = [];
 
     try {
@@ -54,6 +64,11 @@ const getTickerDataFlow = ai.defineFlow(
         console.error("Error fetching ticker list:", error);
         return { tickers: [] };
     }
+    
+    if (market === 'fx') {
+        tickers = tickers.filter(t => isMajorPair(t.ticker));
+    }
+
 
     // 2. For each ticker, fetch its previous day's close
     const tickerPromises = tickers.map(async (t) => {
@@ -71,7 +86,7 @@ const getTickerDataFlow = ai.defineFlow(
                 const isUp = change > 0 ? true : change < 0 ? false : null;
                 
                 return {
-                    symbol: t.ticker,
+                    symbol: t.ticker.replace('C:', ''),
                     price: close,
                     change,
                     isUp,
