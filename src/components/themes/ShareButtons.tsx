@@ -27,6 +27,7 @@ type ShareButtonsProps = {
 export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   const [currentUrl, setCurrentUrl] = useState('');
   const { toast } = useToast();
+  const firestore = useFirestore();
   const auth = useAuth();
   const user = auth?.currentUser;
 
