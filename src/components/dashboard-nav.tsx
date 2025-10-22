@@ -101,7 +101,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                     })}
                 </SidebarMenu>
             </div>
-             <div className="mt-auto hidden md:block">
+             <div className="hidden md:block">
                 <div className="p-4">
                     <UserNav user={user} />
                 </div>
