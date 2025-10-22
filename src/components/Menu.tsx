@@ -93,7 +93,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
         <AccordionContent className="pl-4">
           <div className="flex flex-col space-y-2">
             {item.children.map(child => (
-              <Link key={child.id} href={child.url} className={cn("text-lg text-background/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
+              <Link key={child.id} href={child.url} className={cn("text-lg text-foreground/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
                 {child.label}
               </Link>
             ))}
