@@ -146,6 +146,7 @@ type WidgetInstance = {
         layout?: 'list' | 'grid';
         gridColumns?: number;
         location?: string;
+        market?: 'stocks' | 'crypto' | 'fx' | 'indices';
     }
 }
 
@@ -432,6 +433,33 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                     </div>
                 );
             case 'trading-ticker':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Market</Label>
+                            <Select
+                                value={config.market || 'fx'}
+                                onValueChange={(value) => setConfig({ ...config, market: value })}
+                            >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="fx">Currencies (FX)</SelectItem>
+                                    <SelectItem value="stocks">Stocks</SelectItem>
+                                    <SelectItem value="crypto">Crypto</SelectItem>
+                                    <SelectItem value="indices">Indices</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                );
             case 'breaking-news':
             case 'live-score':
             case 'sporting-tables':
@@ -443,7 +471,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                             value={config.title || ''}
                             onChange={(e) => setConfig({ ...config, title: e.target.value })}
                         />
-                        <p className="text-sm text-muted-foreground">This widget uses placeholder data. A developer will need to connect it to a live data source.</p>
+                        <p className="text-sm text-muted-foreground">This widget uses placeholder data. A developer may need to connect it to a live data source.</p>
                     </div>
                 );
             case 'weather':
@@ -459,15 +487,15 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="widget-location">Location</Label>
+                            <Label htmlFor="widget-location">Default Location</Label>
                             <Input
                                 id="widget-location"
                                 placeholder="e.g., New York, NY"
                                 value={config.location || ''}
                                 onChange={(e) => setConfig({ ...config, location: e.target.value })}
                             />
+                            <p className="text-sm text-muted-foreground">This is a fallback if the user's location cannot be determined.</p>
                         </div>
-                         <p className="text-sm text-muted-foreground">This widget uses placeholder data. A developer will need to connect it to a live data source.</p>
                     </div>
                 );
             case 'social-follow':
