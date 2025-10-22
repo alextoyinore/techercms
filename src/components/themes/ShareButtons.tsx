@@ -10,31 +10,100 @@ import {
   LinkedinIcon,
 } from 'react-share';
 import { usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Heart } from 'lucide-react';
+import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type ShareButtonsProps = {
   title: string;
+  postId: string;
 };
 
-export const ShareButtons = ({ title }: ShareButtonsProps) => {
-  const pathname = usePathname();
-  const url = typeof window !== 'undefined' ? `${window.location.origin}${pathname}` : '';
+export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
+  const [currentUrl, setCurrentUrl] = useState('');
+  const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const user = auth?.currentUser;
 
-  if (!url) {
+  // Set URL on client-side mount
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
+
+  // Fetch likes for the post
+  const likesQuery = useMemoFirebase(() => {
+    if (!firestore || !postId) return null;
+    return collection(firestore, `posts/${postId}/likes`);
+  }, [firestore, postId]);
+  const { data: likes } = useCollection(likesQuery);
+  const likeCount = likes?.length || 0;
+
+  // Check if the current user has liked the post
+  const likeDocRef = useMemoFirebase(() => {
+    if (!firestore || !postId || !user) return null;
+    return doc(firestore, `posts/${postId}/likes`, user.uid);
+  }, [firestore, postId, user]);
+  const { data: userLike } = useDoc(likeDocRef);
+  const hasLiked = !!userLike;
+  
+  const handleLike = () => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Required",
+            description: "You must be logged in to like a post.",
+        });
+        return;
+    }
+
+    if (!likeDocRef) return;
+
+    if (hasLiked) {
+        // Unlike the post
+        deleteDocumentNonBlocking(likeDocRef);
+    } else {
+        // Like the post
+        setDocumentNonBlocking(likeDocRef, {
+            userId: user.uid,
+            postId: postId,
+            createdAt: serverTimestamp(),
+        }, {});
+    }
+  };
+
+
+  if (!currentUrl) {
     return null;
   }
 
   return (
     <div className="my-8 py-6 border-y">
-      <div className="flex items-center gap-4">
-        <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Share This</p>
+      <div className="flex items-center justify-between gap-4">
+        <Button 
+            variant="outline"
+            onClick={handleLike}
+            disabled={!user}
+            className="flex items-center gap-2"
+        >
+            <Heart className={cn("h-5 w-5", hasLiked && "fill-destructive text-destructive")} />
+            <span className="font-semibold">{likeCount}</span>
+            <span className="sr-only">Likes</span>
+        </Button>
         <div className="flex items-center gap-2">
-            <FacebookShareButton url={url} quote={title}>
+            <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground hidden sm:block">Share This</p>
+            <FacebookShareButton url={currentUrl} quote={title}>
                 <FacebookIcon size={32} round />
             </FacebookShareButton>
-            <TwitterShareButton url={url} title={title}>
+            <TwitterShareButton url={currentUrl} title={title}>
                 <TwitterIcon size={32} round />
             </TwitterShareButton>
-            <LinkedinShareButton url={url} title={title}>
+            <LinkedinShareButton url={currentUrl} title={title}>
                 <LinkedinIcon size={32} round />
             </LinkedinShareButton>
         </div>
