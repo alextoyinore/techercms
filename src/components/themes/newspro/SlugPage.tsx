@@ -155,7 +155,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const pageTitle = `${item.title} - ${siteTitle}`;
   const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
 
-
   return (
     <>
       <Head>
@@ -183,7 +182,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                               className="prose lg:prose-xl max-w-none lg:leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: item.content }}
                           />
-                          <ShareButtons title={item.title} />
+                          <ShareButtons title={item.title} postId={item.id}/>
                           <RelatedPosts currentPost={item as Post} />
                           </>
                       ) : (

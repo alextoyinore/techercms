@@ -23,30 +23,18 @@
             "photoURL": {
                 "type": "string",
                 "description": "The URL for the user's profile picture."
+            },
+            "role": {
+              "type": "string",
+              "description": "The assigned role for the user.",
+              "enum": ["superuser", "writer", "editor", "subscriber"]
             }
         },
         "required": [
             "id",
-            "email"
+            "email",
+            "role"
         ]
-    },
-    "Role": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "Role",
-        "type": "object",
-        "description": "Represents a user's role in the system.",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The user's UID."
-          },
-          "role": {
-            "type": "string",
-            "description": "The assigned role for the user.",
-            "enum": ["superuser", "writer", "editor", "subscriber"]
-          }
-        },
-        "required": ["id", "role"]
     },
     "Page": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -306,6 +294,14 @@
             "type": "string",
             "description": "The public name of the website."
         },
+        "siteDescription": {
+            "type": "string",
+            "description": "A short description or tagline for the website."
+        },
+        "companyName": {
+            "type": "string",
+            "description": "The name of the company for the copyright notice."
+        },
         "siteLogoUrl": {
             "type": "string",
             "description": "The URL for the website's logo."
@@ -499,6 +495,33 @@
         "config": { "type": "object", "description": "A flexible object to store instance-specific settings, such as content filters (e.g., post count, category filters)." }
       },
       "required": ["id", "sectionId", "blockLayoutId", "columnIndex", "order"]
+    },
+    "Comment": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Comment",
+        "type": "object",
+        "description": "Represents a comment on a post.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the comment." },
+            "postId": { "type": "string", "description": "The ID of the post this comment belongs to." },
+            "authorId": { "type": "string", "description": "The ID of the user who wrote the comment." },
+            "content": { "type": "string", "description": "The text content of the comment." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the comment was created." },
+            "parentId": { "type": "string", "description": "Optional. The ID of the parent comment for threading." }
+        },
+        "required": ["id", "postId", "authorId", "content", "createdAt"]
+    },
+    "PostLike": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PostLike",
+        "type": "object",
+        "description": "Represents a like on a post by a user.",
+        "properties": {
+            "postId": { "type": "string", "description": "The ID of the liked post." },
+            "userId": { "type": "string", "description": "The ID of the user who liked the post." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the like was created." }
+        },
+        "required": ["postId", "userId", "createdAt"]
     }
   },
   "auth": {
@@ -516,21 +539,13 @@
             "schema": {
                 "$ref": "#/backend/entities/User"
             },
-            "description": "Stores public user profile information. `userId` matches the Firebase Auth UID.",
+            "description": "Stores public user profile information and role. `userId` matches the Firebase Auth UID.",
             "params": [
                 {
                     "name": "userId",
                     "description": "The unique identifier of the user."
                 }
             ]
-        }
-      },
-      {
-        "path": "/roles/{userId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": { "$ref": "#/backend/entities/Role" },
-          "description": "Stores the role for a specific user. `userId` matches the Firebase Auth UID."
         }
       },
       {
@@ -593,6 +608,24 @@
             {
               "name": "postId",
               "description": "The unique identifier for the post."
+            }
+          ],
+          "subcollections": [
+            {
+              "path": "comments/{commentId}",
+              "definition": {
+                "entityName": "Comment",
+                "schema": { "$ref": "#/backend/entities/Comment" },
+                "description": "Stores comments for a specific post."
+              }
+            },
+            {
+              "path": "likes/{userId}",
+              "definition": {
+                "entityName": "PostLike",
+                "schema": { "$ref": "#/backend/entities/PostLike" },
+                "description": "Stores likes for a specific post. The document ID is the user's UID."
+              }
             }
           ]
         }
@@ -696,6 +729,6 @@
         }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A new top-level 'users' collection is added to store public profile information for each user, with the document ID matching the Firebase Auth UID. A new 'roles' collection is added to store user roles, with the document ID matching the user's UID."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic. The `posts` collection now has subcollections for `comments` and `likes` to efficiently store and query engagement data scoped to each post."
   }
 }

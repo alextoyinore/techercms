@@ -198,7 +198,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                               className="prose dark:prose-invert lg:prose-lg max-w-none lg:leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: item.content }}
                            />
-                           <ShareButtons title={item.title} />
+                           <ShareButtons title={item.title} postId={item.id}/>
                            <RelatedPosts currentPost={item as Post} />
                            </>
                       ) : (
