@@ -34,6 +34,7 @@ type Post = {
   metaDescription?: string;
   excerpt?: string;
   categoryIds?: string[];
+  audioUrl?: string;
 };
 
 type Page = {
@@ -209,7 +210,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       
                       {isPost ? (
                           <>
-                          <TextToSpeechPlayer content={item.content} />
+                          <TextToSpeechPlayer audioUrl={(item as Post).audioUrl} />
                           <div
                               className="prose lg:prose-xl max-w-none lg:leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: item.content }}
@@ -248,3 +249,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    

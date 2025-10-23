@@ -35,6 +35,7 @@ type Post = {
   metaDescription?: string;
   excerpt?: string;
   categoryIds?: string[];
+  audioUrl?: string;
 };
 
 type Page = {
@@ -213,7 +214,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
                   </header>
                   
-                  <TextToSpeechPlayer content={item.content} />
+                  <TextToSpeechPlayer audioUrl={(item as Post).audioUrl} />
 
                   {item.featuredImageUrl && (
                       <div className="relative aspect-video w-full mb-8">
@@ -264,3 +265,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    

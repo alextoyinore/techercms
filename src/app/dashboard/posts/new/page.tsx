@@ -26,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone, Podcast } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useMemoFirebase } from '@/firebase';
@@ -37,6 +37,7 @@ import RichTextEditor from '@/components/rich-text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { MediaLibrary } from '@/components/media-library';
 import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { Switch } from '@/components/ui/switch';
 
 type Category = {
@@ -62,6 +63,7 @@ export default function NewPostPage() {
   const [excerpt, setExcerpt] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [audioUrl, setAudioUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categorySearch, setCategorySearch] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -71,6 +73,7 @@ export default function NewPostPage() {
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
   // State for new category dialog
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -216,6 +219,30 @@ export default function NewPostPage() {
     }
   };
 
+  const handleGenerateAudio = async () => {
+    const plainText = content.replace(/<[^>]*>?/gm, '');
+    if (!title || !plainText) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate audio.',
+      });
+      return;
+    }
+    setIsGeneratingAudio(true);
+    try {
+      const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      const result = await textToSpeech({ text: plainText, filename });
+      setAudioUrl(result.audioUrl);
+      toast({ title: 'Audio Generated!', description: 'The audio file for this post has been created.' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Audio Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  };
+
+
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title) {
         toast({
@@ -261,6 +288,7 @@ export default function NewPostPage() {
         excerpt,
         metaDescription: finalMetaDescription,
         featuredImageUrl,
+        audioUrl,
         status,
         isBreaking,
         authorId: auth.currentUser.uid,
@@ -401,6 +429,19 @@ export default function NewPostPage() {
                     )}
                     </Button>
                 </div>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Audio</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                {audioUrl && (
+                  <audio controls src={audioUrl} className="w-full">Your browser does not support the audio element.</audio>
+                )}
+                <Button variant="outline" size="sm" onClick={handleGenerateAudio} disabled={isGeneratingAudio || !title || !content}>
+                    {isGeneratingAudio ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...</> : <><Podcast className="mr-2 h-4 w-4" /> Generate Audio</>}
+                </Button>
             </CardContent>
           </Card>
            <Card>
@@ -632,5 +673,7 @@ export default function NewPostPage() {
     </div>
   );
 }
+
+    
 
     
