@@ -14,4 +14,3 @@ export function TextToSpeechPlayer({ audioUrl }: { audioUrl?: string }) {
     </div>
   );
 }
-
