@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for the CMS.
  *
@@ -68,14 +69,6 @@ service cloud.firestore {
     function isContentManager() {
       return isSuperUser() || isWriter();
     }
-    
-    // ================== Collection Group Rules (for cross-collection queries) ===================
-    
-    // Allows superusers to query all comments across all posts for the dashboard
-    match /{path=**}/comments/{commentId} {
-      allow get, list: if isSuperUser();
-    }
-
 
     // ======================== Collection Rules ========================
 
@@ -91,7 +84,7 @@ service cloud.firestore {
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
       allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
       
-      // Comments Subcollection (for single post view)
+      // Comments Subcollection
       match /comments/{commentId} {
         allow read;
         allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
@@ -103,10 +96,11 @@ service cloud.firestore {
         allow read;
         allow create, delete: if isOwner(userId);
       }
-
+      
       // Views Subcollection
-      match /views/{viewId} {
-        allow read, create;
+      match /views/{ipAddress} {
+        allow get, list, create;
+        allow update, delete: if false;
       }
     }
 
@@ -184,3 +178,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

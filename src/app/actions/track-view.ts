@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirestore } from 'firebase-admin/firestore';
@@ -43,3 +44,5 @@ export async function trackView(postId: string) {
     return { error: 'Failed to track view' };
   }
 }
+
+    
