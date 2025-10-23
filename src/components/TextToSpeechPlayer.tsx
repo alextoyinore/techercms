@@ -1,4 +1,7 @@
+
 'use client';
+import { CustomAudioPlayer } from './CustomAudioPlayer';
+
 
 export function TextToSpeechPlayer({ audioUrl }: { audioUrl?: string }) {
   if (!audioUrl) {
@@ -7,9 +10,8 @@ export function TextToSpeechPlayer({ audioUrl }: { audioUrl?: string }) {
 
   return (
     <div className="my-6">
-      <audio controls src={audioUrl} className="w-full">
-        Your browser does not support the audio element.
-      </audio>
+      <CustomAudioPlayer audioUrl={audioUrl} />
     </div>
   );
 }
+
