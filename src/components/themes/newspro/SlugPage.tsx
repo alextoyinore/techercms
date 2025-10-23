@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect } from 'react';
 import Head from 'next/head';
@@ -21,6 +20,7 @@ import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { trackView } from '@/app/actions/track-view';
 import { calculateReadTime } from '@/lib/utils';
+import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
 
 type Post = {
   id: string;
@@ -209,6 +209,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       
                       {isPost ? (
                           <>
+                          <TextToSpeechPlayer content={item.content} />
                           <div
                               className="prose lg:prose-xl max-w-none lg:leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: item.content }}

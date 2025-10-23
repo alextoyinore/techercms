@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect } from 'react';
 import Head from 'next/head';
@@ -22,6 +21,7 @@ import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { trackView } from '@/app/actions/track-view';
 import { calculateReadTime } from '@/lib/utils';
+import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
 
 type Post = {
   id: string;
@@ -213,6 +213,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <p className='text-muted-foreground text-base italics mt-3'>{item.excerpt}</p>
                   </header>
                   
+                  <TextToSpeechPlayer content={item.content} />
+
                   {item.featuredImageUrl && (
                       <div className="relative aspect-video w-full mb-8">
                       <Image
