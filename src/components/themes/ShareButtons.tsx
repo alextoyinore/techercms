@@ -5,9 +5,11 @@ import {
   FacebookShareButton,
   TwitterShareButton,
   LinkedinShareButton,
+  WhatsappShareButton,
   FacebookIcon,
   TwitterIcon,
   LinkedinIcon,
+  WhatsappIcon,
 } from 'react-share';
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
@@ -105,6 +107,9 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
             <LinkedinShareButton url={currentUrl} title={title}>
                 <LinkedinIcon size={32} round />
             </LinkedinShareButton>
+            <WhatsappShareButton url={currentUrl} title={title}>
+                <WhatsappIcon size={32} round />
+            </WhatsappShareButton>
         </div>
       </div>
     </div>
