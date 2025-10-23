@@ -184,7 +184,7 @@ export default function HomePage() {
                 </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
-                <div className="lg:col-span-9">
+                <div className="lg:col-span-8">
                     {heroPost && (
                         <div className="pb-6 border-b">
                             <h1 className="font-black font-headline text-4xl lg:text-5xl leading-tight mb-4 hover:underline">
