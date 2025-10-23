@@ -91,7 +91,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                                     asChild
                                     size="lg"
                                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                                    className="w-full justify-start text-lg md:text-sm font-bold md:font-medium group-data-[state=collapsed]:justify-center"
+                                    className="w-full justify-start text-base md:text-sm font-bold md:font-medium group-data-[state=collapsed]:justify-center"
                                     tooltip={item.label}
                                 >
                                     <Link href={item.href}>
