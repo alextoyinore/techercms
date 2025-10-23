@@ -65,7 +65,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                         <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
                              <div className="p-6">
-                                <SearchForm />
+                                <SearchForm startExpanded={true} />
                             </div>
                             <ScrollArea className="flex-1 px-6">
                                <Menu locationId="business-header" className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
