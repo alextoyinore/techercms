@@ -26,6 +26,7 @@ import {
     SidebarMenuItem,
     SidebarMenuButton,
     SidebarFooter,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import type { User as FirebaseUser } from "firebase/auth";
 import { useDoc, useMemoFirebase, useFirestore } from "@/firebase";
@@ -59,6 +60,7 @@ const navItems = [
 export function DashboardNav({ user }: { user: FirebaseUser | null }) {
     const pathname = usePathname();
     const firestore = useFirestore();
+    const { setOpenMobile } = useSidebar();
 
     const userRef = useMemoFirebase(() => {
         if (!firestore || !user) return null;
@@ -67,6 +69,10 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
 
     const { data: userData } = useDoc<UserRole>(userRef);
     const userRole = userData?.role;
+
+    const handleLinkClick = () => {
+        setOpenMobile(false);
+    };
 
     return (
         <div className="flex flex-col h-full">
@@ -93,6 +99,7 @@ export function DashboardNav({ user }: { user: FirebaseUser | null }) {
                                     isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                                     className="w-full justify-start text-base md:text-sm font-bold md:font-medium group-data-[state=collapsed]:justify-center"
                                     tooltip={item.label}
+                                    onClick={handleLinkClick}
                                 >
                                     <Link href={item.href}>
                                         <item.icon className="h-5 w-5 md:h-4 md:w-4" />

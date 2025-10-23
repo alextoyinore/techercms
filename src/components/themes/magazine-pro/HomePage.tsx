@@ -21,6 +21,7 @@ import { PublicAuthNav } from '../PublicAuthNav';
 
 export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
     const [currentDate, setCurrentDate] = useState('');
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     useEffect(() => {
         setCurrentDate(format(new Date(), 'eeee, MMMM d, yyyy'));
@@ -40,7 +41,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                 <SearchForm />
             </div>
             <div className="md:hidden">
-                <Sheet>
+                <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <MenuIcon />
@@ -57,7 +58,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                             </SheetClose>
                         </div>
                         <ScrollArea className="flex-1 px-6 py-4">
-                           <Menu locationId="magazine-pro-header" className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
+                           <Menu locationId="magazine-pro-header" onLinkClick={() => setIsMobileNavOpen(false)} className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
                         </ScrollArea>
                         <div className="p-4 mt-auto border-t">
                            <PublicAuthNav orientation="horizontal" linkClassName="text-foreground hover:text-primary" />
