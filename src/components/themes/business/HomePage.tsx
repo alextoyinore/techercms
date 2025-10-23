@@ -176,11 +176,11 @@ export default function HomePage() {
   return (
     <div className="bg-background text-foreground font-sans">
         <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />
-        <main className="container mx-auto py-8 px-4">
+        <main className="container mx-auto py-8 px-4 min-h-screen-[calc(100vh-120px)]">
             
             {!hasContent ? (
                 <div className="text-center py-24">
-                    <p className="text-muted-foreground mt-4">No stories have been published yet. Check back for the latest financial news.</p>
+                    <p className="text-muted-foreground mt-4">You are here because we've detected a slow internet connection. You will be automatically redirected from this page once your internet is better. Otherwise, kindly refresh your browsere.</p>
                 </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
