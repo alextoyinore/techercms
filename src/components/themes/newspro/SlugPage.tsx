@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Clock } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
@@ -20,6 +20,7 @@ import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { trackView } from '@/app/actions/track-view';
+import { calculateReadTime } from '@/lib/utils';
 
 type Post = {
   id: string;
@@ -171,6 +172,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const siteTitle = settings?.siteName || 'Techer CMS';
   const pageTitle = `${item.title} - ${siteTitle}`;
   const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
+  const readTime = isPost ? calculateReadTime(item.content) : null;
 
   return (
     <>
@@ -186,7 +188,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <article className="max-w-none">
                       <header className="mb-8">
                           {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
-                          <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4">
+                          <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4 flex-wrap">
                             <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                 <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
                             </Link>
@@ -194,6 +196,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                                 <div className="flex items-center gap-1">
                                     <Eye className="h-4 w-4" />
                                     <span>{views.length} views</span>
+                                </div>
+                            )}
+                            {readTime && (
+                                <div className="flex items-center gap-1">
+                                    <Clock className="h-4 w-4" />
+                                    <span>{readTime}</span>
                                 </div>
                             )}
                           </div>
@@ -239,5 +247,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

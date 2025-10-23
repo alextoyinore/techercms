@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Clock } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
@@ -21,6 +21,7 @@ import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { trackView } from '@/app/actions/track-view';
+import { calculateReadTime } from '@/lib/utils';
 
 type Post = {
   id: string;
@@ -172,6 +173,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const siteTitle = settings?.siteName || 'Techer CMS';
   const pageTitle = `${item.title} - ${siteTitle}`;
   const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
+  const readTime = isPost ? calculateReadTime(item.content) : null;
 
   return (
     <>
@@ -189,7 +191,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     <>
                     <header className="mb-8 border-b pb-4">
                       {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
-                      <div className="text-muted-foreground text-sm flex items-center gap-4 wrap">
+                      <div className="text-muted-foreground text-sm flex items-center gap-4 flex-wrap">
                           <div>
                             <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
                             <span className='mx-1'>by</span>
@@ -199,6 +201,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                             <div className="flex items-center gap-1">
                                 <Eye className="h-4 w-4" />
                                 <span>{views.length} views</span>
+                            </div>
+                          )}
+                          {readTime && (
+                             <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                <span>{readTime}</span>
                             </div>
                           )}
                       </div>
@@ -254,5 +262,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    
