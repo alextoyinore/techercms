@@ -242,6 +242,8 @@ export default function NewPostPage() {
     setSubmissionStatus(status);
     
     let finalAudioUrl = audioUrl;
+    let finalTags = [...tags];
+
     if (shouldGenerateAudio) {
       const plainText = content.replace(/<[^>]*>?/gm, '');
       if (title && plainText) {
@@ -252,6 +254,13 @@ export default function NewPostPage() {
           finalAudioUrl = result.audioUrl;
           setAudioUrl(finalAudioUrl);
           toast({ title: 'Audio Generated!', description: 'The audio file has been created.' });
+
+          // Add 'audio' tag if not present
+          if (!finalTags.includes('audio')) {
+            finalTags.push('audio');
+            setTags(finalTags);
+          }
+
         } catch (e: any) {
           toast({ variant: 'destructive', title: 'Audio Generation Failed', description: e.message });
         }
@@ -286,7 +295,7 @@ export default function NewPostPage() {
         isBreaking,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
-        tagIds: tags, 
+        tagIds: finalTags, 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
@@ -299,7 +308,7 @@ export default function NewPostPage() {
         
         // 2. Sync tags with the main tags collection
         const existingTags = allTags?.map(t => t.name.toLowerCase()) || [];
-        tags.forEach(tag => {
+        finalTags.forEach(tag => {
             if (!existingTags.includes(tag.toLowerCase())) {
                 const newTagRef = doc(collection(firestore, 'tags'));
                 const tagSlug = tag.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -679,3 +688,4 @@ export default function NewPostPage() {
     
 
     
+

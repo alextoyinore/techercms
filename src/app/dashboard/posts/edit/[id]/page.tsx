@@ -288,6 +288,8 @@ export default function EditPostPage() {
     setSubmissionStatus(status);
     
     let finalAudioUrl = audioUrl;
+    let finalTags = [...tags];
+
     if (shouldGenerateAudio) {
       const plainText = content.replace(/<[^>]*>?/gm, '');
       if (title && plainText) {
@@ -298,6 +300,13 @@ export default function EditPostPage() {
           finalAudioUrl = result.audioUrl;
           setAudioUrl(finalAudioUrl);
           toast({ title: 'Audio Generated!', description: 'The audio file has been created.' });
+
+          // Add 'audio' tag if not present
+          if (!finalTags.includes('audio')) {
+            finalTags.push('audio');
+            setTags(finalTags);
+          }
+
         } catch (e: any) {
           toast({ variant: 'destructive', title: 'Audio Generation Failed', description: e.message });
         }
@@ -318,7 +327,7 @@ export default function EditPostPage() {
     // Sync tags with the main tags collection
     const batch = writeBatch(firestore);
     const existingTags = allTags?.map(t => t.name.toLowerCase()) || [];
-    tags.forEach(tag => {
+    finalTags.forEach(tag => {
         if (!existingTags.includes(tag.toLowerCase())) {
             const newTagRef = doc(collection(firestore, 'tags'));
             const slug = tag.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -355,7 +364,7 @@ export default function EditPostPage() {
         isBreaking,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
-        tagIds: tags, 
+        tagIds: finalTags, 
         updatedAt: serverTimestamp(),
     };
     
@@ -755,3 +764,4 @@ export default function EditPostPage() {
     
 
     
+
