@@ -1,21 +1,16 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, Pause, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useWavesurfer } from 'wavesurfer-react';
-import type WaveSurfer from 'wavesurfer.js';
+import { useWavesurfer, WaveSurfer } from 'wavesurfer-react';
+import type WaveSurferInstance from 'wavesurfer.js';
 
-type CustomAudioPlayerProps = {
-  audioUrl: string;
-};
-
-export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
+const PlayerControls = ({ audioUrl }: { audioUrl: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  
+
   const { wavesurfer, isReady, duration } = useWavesurfer({
     container: containerRef,
     url: audioUrl,
@@ -91,5 +86,18 @@ export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
         </div>
       </div>
     </div>
+  );
+};
+
+
+type CustomAudioPlayerProps = {
+  audioUrl: string;
+};
+
+export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
+  return (
+    <WaveSurfer>
+      <PlayerControls audioUrl={audioUrl} />
+    </WaveSurfer>
   );
 }
