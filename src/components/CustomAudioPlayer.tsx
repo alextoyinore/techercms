@@ -83,7 +83,7 @@ export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
         onEnded={() => setIsPlaying(false)}
         preload="metadata"
       />
-      <Button onClick={handlePlayPause} variant="ghost" size="icon" className="shrink-0">
+      <Button onClick={handlePlayPause} variant="ghost" size="icon" className="shrink-0 rounded-full">
         {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
       </Button>
       <div 
