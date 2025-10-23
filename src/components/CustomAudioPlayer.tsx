@@ -1,6 +1,14 @@
 'use client';
+import dynamic from 'next/dynamic';
+import { Skeleton } from './ui/skeleton';
 
-import { AudioVisualizer } from 'react-audio-visualize';
+const AudioVisualizer = dynamic(
+  () => import('react-audio-visualize').then(mod => mod.AudioVisualizer),
+  {
+    loading: () => <Skeleton className="w-full h-12" />,
+    ssr: false
+  }
+);
 
 type CustomAudioPlayerProps = {
   audioUrl: string;
