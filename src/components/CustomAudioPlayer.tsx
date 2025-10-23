@@ -1,6 +1,6 @@
 'use client';
 
-import { AudioPlayer } from 'react-audio-visualize';
+import { AudioVisualizer } from 'react-audio-visualize';
 
 type CustomAudioPlayerProps = {
   audioUrl: string;
@@ -9,14 +9,14 @@ type CustomAudioPlayerProps = {
 export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
   return (
     <div className="w-full">
-      <AudioPlayer
+      <AudioVisualizer
         src={audioUrl}
         barWidth={2}
         gap={2}
         height={48}
         width={500}
-        barColor={'hsl(var(--primary))'}
-        barPlayedColor={'hsl(var(--muted))'}
+        barColor={'hsl(var(--muted))'}
+        barPlayedColor={'hsl(var(--primary))'}
         showVolume={false}
         showLoop={false}
         style={{ width: '100%' }}
