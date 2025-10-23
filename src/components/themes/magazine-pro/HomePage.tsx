@@ -47,7 +47,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
                             <MenuIcon />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
+                    <SheetContent onOpenAutoFocus={(e) => e.preventDefault()} side="right" className="bg-background text-foreground flex flex-col p-0">
                         <SheetTitle className="sr-only">Main Menu</SheetTitle>
                         <div className="p-4 flex items-center justify-between border-b">
                             <SearchForm startExpanded={true} />
