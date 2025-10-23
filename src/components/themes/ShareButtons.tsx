@@ -90,7 +90,7 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
             disabled={!user}
             className="flex items-center gap-2 px-2 hover:bg-transparent"
         >
-            <ThumbsUp className={cn("h-6 w-6 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
+            <ThumbsUp className={cn("h-8 w-8 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
             <span className="font-semibold">Like</span>
             <span className="font-semibold text-muted-foreground">({likeCount})</span>
         </Button>
