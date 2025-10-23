@@ -91,7 +91,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName, onLinkClick }: { item: Me
   if (item.children.length > 0) {
     return (
       <AccordionItem value={item.id} className="border-b-0">
-        <AccordionTrigger onClick={onLinkClick} className={cn("py-2 hover:no-underline", linkClassName)}>{item.label}</AccordionTrigger>
+        <AccordionTrigger className={cn("py-2 hover:no-underline", linkClassName)}>{item.label}</AccordionTrigger>
         <AccordionContent className="pl-4">
           <div className="flex flex-col space-y-4">
             {item.children.map(child => (
