@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -9,9 +9,9 @@ import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetTrigger, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { MenuIcon } from 'lucide-react';
+import { MenuIcon, ArrowRight } from 'lucide-react';
 import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -35,6 +35,8 @@ type SiteSettings = {
 
 export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
     const isSvg = siteLogoUrl?.endsWith('.svg');
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
     return (
         <header className="sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b-4 border-primary">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -57,7 +59,7 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                     <SearchForm />
                 </div>
                  <div className="md:hidden">
-                    <Sheet>
+                    <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon">
                                 <MenuIcon />
@@ -65,14 +67,19 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                         </SheetTrigger>
                         <SheetContent side="right" className="bg-background text-foreground flex flex-col p-0">
                             <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                            <div className="p-6">
-                                <SearchForm />
+                            <div className="p-4 flex items-center justify-between border-b">
+                                <SearchForm startExpanded={true} />
+                                <SheetClose asChild>
+                                    <Button variant="ghost" size="icon" className="ml-2 shrink-0">
+                                        <ArrowRight className="h-5 w-5" />
+                                    </Button>
+                                </SheetClose>
                             </div>
-                            <ScrollArea className="flex-1 px-6">
-                               <Menu locationId="newspro-header" className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
+                            <ScrollArea className="flex-1 px-6 py-4">
+                               <Menu locationId="newspro-header" onLinkClick={() => setIsMobileNavOpen(false)} className="flex flex-col space-y-2 text-xl font-headline" linkClassName="hover:text-primary transition-colors" />
                             </ScrollArea>
-                             <div className="p-6 mt-auto border-t border-gray-200">
-                                <PublicAuthNav orientation="vertical" linkClassName="text-foreground hover:text-primary" />
+                             <div className="p-4 mt-auto border-t">
+                                <PublicAuthNav orientation="horizontal" linkClassName="text-foreground hover:text-primary" />
                              </div>
                         </SheetContent>
                     </Sheet>

@@ -92,14 +92,25 @@ export default function NewPostPage() {
     return collection(firestore, 'tags');
   }, [firestore]);
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
+  
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name));
+  }, [categories]);
 
   const filteredCategories = useMemo(() => {
-    if (!categories) return [];
-    if (!categorySearch) return categories;
-    return categories.filter(category =>
+    if (!sortedCategories) return [];
+    if (!categorySearch) return sortedCategories;
+    return sortedCategories.filter(category =>
         category.name.toLowerCase().includes(categorySearch.toLowerCase())
     );
-  }, [categories, categorySearch]);
+  }, [sortedCategories, categorySearch]);
+  
+  const selectedCategoryObjects = useMemo(() => {
+    if (!categories) return [];
+    return selectedCategories.map(id => categories.find(c => c.id === id)).filter(Boolean) as Category[];
+  }, [selectedCategories, categories]);
+
 
   const filteredTags = useMemo(() => {
     if (!newTag || !allTags) return [];
@@ -496,6 +507,18 @@ export default function NewPostPage() {
               <CardTitle className="font-headline">Categories</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
+                {selectedCategoryObjects.length > 0 && (
+                    <div className="flex flex-wrap gap-2 border-b pb-4">
+                        {selectedCategoryObjects.map(cat => (
+                            <Badge key={cat.id} variant="secondary" className="flex items-center gap-1">
+                                {cat.name}
+                                <button onClick={() => handleCategoryChange(cat.id, false)} disabled={isSubmitting}>
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </Badge>
+                        ))}
+                    </div>
+                )}
                 <Input
                     placeholder="Search categories..."
                     value={categorySearch}
@@ -507,6 +530,7 @@ export default function NewPostPage() {
                         <div key={category.id} className="flex items-center space-x-2">
                         <Checkbox 
                             id={category.id} 
+                            checked={selectedCategories.includes(category.id)}
                             onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
                             disabled={isSubmitting}
                         />

@@ -48,9 +48,10 @@ type MenuProps = {
   className?: string;
   linkClassName?: string;
   orientation?: "vertical" | "horizontal";
+  onLinkClick?: () => void;
 };
 
-const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
+const RecursiveNavItem = ({ item, linkClassName, onLinkClick }: { item: MenuItemWithChildren, linkClassName?: string, onLinkClick?: () => void }) => {
     const pathname = usePathname();
     const isActive = pathname === item.url;
 
@@ -66,7 +67,7 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
                 <DropdownMenuContent>
                     {item.children.map(child => (
                         <DropdownMenuItem key={child.id} asChild>
-                            <Link href={child.url} className={cn("cursor-pointer", pathname === child.url && "font-semibold text-primary")}>
+                            <Link href={child.url} onClick={onLinkClick} className={cn("cursor-pointer", pathname === child.url && "font-semibold text-primary")}>
                                 {child.label}
                             </Link>
                         </DropdownMenuItem>
@@ -77,15 +78,16 @@ const RecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren,
     }
 
     return (
-        <Link href={item.url} className={cn(linkClassName, isActive && "font-bold text-primary")}>
+        <Link href={item.url} onClick={onLinkClick} className={cn(linkClassName, isActive && "font-bold text-primary")}>
             {item.label}
         </Link>
     );
 };
 
-const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChildren, linkClassName?: string }) => {
+const MobileRecursiveNavItem = ({ item, linkClassName, onLinkClick }: { item: MenuItemWithChildren, linkClassName?: string, onLinkClick?: () => void }) => {
     const pathname = usePathname();
     const isActive = pathname === item.url;
+
   if (item.children.length > 0) {
     return (
       <AccordionItem value={item.id} className="border-b-0">
@@ -93,7 +95,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
         <AccordionContent className="pl-4">
           <div className="flex flex-col space-y-4">
             {item.children.map(child => (
-              <Link key={child.id} href={child.url} className={cn("text-lg text-foreground/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
+              <Link key={child.id} href={child.url} onClick={onLinkClick} className={cn("text-lg text-foreground/80", linkClassName, pathname === child.url && "text-primary font-semibold")}>
                 {child.label}
               </Link>
             ))}
@@ -105,7 +107,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
 
   return (
     <div>
-      <Link href={item.url} className={cn("block py-2", linkClassName, isActive && "text-primary font-semibold")}>
+      <Link href={item.url} onClick={onLinkClick} className={cn("block py-2", linkClassName, isActive && "text-primary font-semibold")}>
         {item.label}
       </Link>
     </div>
@@ -113,7 +115,7 @@ const MobileRecursiveNavItem = ({ item, linkClassName }: { item: MenuItemWithChi
 };
 
 
-export function Menu({ locationId, className, linkClassName, orientation = "horizontal" }: MenuProps) {
+export function Menu({ locationId, className, linkClassName, orientation = "horizontal", onLinkClick }: MenuProps) {
   const firestore = useFirestore();
   const isMobile = useIsMobile();
 
@@ -179,7 +181,7 @@ export function Menu({ locationId, className, linkClassName, orientation = "hori
     return (
       <Accordion type="multiple" className={cn("w-full", className)}>
         {menuTree.map(item => (
-          <MobileRecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} />
+          <MobileRecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} onLinkClick={onLinkClick} />
         ))}
       </Accordion>
     )
@@ -188,7 +190,7 @@ export function Menu({ locationId, className, linkClassName, orientation = "hori
   return (
     <div className={cn("flex", orientation === 'horizontal' ? 'items-center' : 'flex-col items-stretch', className)}>
         {menuTree.map(item => (
-            <RecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} />
+            <RecursiveNavItem key={item.id} item={item} linkClassName={linkClassName} onLinkClick={onLinkClick} />
         ))}
     </div>
   );

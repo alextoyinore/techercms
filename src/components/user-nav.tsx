@@ -68,7 +68,7 @@ export function UserNav({user}: {user: FirebaseUser | null}) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-10 w-full justify-start gap-2 px-2 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10"
+          className="relative h-10 w-full justify-start gap-2 px-2 hover:bg-transparent group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage src={getAvatar(user)} alt="@user" />

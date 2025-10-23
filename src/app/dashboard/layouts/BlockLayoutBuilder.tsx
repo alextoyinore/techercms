@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, X } from 'lucide-react';
 import { BlockLayout } from './BlockLayoutsView';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +49,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { FeaturedTopAndGridPreview } from './previews/FeaturedTopAndGridPreview';
 import { FeaturedAndListPreview } from './previews/FeaturedAndListPreview';
 import { BigFeaturedPreview } from './previews/BigFeaturedPreview';
+import { Badge } from '@/components/ui/badge';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -123,9 +124,29 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   const [type, setType] = useState<NewBlockType>('post-grid');
   const [config, setConfig] = useState<any>(initialConfig['post-grid']);
   const [isSaving, setIsSaving] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
 
   const categoriesCollection = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesCollection);
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name));
+  }, [categories]);
+
+  const filteredCategories = useMemo(() => {
+    if (!sortedCategories) return [];
+    if (!categorySearch) return sortedCategories;
+    return sortedCategories.filter(category =>
+        category.name.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+  }, [sortedCategories, categorySearch]);
+
+  const getSelectedCategories = () => {
+    if (!config.categoryIds || !categories) return [];
+    return config.categoryIds.map((id: string) => categories.find(c => c.id === id)).filter(Boolean) as Category[];
+  }
+  const selectedCategories = getSelectedCategories();
 
   useEffect(() => {
     if (isOpen) {
