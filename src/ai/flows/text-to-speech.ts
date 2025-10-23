@@ -6,6 +6,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import wav from 'wav';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const TextToSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
@@ -58,7 +59,7 @@ const textToSpeechFlow = ai.defineFlow(
     // Generate audio for each chunk in parallel.
     const audioGenerationPromises = chunks.map(async (chunk) => {
       const { media } = await ai.generate({
-        model: 'gemini-2.5-flash-preview-tts',
+        model: googleAI.model('gemini-2.5-flash-preview-tts'),
         config: {
           responseModalities: ['AUDIO'],
         },
