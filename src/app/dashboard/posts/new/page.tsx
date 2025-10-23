@@ -73,7 +73,7 @@ export default function NewPostPage() {
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [shouldGenerateAudio, setShouldGenerateAudio] = useState(false);
 
   // State for new category dialog
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -219,30 +219,6 @@ export default function NewPostPage() {
     }
   };
 
-  const handleGenerateAudio = async () => {
-    const plainText = content.replace(/<[^>]*>?/gm, '');
-    if (!title || !plainText) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Content',
-        description: 'Please provide a title and content to generate audio.',
-      });
-      return;
-    }
-    setIsGeneratingAudio(true);
-    try {
-      const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-      const result = await textToSpeech({ text: plainText, filename });
-      setAudioUrl(result.audioUrl);
-      toast({ title: 'Audio Generated!', description: 'The audio file for this post has been created.' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Audio Generation Failed', description: error.message });
-    } finally {
-      setIsGeneratingAudio(false);
-    }
-  };
-
-
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title) {
         toast({
@@ -265,6 +241,23 @@ export default function NewPostPage() {
     setIsSubmitting(true);
     setSubmissionStatus(status);
     
+    let finalAudioUrl = audioUrl;
+    if (shouldGenerateAudio) {
+      const plainText = content.replace(/<[^>]*>?/gm, '');
+      if (title && plainText) {
+        try {
+          toast({ title: "Generating audio...", description: "This may take a moment." });
+          const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+          const result = await textToSpeech({ text: plainText, filename });
+          finalAudioUrl = result.audioUrl;
+          setAudioUrl(finalAudioUrl);
+          toast({ title: 'Audio Generated!', description: 'The audio file has been created.' });
+        } catch (e: any) {
+          toast({ variant: 'destructive', title: 'Audio Generation Failed', description: e.message });
+        }
+      }
+    }
+
     let finalMetaDescription = metaDescription;
     if (!finalMetaDescription && content) {
         try {
@@ -288,7 +281,7 @@ export default function NewPostPage() {
         excerpt,
         metaDescription: finalMetaDescription,
         featuredImageUrl,
-        audioUrl,
+        audioUrl: finalAudioUrl,
         status,
         isBreaking,
         authorId: auth.currentUser.uid,
@@ -439,9 +432,18 @@ export default function NewPostPage() {
                 {audioUrl && (
                   <audio controls src={audioUrl} className="w-full">Your browser does not support the audio element.</audio>
                 )}
-                <Button variant="outline" size="sm" onClick={handleGenerateAudio} disabled={isGeneratingAudio || !title || !content}>
-                    {isGeneratingAudio ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...</> : <><Podcast className="mr-2 h-4 w-4" /> Generate Audio</>}
-                </Button>
+                <div className="flex items-center space-x-2">
+                    <Switch
+                        id="generate-audio"
+                        checked={shouldGenerateAudio}
+                        onCheckedChange={setShouldGenerateAudio}
+                        disabled={isSubmitting}
+                    />
+                    <Label htmlFor="generate-audio" className="flex items-center gap-2">
+                        <Podcast className="h-4 w-4" />
+                        Generate audio on save
+                    </Label>
+                </div>
             </CardContent>
           </Card>
            <Card>
