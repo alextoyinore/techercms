@@ -10,6 +10,9 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { Loading } from "@/components/loading";
 import { doc } from "firebase/firestore";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { File, PlusCircle } from "lucide-react";
 
 type UserRole = {
   role: 'superuser' | 'writer' | string;
@@ -76,8 +79,22 @@ export default function DashboardLayout({
           <DashboardNav user={user} />
         </Sidebar>
         <div className="flex flex-col flex-1">
-          <header className="p-2 md:p-4 border-b flex items-center justify-between lg:hidden sticky top-0 bg-background z-10">
-              <SidebarTrigger />
+          <header className="p-2 md:p-4 border-b flex items-center justify-between lg:justify-end sticky top-0 bg-background z-10 gap-4">
+              <SidebarTrigger className="lg:hidden" />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                    <Link href="/dashboard/posts/new">
+                        <PlusCircle className="h-4 w-4" />
+                        <span className="hidden sm:inline ml-2">New Post</span>
+                    </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                     <Link href="/dashboard/pages/new">
+                        <File className="h-4 w-4" />
+                        <span className="hidden sm:inline ml-2">New Page</span>
+                    </Link>
+                </Button>
+              </div>
               <UserNav user={user} />
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
