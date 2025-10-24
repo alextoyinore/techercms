@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
@@ -22,6 +23,8 @@ import { trackView } from '@/app/actions/track-view';
 import { calculateReadTime } from '@/lib/utils';
 import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
+import { RelatedPostCard } from '../RelatedPostCard';
 
 type Post = {
   id: string;
@@ -55,6 +58,17 @@ type SiteSettings = {
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
 }
+
+const parserOptions: HTMLReactParserOptions = {
+    replace: (domNode) => {
+        if (domNode instanceof Element && domNode.attribs && domNode.attribs['data-type'] === 'related-post') {
+            const postId = domNode.attribs['data-id'];
+            if (postId) {
+                return <RelatedPostCard postId={postId} />;
+            }
+        }
+    },
+};
 
 function PageContent({ page }: { page: Page }) {
     const firestore = useFirestore();
@@ -91,10 +105,9 @@ function PageContent({ page }: { page: Page }) {
     }
     
     return (
-        <div
-            className="prose lg:prose-lg max-w-none lg:leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: page.content }}
-        />
+        <div className="prose lg:prose-lg max-w-none lg:leading-relaxed">
+            {parse(page.content, parserOptions)}
+        </div>
     );
 }
 
@@ -214,10 +227,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       {isPost ? (
                           <>
                           <TextToSpeechPlayer audioUrl={(item as Post).audioUrl} />
-                          <div
-                              className="prose lg:prose-xl max-w-none lg:leading-relaxed"
-                              dangerouslySetInnerHTML={{ __html: item.content }}
-                          />
+                          <div className="prose lg:prose-xl max-w-none lg:leading-relaxed">
+                            {parse(item.content, parserOptions)}
+                          </div>
                           <ShareButtons title={item.title} postId={item.id}/>
                           
                           {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
