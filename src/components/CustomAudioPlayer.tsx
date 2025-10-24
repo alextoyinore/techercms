@@ -74,7 +74,7 @@ export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 w-full">
+    <div className="flex flex-wrap items-center gap-4 w-full">
       <audio
         ref={audioRef}
         src={audioUrl}
@@ -97,7 +97,7 @@ export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
             <div
               key={index}
               className={cn(
-                "w-1 rounded-full transition-colors duration-75",
+                "w-1 rounded-full transition-colors duration-150 ease-in-out",
                 isActive ? 'bg-primary' : 'bg-muted'
               )}
               style={{ height: `${height}%` }}

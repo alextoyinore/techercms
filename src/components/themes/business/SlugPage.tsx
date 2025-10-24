@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ import { CommentsSection } from '@/components/comments/CommentsSection';
 import { trackView } from '@/app/actions/track-view';
 import { calculateReadTime } from '@/lib/utils';
 import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
+import { ReadingProgress } from '@/components/ReadingProgress';
 
 type Post = {
   id: string;
@@ -103,6 +104,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const params = useParams();
   const slug = preloadedItem ? (preloadedItem as any).slug : params.slug as string;
   const firestore = useFirestore();
+  const articleRef = useRef<HTMLElement>(null);
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !slug || preloadedItem) return null;
@@ -183,10 +185,11 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <meta name="description" content={metaDescription} />
       </Head>
       <div className="bg-background text-foreground font-sans">
+          {isPost && <ReadingProgress targetRef={articleRef} />}
           <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} pageId={pageId}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
               <div className="lg:col-span-9">
-                  <article className="max-w-none">
+                  <article className="max-w-none" ref={articleRef}>
                   
                   {isPost ? (
                     <>
@@ -265,5 +268,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    
