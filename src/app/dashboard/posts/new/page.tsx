@@ -96,6 +96,14 @@ export default function NewPostPage() {
   }, [firestore]);
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
   
+  const wordCount = useMemo(() => {
+    if (!content) return 0;
+    const text = content.replace(/<[^>]*>?/gm, ''); // Strip HTML tags
+    if (!text.trim()) return 0;
+    const words = text.trim().split(/\s+/);
+    return words.length;
+  }, [content]);
+
   const sortedCategories = useMemo(() => {
     if (!categories) return [];
     return [...categories].sort((a, b) => a.name.localeCompare(b.name));
@@ -243,6 +251,7 @@ export default function NewPostPage() {
     
     let finalAudioUrl = audioUrl;
     let finalTags = [...tags];
+    let audioWaveform: number[] | undefined = undefined;
 
     if (shouldGenerateAudio) {
       const plainText = content.replace(/<[^>]*>?/gm, '');
@@ -252,6 +261,7 @@ export default function NewPostPage() {
           const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
           const result = await textToSpeech({ text: plainText, filename });
           finalAudioUrl = result.audioUrl;
+          audioWaveform = result.waveform;
           setAudioUrl(finalAudioUrl);
           toast({ title: 'Audio Generated!', description: 'The audio file has been created.' });
 
@@ -291,6 +301,7 @@ export default function NewPostPage() {
         metaDescription: finalMetaDescription,
         featuredImageUrl,
         audioUrl: finalAudioUrl,
+        audioWaveform,
         status,
         isBreaking,
         authorId: auth.currentUser.uid,
@@ -386,6 +397,9 @@ export default function NewPostPage() {
                   onChange={setContent}
                   disabled={isSubmitting}
                 />
+                <p className="text-sm text-muted-foreground text-right">
+                  Word Count: {wordCount}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -688,4 +702,5 @@ export default function NewPostPage() {
     
 
     
+
 
