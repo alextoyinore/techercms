@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,15 @@ export function CustomAudioPlayer({ audioUrl, waveform = [] }: CustomAudioPlayer
   const [currentTime, setCurrentTime] = useState(0);
   
   const barCount = 60;
-  const barHeights = waveform.length === barCount ? waveform : Array.from({ length: barCount }, () => 10 + Math.random() * 80);
+  
+  const barHeights = useMemo(() => {
+    if (waveform && waveform.length === barCount) {
+      return waveform;
+    }
+    // Generate a random but stable fallback waveform if none is provided
+    return Array.from({ length: barCount }, () => 10 + Math.random() * 80);
+  }, [waveform]);
+
 
   const formatTime = (time: number) => {
     if (isNaN(time) || time === 0) return '0:00';
