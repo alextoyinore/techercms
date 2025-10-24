@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -63,7 +62,7 @@ export function BreakingNewsWidget({
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg text-primary">{title}</CardTitle>
+                <CardTitle className="font-headline text-lg text-destructive">{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
