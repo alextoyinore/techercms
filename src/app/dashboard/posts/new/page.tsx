@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -98,7 +97,10 @@ export default function NewPostPage() {
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
-    const text = content.replace(/<[^>]*>?/gm, ''); // Strip HTML tags
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    doc.querySelectorAll('[data-type="related-post"]').forEach(el => el.remove());
+    const text = doc.body.textContent || "";
     if (!text.trim()) return 0;
     const words = text.trim().split(/\s+/);
     return words.length;
@@ -253,7 +255,11 @@ export default function NewPostPage() {
     let finalTags = [...tags];
 
     if (shouldGenerateAudio && !audioUrl) {
-      const plainText = content.replace(/<[^>]*>?/gm, '');
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
+      doc.querySelectorAll('[data-type="related-post"]').forEach(el => el.remove());
+      const plainText = doc.body.textContent || "";
+      
       if (title && plainText) {
         try {
           toast({ title: "Generating audio...", description: "This may take a moment." });

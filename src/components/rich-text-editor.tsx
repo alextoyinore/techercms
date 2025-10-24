@@ -1,6 +1,6 @@
 'use client';
 
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Node } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
@@ -41,12 +41,129 @@ import {
   FlipVertical,
   RectangleHorizontal,
   Link as LinkIcon,
+  Link2,
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { MediaLibrary } from './media-library';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import { Input } from './ui/input';
+import { ScrollArea } from './ui/scroll-area';
+
+// Custom Tiptap Node for Related Post
+const RelatedPostNode = Node.create({
+  name: 'relatedPost',
+  group: 'block',
+  atom: true, // This makes it behave like a single, non-editable unit
+  
+  addAttributes() {
+    return {
+      'data-id': { default: null },
+      'data-slug': { default: null },
+      'data-title': { default: 'Related Post' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="related-post"]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', { ...HTMLAttributes, 'data-type': 'related-post' }, 0];
+  },
+  
+  // This is what renders it inside the editor
+  addNodeView() {
+    return ({ node }) => {
+      const { 'data-title': title } = node.attrs;
+      const dom = document.createElement('div');
+      dom.setAttribute('data-type', 'related-post');
+      dom.className = 'my-4 p-3 rounded-md border border-dashed flex items-center gap-2 bg-muted/50 cursor-default';
+      
+      const icon = document.createElement('span');
+      icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-2"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></svg>`;
+      icon.className = 'text-muted-foreground';
+      
+      const text = document.createElement('span');
+      text.className = 'text-sm font-medium text-muted-foreground';
+      text.textContent = `Related Post: ${title}`;
+
+      dom.append(icon, text);
+      return { dom };
+    };
+  },
+
+  // This ensures it's excluded from text-based outputs (like for audio generation)
+  addCommands() {
+    return {
+      setRelatedPost: (options) => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: { 
+            'data-id': options.id,
+            'data-slug': options.slug,
+            'data-title': options.title,
+          },
+        });
+      },
+    };
+  },
+});
+
+
+type Post = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
+const PostPicker = ({ onSelectPost }: { onSelectPost: (post: Post) => void }) => {
+    const firestore = useFirestore();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const postsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'posts'), where('status', '==', 'published'));
+    }, [firestore]);
+
+    const { data: posts, isLoading } = useCollection<Post>(postsQuery);
+
+    const filteredPosts = useMemo(() => {
+        if (!posts) return [];
+        if (!searchTerm) return posts;
+        return posts.filter(post => post.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [posts, searchTerm]);
+
+    return (
+        <div className="flex flex-col gap-4">
+            <Input 
+                placeholder="Search posts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <ScrollArea className="h-64 border rounded-md">
+                <div className="p-2">
+                    {isLoading && <p className="text-sm text-muted-foreground p-2">Loading posts...</p>}
+                    {!isLoading && filteredPosts.map(post => (
+                        <div 
+                            key={post.id}
+                            className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                            onClick={() => onSelectPost(post)}
+                        >
+                            <p className="font-medium text-sm">{post.title}</p>
+                        </div>
+                    ))}
+                    {!isLoading && filteredPosts.length === 0 && (
+                         <p className="text-sm text-muted-foreground p-2 text-center">No posts found.</p>
+                    )}
+                </div>
+            </ScrollArea>
+        </div>
+    )
+}
 
 const RichTextEditor = ({
   content,
@@ -86,6 +203,7 @@ const RichTextEditor = ({
       Link.configure({
         openOnClick: false,
       }),
+      RelatedPostNode,
     ],
     content: content,
     editorProps: {
@@ -101,6 +219,7 @@ const RichTextEditor = ({
   });
 
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
+  const [isPostPickerOpen, setIsPostPickerOpen] = useState(false);
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
@@ -130,6 +249,13 @@ const RichTextEditor = ({
     }
 
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
+  
+  const addRelatedPost = useCallback((post: Post) => {
+    if (editor && post) {
+        editor.chain().focus().setRelatedPost({ id: post.id, slug: post.slug, title: post.title }).run();
+        setIsPostPickerOpen(false);
+    }
   }, [editor]);
 
   if (!editor) {
@@ -287,6 +413,19 @@ const RichTextEditor = ({
         >
             <LinkIcon className="h-4 w-4" />
         </Toggle>
+         <Dialog open={isPostPickerOpen} onOpenChange={setIsPostPickerOpen}>
+            <DialogTrigger asChild>
+                <Toggle size="sm" disabled={disabled}>
+                    <Link2 className="h-4 w-4" />
+                </Toggle>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Insert Related Post</DialogTitle>
+                </DialogHeader>
+                <PostPicker onSelectPost={addRelatedPost} />
+            </DialogContent>
+        </Dialog>
         <MediaLibrary onSelect={addImageFromUrl}>
             <Toggle size="sm" disabled={disabled}>
                 <ImageIcon className="h-4 w-4" />
