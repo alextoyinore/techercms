@@ -1,3 +1,4 @@
+
 import {
     FileText,
     List,
@@ -23,6 +24,7 @@ import {
     Copy,
     Rows,
     RectangleHorizontal,
+    Podcast
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -54,9 +56,11 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'navigation-menu', label: 'Navigation Menu', icon: Menu, defaultConfig: { title: 'Navigation', navLinks: [] } },
     { type: 'social-follow', label: 'Social Follow', icon: Users, defaultConfig: { title: 'Follow Us', socialLinks: [] } },
     { type: 'post-showcase', label: 'Post Showcase', icon: LayoutGrid, defaultConfig: { title: 'Post Showcase', count: 3, sourceType: 'category', layout: 'list' } },
+    { type: 'audio-player', label: 'Audio Player', icon: Podcast, defaultConfig: { title: 'Listen to Articles' } },
     { type: 'trading-ticker', label: 'Trading Ticker', icon: TrendingUp, defaultConfig: { title: 'Market Watch' } },
     { type: 'breaking-news', label: 'Breaking News', icon: Rss, defaultConfig: { title: 'Breaking News' } },
     { type: 'live-score', label: 'Live Score', icon: Star, defaultConfig: { title: 'Live Match' } },
     { type: 'sporting-tables', label: 'Sporting Tables', icon: BarChart, defaultConfig: { title: 'League Standings' } },
     { type: 'weather', label: 'Weather', icon: CloudSun, defaultConfig: { title: 'Weather', location: 'New York, NY' } },
 ];
+

@@ -1,3 +1,4 @@
+
 'use client';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -22,6 +23,7 @@ import { PostCarouselWidget } from '@/components/widgets/PostCarouselWidget';
 import { FeaturedSmallsWidget } from '@/components/widgets/FeaturedSmallsWidget';
 import { TabbedPostsWidget } from '@/components/widgets/TabbedPostsWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AudioPlayerWidget } from './AudioPlayerWidget';
 
 type WidgetInstance = {
     id: string;
@@ -57,6 +59,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'post-carousel': PostCarouselWidget,
     'featured-and-smalls': FeaturedSmallsWidget,
     'tabbed-posts': TabbedPostsWidget,
+    'audio-player': AudioPlayerWidget,
 };
 
 export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaName: string, isPageSpecific?: boolean, pageId?: string }) {

@@ -197,6 +197,11 @@
           "type": "string",
           "description": "The URL for the post's generated audio file."
         },
+         "audioWaveform": {
+          "type": "array",
+          "items": { "type": "number" },
+          "description": "An array of numbers representing the visual waveform for the audio."
+        },
         "status": {
           "type": "string",
           "description": "The publication status of the post.",
@@ -379,7 +384,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid", "big-featured"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid", "big-featured", "audio-player"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {
