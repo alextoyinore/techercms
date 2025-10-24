@@ -253,7 +253,7 @@ export default function NewPostPage() {
     let finalTags = [...tags];
     let audioWaveform: number[] | undefined = undefined;
 
-    if (shouldGenerateAudio) {
+    if (shouldGenerateAudio && !audioUrl) {
       const plainText = content.replace(/<[^>]*>?/gm, '');
       if (title && plainText) {
         try {
@@ -460,7 +460,7 @@ export default function NewPostPage() {
                         id="generate-audio"
                         checked={shouldGenerateAudio}
                         onCheckedChange={setShouldGenerateAudio}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!audioUrl}
                     />
                     <Label htmlFor="generate-audio" className="flex items-center gap-2">
                         <Podcast className="h-4 w-4" />
@@ -702,3 +702,4 @@ export default function NewPostPage() {
     
 
     
+
