@@ -39,7 +39,7 @@ export function BreakingNewsWidget({ title = 'Breaking News', postCount = 5 }: B
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg text-destructive">{title}</CardTitle>
+                <CardTitle className="font-headline text-lg text-primary">{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -66,5 +66,7 @@ export function BreakingNewsWidget({ title = 'Breaking News', postCount = 5 }: B
         </Card>
     );
 }
+
+    
 
     
