@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEditor, EditorContent, Node } from '@tiptap/react';
@@ -72,7 +73,8 @@ const RelatedPostNode = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', { ...HTMLAttributes, 'data-type': 'related-post' }, 0];
+    // The `0` was causing the "content hole" error in an atom node. Removing it fixes the issue.
+    return ['div', { ...HTMLAttributes, 'data-type': 'related-post' }];
   },
   
   // This is what renders it inside the editor
