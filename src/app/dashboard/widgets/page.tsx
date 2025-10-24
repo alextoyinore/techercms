@@ -16,7 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
+import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Podcast } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, where, or, and } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
@@ -55,6 +55,9 @@ const availableWidgets = {
         { type: 'categories-list', name: 'Categories', description: 'Show a list of all post categories.' },
         { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
         { type: 'post-showcase', name: 'Post Showcase', description: 'Display posts from a specific category or tag.' },
+    ],
+    'Media': [
+        { type: 'audio-player', name: 'Audio Player', description: 'Plays a sequential list of posts with audio.', icon: Podcast },
     ],
     'Navigation': [
         { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a reusable navigation menu.' },
@@ -1064,3 +1067,5 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         </DndContext>
     );
 }
+
+    
