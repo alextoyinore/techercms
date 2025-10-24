@@ -10,7 +10,10 @@ type CustomAudioPlayerProps = {
   waveform?: number[];
 };
 
-export function CustomAudioPlayer({ audioUrl, waveform = [] }: CustomAudioPlayerProps) {
+// Create a stable empty array reference outside the component.
+const defaultWaveform: number[] = [];
+
+export function CustomAudioPlayer({ audioUrl, waveform = defaultWaveform }: CustomAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -19,12 +22,13 @@ export function CustomAudioPlayer({ audioUrl, waveform = [] }: CustomAudioPlayer
   const barCount = 60;
   
   const barHeights = useMemo(() => {
+    // If a valid waveform is provided from the database, use it.
     if (waveform && waveform.length === barCount) {
       return waveform;
     }
-    // Generate a random but stable fallback waveform if none is provided
+    // Otherwise, generate a random but STABLE fallback waveform once.
     return Array.from({ length: barCount }, () => 10 + Math.random() * 80);
-  }, [waveform]);
+  }, [waveform]); // This now works correctly with a stable default prop.
 
 
   const formatTime = (time: number) => {
