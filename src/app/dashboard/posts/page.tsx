@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2, Podcast } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
     DropdownMenu,
@@ -45,6 +45,7 @@ type Post = {
     categoryIds: string[];
     createdAt: Timestamp;
     featuredImageUrl?: string;
+    audioUrl?: string;
 };
 
 export default function PostsPage() {
@@ -172,6 +173,7 @@ export default function PostsPage() {
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Views</TableHead>
+                <TableHead>Audio</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -181,14 +183,14 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={8} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={8} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
@@ -223,6 +225,9 @@ export default function PostsPage() {
                         ) : (
                            viewCounts[post.id]
                         )}
+                    </TableCell>
+                    <TableCell>
+                        {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
                     </TableCell>
                   <TableCell>
                     {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
