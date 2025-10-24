@@ -62,7 +62,6 @@ type Post = {
     metaDescription?: string;
     featuredImageUrl: string;
     audioUrl?: string;
-    audioWaveform?: number[];
     slug: string;
     status: 'draft' | 'published' | 'archived';
     isBreaking?: boolean;
@@ -298,7 +297,6 @@ export default function EditPostPage() {
     
     let finalAudioUrl = audioUrl;
     let finalTags = [...tags];
-    let audioWaveform = post?.audioWaveform;
 
     if (shouldGenerateAudio && !audioUrl) {
       const plainText = content.replace(/<[^>]*>?/gm, '');
@@ -308,7 +306,6 @@ export default function EditPostPage() {
           const filename = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
           const result = await textToSpeech({ text: plainText, filename });
           finalAudioUrl = result.audioUrl;
-          audioWaveform = result.waveform;
           setAudioUrl(finalAudioUrl);
           toast({ title: 'Audio Generated!', description: 'The audio file has been created.' });
 
@@ -371,7 +368,6 @@ export default function EditPostPage() {
         metaDescription: finalMetaDescription,
         featuredImageUrl,
         audioUrl: finalAudioUrl,
-        audioWaveform,
         status,
         isBreaking,
         authorId: auth.currentUser.uid,
@@ -775,8 +771,3 @@ export default function EditPostPage() {
     </div>
   );
 }
-
-    
-
-    
-

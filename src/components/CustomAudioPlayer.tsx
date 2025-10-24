@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -7,13 +8,9 @@ import { cn } from '@/lib/utils';
 
 type CustomAudioPlayerProps = {
   audioUrl: string;
-  waveform?: number[];
 };
 
-// Create a stable empty array reference outside the component.
-const defaultWaveform: number[] = [];
-
-export function CustomAudioPlayer({ audioUrl, waveform = defaultWaveform }: CustomAudioPlayerProps) {
+export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -22,13 +19,8 @@ export function CustomAudioPlayer({ audioUrl, waveform = defaultWaveform }: Cust
   const barCount = 60;
   
   const barHeights = useMemo(() => {
-    // If a valid waveform is provided from the database, use it.
-    if (waveform && waveform.length === barCount) {
-      return waveform;
-    }
-    // Otherwise, generate a random but STABLE fallback waveform once.
     return Array.from({ length: barCount }, () => 10 + Math.random() * 80);
-  }, [waveform]); // This now works correctly with a stable default prop.
+  }, []); // Empty dependency array ensures this runs only once.
 
 
   const formatTime = (time: number) => {
