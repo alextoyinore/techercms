@@ -140,7 +140,7 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
                             className={`w-full text-left p-3 text-sm hover:bg-muted/50 ${index === currentTrackIndex ? 'bg-muted' : ''}`}
                             onClick={() => selectTrack(index)}
                         >
-                            <p className="font-semibold truncate">{track.title}</p>
+                            <p className="font-semibold">{track.title}</p>
                             <p className="text-xs text-muted-foreground"><PostAuthor authorId={track.authorId} /></p>
                         </button>
                     ))}
@@ -149,4 +149,3 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
         </Card>
     );
 }
-
