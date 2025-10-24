@@ -165,7 +165,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     }
   }, [isPost, item?.id]);
 
-  if (isLoadingPosts || isLoadingPages || isLoadingSettings) {
+  const isLoading = isLoadingPosts || isLoadingPages || isLoadingSettings;
+
+  if (isLoading) {
     return <Loading />;
   }
 
