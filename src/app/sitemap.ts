@@ -2,11 +2,12 @@
 import { MetadataRoute } from 'next';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { firebaseConfig } from '@/firebase/config';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!getApps().length) {
   initializeApp({
-    projectId: process.env.GCLOUD_PROJECT,
+    projectId: firebaseConfig.projectId,
   });
 }
 
