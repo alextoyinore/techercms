@@ -50,6 +50,7 @@ import { FeaturedTopAndGridPreview } from './previews/FeaturedTopAndGridPreview'
 import { FeaturedAndListPreview } from './previews/FeaturedAndListPreview';
 import { BigFeaturedPreview } from './previews/BigFeaturedPreview';
 import { Badge } from '@/components/ui/badge';
+import { AudioPlayerPreview } from './previews/AudioPlayerPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -77,7 +78,8 @@ type NewBlockType =
     | 'gallery'
     | 'video'
     | 'testimonials'
-    | 'contact-form';
+    | 'contact-form'
+    | 'audio-player';
 
 const initialConfig = {
     'post-grid': { columns: 3, showImages: true, showExcerpts: false, imagePosition: 'before' },
@@ -94,7 +96,8 @@ const initialConfig = {
     'gallery': { images: [] as { id: string; url: string }[] },
     'video': { videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
     'testimonials': { testimonials: [{ id: '1', author: 'Jane Doe', quote: 'This is a fantastic service!'}, {id: '2', author: 'John Smith', quote: 'I highly recommend this to everyone.'}] },
-    'contact-form': { recipientEmail: 'you@example.com', submitButtonText: 'Send Message' }
+    'contact-form': { recipientEmail: 'you@example.com', submitButtonText: 'Send Message' },
+    'audio-player': { title: 'Listen to Articles', tag: 'audio' }
 }
 
 const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
@@ -111,6 +114,7 @@ const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
     { value: 'feature-grid', label: 'Feature Grid', group: 'Page Sections' },
     { value: 'gallery', label: 'Image Gallery', group: 'Media' },
     { value: 'video', label: 'Video', group: 'Media' },
+    { value: 'audio-player', label: 'Audio Player', group: 'Media' },
     { value: 'testimonials', label: 'Testimonials', group: 'Content' },
     { value: 'contact-form', label: 'Contact Form', group: 'Utility' },
 ];
@@ -247,6 +251,20 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   
   const renderConfigFields = () => {
     switch(type) {
+        case 'audio-player':
+            return (
+                 <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Title</Label>
+                        <Input value={config.title || ''} onChange={e => handleConfigChange({ title: e.target.value })} placeholder="e.g., Listen to Articles"/>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Source Tag</Label>
+                        <Input value={config.tag || ''} onChange={e => handleConfigChange({ tag: e.target.value })} placeholder="e.g., audio"/>
+                        <p className="text-sm text-muted-foreground">The widget will play posts that have this tag.</p>
+                    </div>
+                </div>
+            )
         case 'big-featured':
             return (
                 <div className="grid gap-4">
@@ -655,6 +673,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  {type === 'feature-grid' && <FeatureGridPreview config={config} />}
                  {type === 'gallery' && <GalleryPreview config={config} />}
                  {type === 'video' && <VideoPreview config={config} />}
+                 {type === 'audio-player' && <AudioPlayerPreview config={config} />}
                  {type === 'testimonials' && <TestimonialsPreview config={config} />}
                  {type === 'contact-form' && <ContactFormPreview config={config} />}
             </div>

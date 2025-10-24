@@ -1,3 +1,4 @@
+
 'use client';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, doc } from 'firebase/firestore';
@@ -34,6 +35,7 @@ import { VideoPreview } from '../app/dashboard/layouts/previews/VideoPreview';
 import { FeaturedTopAndGridWidget } from './widgets/FeaturedTopAndGridWidget';
 import { FeaturedAndListWidget } from './widgets/FeaturedAndListWidget';
 import { BigFeaturedWidget } from './widgets/BigFeaturedWidget';
+import { AudioPlayerWidget } from './widgets/AudioPlayerWidget';
 
 
 const blockLayoutWidgets: Record<string, React.FC<any>> = {
@@ -52,6 +54,7 @@ const blockLayoutWidgets: Record<string, React.FC<any>> = {
     'video': VideoPreview,
     'testimonials': TestimonialsPreview,
     'contact-form': ContactFormPreview,
+    'audio-player': AudioPlayerWidget,
 };
 
 type PageSection = {

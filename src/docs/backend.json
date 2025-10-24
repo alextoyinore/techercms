@@ -466,7 +466,8 @@
                     "contact-form",
                     "featured-top-and-grid",
                     "featured-and-list",
-                    "big-featured"
+                    "big-featured",
+                    "audio-player"
                 ]
             },
             "config": { "type": "object", "description": "A flexible object to store block-specific PRESENTATIONAL settings (e.g., columns, showExcerpts)." }
