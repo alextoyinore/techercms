@@ -17,6 +17,7 @@ const themes: Record<string, Record<string, any>> = {
     AuthorPage: dynamic(() => import('@/components/themes/magazine-pro/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/magazine-pro/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/magazine-pro/DatePage')),
+    NewsPage: dynamic(() => import('@/components/themes/magazine-pro/CategoryPage')), // Fallback
   },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
@@ -26,6 +27,7 @@ const themes: Record<string, Record<string, any>> = {
     AuthorPage: dynamic(() => import('@/components/themes/business/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/business/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/business/DatePage')),
+    NewsPage: dynamic(() => import('@/components/themes/business/NewsPage')),
   },
   'NewsPro': {
     HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
@@ -35,6 +37,7 @@ const themes: Record<string, Record<string, any>> = {
     AuthorPage: dynamic(() => import('@/components/themes/newspro/AuthorPage')),
     SearchPage: dynamic(() => import('@/components/themes/newspro/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/newspro/DatePage')),
+    NewsPage: dynamic(() => import('@/components/themes/newspro/CategoryPage')), // Fallback
   },
 };
 
@@ -51,7 +54,7 @@ type CustomTheme = {
 };
 
 type ThemeRendererProps = {
-  pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search' | 'date';
+  pageType: 'home' | 'slug' | 'category' | 'tag' | 'author' | 'search' | 'date' | 'news';
 };
 
 function ActiveThemeResolver({ pageType, settings }: { pageType: ThemeRendererProps['pageType'], settings: SiteSettings }) {
@@ -108,6 +111,9 @@ function ActiveThemeResolver({ pageType, settings }: { pageType: ThemeRendererPr
       break;
     case 'date':
       PageComponent = theme.DatePage;
+      break;
+    case 'news':
+      PageComponent = theme.NewsPage;
       break;
     default:
       PageComponent = theme.HomePage;
