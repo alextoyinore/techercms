@@ -39,7 +39,7 @@ async function fetchCollectionSimple(collectionName: string): Promise<SitemapEnt
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.techer.co';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.95news.com.ng';
 
   // Fetch all dynamic content
   const posts = await fetchCollection('posts');
