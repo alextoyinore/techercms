@@ -50,7 +50,7 @@ export function RelatedPostCard({ postId }: { postId: string }) {
             </div>
           )}
           <div className="flex-1">
-            <p className="text-xs font-semibold uppercase text-primary tracking-wider mb-0.5">Related Post</p>
+            <p className="text-xs font-semibold uppercase text-primary tracking-wider">Related Post</p>
             <h4 className="font-semibold leading-tight group-hover:underline">{post.title}</h4>
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
             <div className="text-xs text-muted-foreground mt-2">
