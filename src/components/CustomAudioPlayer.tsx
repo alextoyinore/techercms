@@ -7,31 +7,17 @@ import { cn } from '@/lib/utils';
 
 type CustomAudioPlayerProps = {
   audioUrl: string;
+  waveform?: number[];
 };
 
-// Generate a static, random-looking array of bar heights
-const generateBarHeights = (count: number) => {
-    let heights = [];
-    let lastHeight = 50;
-    for (let i = 0; i < count; i++) {
-        const nextHeight = lastHeight + (Math.random() - 0.5) * 40;
-        lastHeight = Math.max(10, Math.min(90, nextHeight));
-        heights.push(lastHeight);
-    }
-    return heights;
-}
-
-export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
+export function CustomAudioPlayer({ audioUrl, waveform = [] }: CustomAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [barHeights, setBarHeights] = useState<number[]>([]);
+  
   const barCount = 60;
-
-  useEffect(() => {
-    setBarHeights(generateBarHeights(barCount));
-  }, []);
+  const barHeights = waveform.length === barCount ? waveform : Array.from({ length: barCount }, () => 10 + Math.random() * 80);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || time === 0) return '0:00';
@@ -98,7 +84,7 @@ export function CustomAudioPlayer({ audioUrl }: CustomAudioPlayerProps) {
               key={index}
               className={cn(
                 "w-1 rounded-full transition-colors duration-150 ease-in-out",
-                isActive ? 'bg-primary' : 'bg-muted'
+                isActive ? 'bg-primary/50' : 'bg-muted'
               )}
               style={{ height: `${height}%` }}
             />
