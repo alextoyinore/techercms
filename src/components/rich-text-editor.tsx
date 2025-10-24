@@ -413,9 +413,9 @@ const RichTextEditor = ({
         >
             <LinkIcon className="h-4 w-4" />
         </Toggle>
-         <Dialog open={isPostPickerOpen} onOpenChange={setIsPostPickerOpen}>
+        <Dialog open={isPostPickerOpen} onOpenChange={setIsPostPickerOpen}>
             <DialogTrigger asChild>
-                <Toggle size="sm" disabled={disabled}>
+                <Toggle size="sm" disabled={disabled} aria-label="Insert Related Post">
                     <Link2 className="h-4 w-4" />
                 </Toggle>
             </DialogTrigger>
