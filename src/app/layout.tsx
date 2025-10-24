@@ -10,6 +10,9 @@ import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 export const metadata: Metadata = {
   title: "95news",
   description: "Up-to-date news and information for workers and professionals",
+  verification: {
+    google: "UzT4k0mumgBwXSPmkuK6ARyI-pYNWiVB5i3GQAQjLUQ",
+  },
 };
 
 export default async function RootLayout({
@@ -34,5 +37,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
-    
