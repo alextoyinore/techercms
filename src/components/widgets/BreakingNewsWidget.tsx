@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -18,28 +17,52 @@ type Post = {
 type BreakingNewsWidgetProps = {
     title?: string;
     postCount?: number;
+    filterType?: 'category' | 'tag';
+    sourceIds?: string[];
+    tags?: string;
 }
 
-export function BreakingNewsWidget({ title = 'Breaking News', postCount = 5 }: BreakingNewsWidgetProps) {
+export function BreakingNewsWidget({ 
+    title = 'Breaking News', 
+    postCount = 5,
+    filterType,
+    sourceIds,
+    tags
+}: BreakingNewsWidgetProps) {
     const firestore = useFirestore();
 
     const breakingNewsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(
+        
+        let q = query(
             collection(firestore, 'posts'),
-            where('status', '==', 'published'),
-            where('isBreaking', '==', true),
-            orderBy('createdAt', 'desc'),
-            limit(postCount)
+            where('status', '==', 'published')
         );
-    }, [firestore, postCount]);
+
+        const hasCategoryFilter = filterType === 'category' && sourceIds && sourceIds.length > 0;
+        const hasTagFilter = filterType === 'tag' && tags && tags.trim() !== '';
+
+        if (hasCategoryFilter) {
+            q = query(q, where('categoryIds', 'array-contains-any', sourceIds));
+        } else if (hasTagFilter) {
+            const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+            if (tagArray.length > 0) {
+                q = query(q, where('tagIds', 'array-contains-any', tagArray));
+            }
+        } else {
+            // Default behavior
+            q = query(q, where('isBreaking', '==', true));
+        }
+
+        return query(q, orderBy('createdAt', 'desc'), limit(postCount));
+    }, [firestore, postCount, filterType, sourceIds, tags]);
 
     const { data: posts, isLoading } = useCollection<Post>(breakingNewsQuery);
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg text-primary">{title}</CardTitle>
+                <CardTitle className="font-headline text-lg text-destructive">{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -66,7 +89,3 @@ export function BreakingNewsWidget({ title = 'Breaking News', postCount = 5 }: B
         </Card>
     );
 }
-
-    
-
-    

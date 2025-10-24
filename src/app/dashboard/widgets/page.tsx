@@ -253,6 +253,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     const renderConfigFields = () => {
         switch (instance.type) {
              case 'post-showcase':
+             case 'breaking-news':
                 return (
                     <div className="grid gap-4">
                         <div className="grid gap-2">
@@ -318,32 +319,36 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 onChange={(e) => setConfig({ ...config, count: parseInt(e.target.value, 10) || 3 })}
                             />
                         </div>
-                         <div className="grid gap-2">
-                            <Label>Layout</Label>
-                            <Select
-                                value={config.layout || 'list'}
-                                onValueChange={(value) => setConfig({ ...config, layout: value })}
-                            >
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="list">List</SelectItem>
-                                    <SelectItem value="grid">Grid</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {config.layout === 'grid' && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="widget-grid-cols">Grid Columns</Label>
-                                <Input
-                                    id="widget-grid-cols"
-                                    type="number"
-                                    min="1"
-                                    max="6"
-                                    value={config.gridColumns || 2}
-                                    onChange={(e) => setConfig({ ...config, gridColumns: parseInt(e.target.value, 10) || 2 })}
-                                />
-                            </div>
-                        )}
+                         {instance.type === 'post-showcase' && (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label>Layout</Label>
+                                    <Select
+                                        value={config.layout || 'list'}
+                                        onValueChange={(value) => setConfig({ ...config, layout: value })}
+                                    >
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="list">List</SelectItem>
+                                            <SelectItem value="grid">Grid</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {config.layout === 'grid' && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="widget-grid-cols">Grid Columns</Label>
+                                        <Input
+                                            id="widget-grid-cols"
+                                            type="number"
+                                            min="1"
+                                            max="6"
+                                            value={config.gridColumns || 2}
+                                            onChange={(e) => setConfig({ ...config, gridColumns: parseInt(e.target.value, 10) || 2 })}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                         )}
                     </div>
                 );
             case 'text':
@@ -463,7 +468,6 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                         </div>
                     </div>
                 );
-            case 'breaking-news':
             case 'live-score':
             case 'sporting-tables':
                 return (
@@ -1067,5 +1071,3 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         </DndContext>
     );
 }
-
-    
