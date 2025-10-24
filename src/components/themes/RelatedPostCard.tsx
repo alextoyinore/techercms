@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -39,17 +40,17 @@ export function RelatedPostCard({ postId }: { postId: string }) {
       <Link href={`/${post.slug}`} className="group">
         <div className="flex items-center gap-4 rounded-lg border p-4 bg-primary/5 transition-colors group-hover:bg-primary/10">
           {post.featuredImageUrl && (
-            <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-md">
+            <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-md bg-muted">
               <Image
                 src={post.featuredImageUrl}
                 alt={post.title}
                 fill
-                className="object-cover"
+                className="object-contain"
               />
             </div>
           )}
           <div className="flex-1">
-            <p className="text-xs font-semibold uppercase text-primary tracking-wider mb-1">Related Post</p>
+            <p className="text-xs font-semibold uppercase text-primary tracking-wider mb-0.5">Related Post</p>
             <h4 className="font-semibold leading-tight group-hover:underline">{post.title}</h4>
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
             <div className="text-xs text-muted-foreground mt-2">
