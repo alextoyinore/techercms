@@ -304,6 +304,7 @@ export default function PostsPage() {
             <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
+                onPageChange={setCurrentPage}
                 pageSize={pageSize}
                 onPageSizeChange={setPageSize}
                 totalItems={filteredPosts.length}
