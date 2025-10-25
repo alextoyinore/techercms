@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Loader2, Podcast } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2, Podcast, Megaphone } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
     DropdownMenu,
@@ -32,10 +32,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { collection, doc, Timestamp, getDocs } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { PaginationControls } from "@/components/pagination-controls";
+import { Switch } from "@/components/ui/switch";
 
 type Post = {
     id: string;
@@ -46,6 +47,7 @@ type Post = {
     createdAt: Timestamp;
     featuredImageUrl?: string;
     audioUrl?: string;
+    isBreaking?: boolean;
 };
 
 export default function PostsPage() {
@@ -78,7 +80,21 @@ export default function PostsPage() {
         if (!sortedPosts) return [];
         return sortedPosts.filter(post => {
             const titleMatch = post.title.toLowerCase().includes(filter.toLowerCase());
-            const statusMatch = statusFilter === 'all' || post.status === statusFilter;
+            let statusMatch = true;
+            switch(statusFilter) {
+                case 'all':
+                    statusMatch = true;
+                    break;
+                case 'breaking':
+                    statusMatch = post.isBreaking === true;
+                    break;
+                case 'audio':
+                    statusMatch = !!post.audioUrl;
+                    break;
+                default:
+                    statusMatch = post.status === statusFilter;
+                    break;
+            }
             return titleMatch && statusMatch;
         });
     }, [sortedPosts, filter, statusFilter]);
@@ -109,6 +125,24 @@ export default function PostsPage() {
             });
         }
     }, [paginatedPosts, firestore, viewCounts]);
+
+    const handleBreakingChange = async (postId: string, checked: boolean) => {
+      if (!firestore) return;
+      try {
+        const postRef = doc(firestore, 'posts', postId);
+        await setDocumentNonBlocking(postRef, { isBreaking: checked }, { merge: true });
+        toast({
+          title: "Post Updated",
+          description: `Breaking news status has been ${checked ? 'enabled' : 'disabled'}.`
+        });
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: error.message || "Could not update the post."
+        });
+      }
+    };
 
 
     const handleDelete = (postId: string, postTitle: string) => {
@@ -157,10 +191,12 @@ export default function PostsPage() {
                     <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="all">All Posts</SelectItem>
                     <SelectItem value="published">Published</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="archived">Archived</SelectItem>
+                    <SelectItem value="breaking">Breaking News</SelectItem>
+                    <SelectItem value="audio">Has Audio</SelectItem>
                 </SelectContent>
             </Select>
         </CardHeader>
@@ -174,6 +210,7 @@ export default function PostsPage() {
                 <TableHead>Status</TableHead>
                 <TableHead>Views</TableHead>
                 <TableHead>Audio</TableHead>
+                <TableHead>Breaking</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -183,14 +220,14 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={8} className="text-center">
+                    <TableCell colSpan={9} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={8} className="text-center">
+                    <TableCell colSpan={9} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
@@ -229,6 +266,13 @@ export default function PostsPage() {
                     <TableCell>
                         {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
                     </TableCell>
+                    <TableCell>
+                        <Switch
+                          checked={post.isBreaking}
+                          onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
+                          aria-label="Mark as breaking news"
+                        />
+                    </TableCell>
                   <TableCell>
                     {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
                   </TableCell>
@@ -260,7 +304,6 @@ export default function PostsPage() {
             <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={setCurrentPage}
                 pageSize={pageSize}
                 onPageSizeChange={setPageSize}
                 totalItems={filteredPosts.length}
