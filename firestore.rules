@@ -1,4 +1,25 @@
-
+/**
+ * @fileoverview Firestore Security Rules for the CMS.
+ *
+ * Core Philosophy:
+ * This ruleset implements role-based access control (RBAC).
+ * - Public content (published posts/pages) is readable by anyone.
+ * - All write operations (create, update, delete) are restricted to authorized roles.
+ * - A 'superuser' has full access to all data, including site settings and user roles.
+ * - A 'writer' can create and manage their own content.
+ *
+ * Data Structure:
+ * - Roles: `/roles/{userId}`
+ * - Content: `/posts/{postId}`, `/pages/{pageId}`, `/media/{mediaId}`
+ * - Taxonomies: `/categories/{categoryId}`, `/tags/{tagId}`
+ * - Site Config: `/site_settings/config`, `/widget_areas/{areaId}`, etc.
+ *
+ * Key Security Decisions:
+ * - Read access for published content is public.
+ * - Write access is strictly controlled by `superuser` and `writer` roles.
+ * - Ownership (`authorId`) is enforced for writers editing their own content.
+ * - Superusers can bypass ownership checks to manage all content.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -165,18 +186,30 @@ service cloud.firestore {
       allow write: if isSuperUser();
     }
 
-    // Notifications
+    // Notifications for users
     match /notifications/{notificationId} {
-      allow get, list, update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // A user can list their own notifications.
+      allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
+      
+      // A user can read their own notification directly.
+      allow get: if isSignedIn() && isOwner(resource.data.userId);
+
+      // Users can only update the 'isRead' status of their own notifications.
+      allow update: if isSignedIn() && isOwner(resource.data.userId)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+
+      // Disallow client-side creation and deletion.
       allow create, delete: if false;
     }
-    
-    // Subscriptions
+
+    // Newsletter Subscriptions
     match /subscriptions/{subscriptionId} {
       // Allow anyone to subscribe.
       allow create;
-      // Disallow reading the full list of subscribers or individual emails.
-      allow read, update, delete: if false;
+      // Allow server-side checks for existing emails.
+      allow list: if request.query.where.email != null;
+      // Disallow reading, updating, or deleting by clients.
+      allow get, update, delete: if false;
     }
   }
 }
