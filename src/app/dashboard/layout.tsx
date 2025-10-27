@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { File, PlusCircle } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
+import { PushNotificationManager } from "@/components/PushNotificationManager";
 
 type UserRole = {
   role: 'superuser' | 'writer' | string;
@@ -97,6 +98,7 @@ export default function DashboardLayout({
                 </Button>
               </div>
               <div className="flex items-center gap-2">
+                <PushNotificationManager />
                 <NotificationBell />
                 <UserNav user={user} />
               </div>
@@ -107,5 +109,3 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
-
-    
