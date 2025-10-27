@@ -81,7 +81,7 @@ export default function DashboardLayout({
           <DashboardNav user={user} />
         </Sidebar>
         <div className="flex flex-col flex-1">
-          <header className="p-2 md:p-4 border-b flex items-center justify-between lg:justify-end sticky top-0 bg-background z-10 gap-4">
+          <header className="p-2 md:p-4 border-b flex items-center sticky top-0 bg-background z-10 gap-4">
               <SidebarTrigger className="lg:hidden" />
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" asChild>
@@ -97,7 +97,7 @@ export default function DashboardLayout({
                     </Link>
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto">
                 <PushNotificationManager />
                 <NotificationBell />
                 <UserNav user={user} />
