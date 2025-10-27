@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useAuth, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, Timestamp, where, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, Timestamp, where, doc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,11 @@ import { formatDistanceToNow } from 'date-fns';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+
+type Post = {
+    authorId: string;
+    title: string;
+};
 
 type Comment = {
     id: string;
@@ -117,6 +122,24 @@ export function CommentsSection({ postId }: { postId: string }) {
                 title: 'Comment Added',
                 description: 'Your comment has been posted.',
             });
+
+            // Create notification for post author
+            const postRef = doc(firestore, 'posts', postId);
+            const postSnap = await getDoc(postRef);
+            if (postSnap.exists()) {
+                const postData = postSnap.data() as Post;
+                // Don't notify user if they comment on their own post
+                if (postData.authorId !== user.uid) {
+                    addDocumentNonBlocking(collection(firestore, 'notifications'), {
+                        userId: postData.authorId,
+                        message: `${user.displayName || 'Someone'} commented on your post: "${postData.title}"`,
+                        link: `/${postSnap.data().slug}`,
+                        isRead: false,
+                        createdAt: serverTimestamp(),
+                    });
+                }
+            }
+
         } catch (error: any) {
             toast({
                 variant: 'destructive',
@@ -162,3 +185,5 @@ export function CommentsSection({ postId }: { postId: string }) {
         </div>
     );
 }
+
+    

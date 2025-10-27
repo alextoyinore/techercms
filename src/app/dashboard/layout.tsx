@@ -13,6 +13,7 @@ import { doc } from "firebase/firestore";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { File, PlusCircle } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type UserRole = {
   role: 'superuser' | 'writer' | string;
@@ -95,7 +96,10 @@ export default function DashboardLayout({
                     </Link>
                 </Button>
               </div>
-              <UserNav user={user} />
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <UserNav user={user} />
+              </div>
           </header>
           <main className="flex-1 p-4 sm:p-6">{children}</main>
         </div>
@@ -103,3 +107,5 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
+
+    

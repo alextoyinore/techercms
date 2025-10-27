@@ -527,6 +527,21 @@
             "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the like was created." }
         },
         "required": ["postId", "userId", "createdAt"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents an in-app notification for a user.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the notification." },
+        "userId": { "type": "string", "description": "The ID of the user to be notified." },
+        "message": { "type": "string", "description": "The notification message." },
+        "link": { "type": "string", "description": "The URL the notification links to." },
+        "isRead": { "type": "boolean", "description": "Whether the user has read the notification.", "default": false },
+        "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the notification was created." }
+      },
+      "required": ["id", "userId", "message", "link", "isRead", "createdAt"]
     }
   },
   "auth": {
@@ -732,8 +747,18 @@
           "schema": { "$ref": "#/backend/entities/SectionBlock" },
           "description": "Stores instances of Block Layouts within page sections."
         }
+      },
+      {
+        "path": "/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": { "$ref": "#/backend/entities/Notification" },
+          "description": "Stores in-app notifications for users."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic. The `posts` collection now has subcollections for `comments` and `likes` to efficiently store and query engagement data scoped to each post."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic. The `posts` collection now has subcollections for `comments` and `likes` to efficiently store and query engagement data scoped to each post. A new top-level `notifications` collection is added to store user-specific alerts, which is efficient to query for a user's notification feed."
   }
 }
+
+    
