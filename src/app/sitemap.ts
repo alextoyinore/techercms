@@ -1,16 +1,25 @@
 
 import { MetadataRoute } from 'next';
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { firebaseConfig } from '@/firebase/config';
 
-// Initialize Firebase Admin SDK if not already initialized
+// Initialize Firebase Admin SDK
+// This configuration is now robust for Vercel deployments.
+// It will try to use service account credentials from environment variables,
+// falling back to a simpler projectId-based setup for local development.
 if (!getApps().length) {
   try {
-    // This will use the GCLOUD_PROJECT environment variable on App Hosting
-    initializeApp();
-  } catch (e: any) {
-    // Fallback for local development
+    // Vercel deployment: Use service account credentials from environment variables
+    const serviceAccount = JSON.parse(
+      process.env.FIREBASE_SERVICE_ACCOUNT_JSON as string
+    );
+    initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } catch (e) {
+    // Local development: Fallback to using the project ID
+    console.log('Falling back to local Firebase Admin SDK initialization.');
     initializeApp({
       projectId: firebaseConfig.projectId,
     });
