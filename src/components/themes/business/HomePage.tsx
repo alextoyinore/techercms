@@ -15,6 +15,7 @@ import { Menu } from '@/components/Menu';
 import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { PublicAuthNav } from '../PublicAuthNav';
+import { SubscriptionPopup } from '@/components/SubscriptionPopup';
 
 type Post = {
   id: string;
@@ -264,6 +265,7 @@ export default function HomePage() {
             )}
         </main>
         <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />
+        <SubscriptionPopup />
     </div>
   );
 }

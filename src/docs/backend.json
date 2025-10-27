@@ -379,7 +379,7 @@
         "type": {
           "type": "string",
           "description": "The type of widget to render (e.g., 'recent-posts', 'categories-list').",
-          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid", "big-featured", "audio-player"]
+          "enum": ["recent-posts", "categories-list", "tag-cloud", "search", "custom-html", "post-showcase", "image", "text", "gallery", "navigation-menu", "social-follow", "trading-ticker", "breaking-news", "live-score", "sporting-tables", "weather", "post-carousel", "featured-and-smalls", "tabbed-posts", "featured-and-list", "featured-top-and-grid", "big-featured", "audio-player", "subscription-form"]
         },
         "order": { "type": "number", "description": "The display order of the widget within its area." },
         "config": {
@@ -464,6 +464,7 @@
                     "video",
                     "testimonials",
                     "contact-form",
+                    "subscription-form",
                     "featured-top-and-grid",
                     "featured-and-list",
                     "big-featured",
@@ -542,6 +543,18 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the notification was created." }
       },
       "required": ["id", "userId", "message", "link", "isRead", "createdAt"]
+    },
+    "Subscription": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Subscription",
+        "type": "object",
+        "description": "Represents an email subscription.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the subscription." },
+            "email": { "type": "string", "format": "email", "description": "The subscriber's email address." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "The timestamp when the subscription was created." }
+        },
+        "required": ["id", "email", "createdAt"]
     }
   },
   "auth": {
@@ -755,10 +768,16 @@
           "schema": { "$ref": "#/backend/entities/Notification" },
           "description": "Stores in-app notifications for users."
         }
+      },
+      {
+        "path": "/subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "Subscription",
+          "schema": { "$ref": "#/backend/entities/Subscription" },
+          "description": "Stores email addresses of subscribers."
+        }
       }
     ],
-    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic. The `posts` collection now has subcollections for `comments` and `likes` to efficiently store and query engagement data scoped to each post. A new top-level `notifications` collection is added to store user-specific alerts, which is efficient to query for a user's notification feed."
+    "reasoning": "The data structure is designed to be simple and secure. Pages, Categories, Tags, Posts, and Media are stored in their own top-level collections. This approach is chosen for simplicity and ease of management in a CMS context. Authorization is simplified since all data is managed centrally. Security rules can be applied at the collection level to restrict creation, modification, or deletion based on user authentication. A single document in `site_settings` holds global config to avoid over-fetching. Widget areas and instances are separated into their own collections to allow for flexible management of theme layouts. Reusable navigation menus and their items are also stored in separate collections for modularity, following a similar pattern. A `custom_themes` collection is added to store user-specific theme customizations, with ownership enforced by an `authorId`. Two new collections, `page_layouts` and `block_layouts`, are added to store reusable page structures and content block configurations, enabling a modular approach to site design. The addition of `page_sections` and `section_blocks` provides the structure for a visual page builder, allowing complex layouts by nesting `BlockLayouts` inside `PageSections` which are tied to a specific `Page`. The `NavigationMenuItem` has been updated with a `parentId` to allow for hierarchical menu structures, enabling dropdowns and nested navigation. A single `users` collection now stores both public profile information and the user's role, simplifying the data model and authorization logic. The `posts` collection now has subcollections for `comments` and `likes` to efficiently store and query engagement data scoped to each post. A new top-level `notifications` collection is added to store user-specific alerts, which is efficient to query for a user's notification feed. A new `subscriptions` collection is added to store email addresses from users who subscribe to the newsletter."
   }
 }
-
-    

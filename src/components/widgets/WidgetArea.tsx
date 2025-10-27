@@ -24,20 +24,11 @@ import { FeaturedSmallsWidget } from '@/components/widgets/FeaturedSmallsWidget'
 import { TabbedPostsWidget } from '@/components/widgets/TabbedPostsWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AudioPlayerWidget } from './AudioPlayerWidget';
+import { SubscriptionWidget } from './SubscriptionWidget';
+import { FeaturedTopAndGridWidget } from './FeaturedTopAndGridWidget';
+import { FeaturedAndListWidget } from './FeaturedAndListWidget';
+import { BigFeaturedWidget } from './BigFeaturedWidget';
 
-type WidgetInstance = {
-    id: string;
-    widgetAreaId: string;
-    type: string;
-    order: number;
-    config?: any;
-};
-
-type WidgetArea = {
-    id: string;
-    name: string;
-    pageId?: string;
-}
 
 const widgetComponents: Record<string, React.FC<any>> = {
     'recent-posts': RecentPostsWidget,
@@ -60,7 +51,25 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'featured-and-smalls': FeaturedSmallsWidget,
     'tabbed-posts': TabbedPostsWidget,
     'audio-player': AudioPlayerWidget,
+    'subscription-form': SubscriptionWidget,
+    'featured-top-and-grid': FeaturedTopAndGridWidget,
+    'featured-and-list': FeaturedAndListWidget,
+    'big-featured': BigFeaturedWidget,
 };
+
+type WidgetInstance = {
+    id: string;
+    widgetAreaId: string;
+    type: string;
+    order: number;
+    config?: any;
+};
+
+type WidgetArea = {
+    id: string;
+    name: string;
+    pageId?: string;
+}
 
 export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaName: string, isPageSpecific?: boolean, pageId?: string }) {
     const firestore = useFirestore();

@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { Loader2, Plus, Trash2, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, X, Mail } from 'lucide-react';
 import { BlockLayout } from './BlockLayoutsView';
 import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +51,7 @@ import { FeaturedAndListPreview } from './previews/FeaturedAndListPreview';
 import { BigFeaturedPreview } from './previews/BigFeaturedPreview';
 import { Badge } from '@/components/ui/badge';
 import { AudioPlayerPreview } from './previews/AudioPlayerPreview';
+import { SubscriptionFormPreview } from './previews/SubscriptionFormPreview';
 
 type BlockLayoutBuilderProps = {
   isOpen: boolean;
@@ -79,6 +80,7 @@ type NewBlockType =
     | 'video'
     | 'testimonials'
     | 'contact-form'
+    | 'subscription-form'
     | 'audio-player';
 
 const initialConfig = {
@@ -97,6 +99,7 @@ const initialConfig = {
     'video': { videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
     'testimonials': { testimonials: [{ id: '1', author: 'Jane Doe', quote: 'This is a fantastic service!'}, {id: '2', author: 'John Smith', quote: 'I highly recommend this to everyone.'}] },
     'contact-form': { recipientEmail: 'you@example.com', submitButtonText: 'Send Message' },
+    'subscription-form': { title: 'Subscribe to our Newsletter', description: 'Get the latest updates.', buttonText: 'Subscribe' },
     'audio-player': { title: 'Listen to Articles', tag: 'audio' }
 }
 
@@ -117,6 +120,7 @@ const blockTypes: { value: NewBlockType, label: string, group: string }[] = [
     { value: 'audio-player', label: 'Audio Player', group: 'Media' },
     { value: 'testimonials', label: 'Testimonials', group: 'Content' },
     { value: 'contact-form', label: 'Contact Form', group: 'Utility' },
+    { value: 'subscription-form', label: 'Subscription Form', group: 'Utility' },
 ];
 
 export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLayoutBuilderProps) {
@@ -251,6 +255,23 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
   
   const renderConfigFields = () => {
     switch(type) {
+        case 'subscription-form':
+            return (
+                <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label>Title</Label>
+                        <Input value={config.title || ''} onChange={e => handleConfigChange({ title: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Description</Label>
+                        <Textarea value={config.description || ''} onChange={e => handleConfigChange({ description: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Button Text</Label>
+                        <Input value={config.buttonText || ''} onChange={e => handleConfigChange({ buttonText: e.target.value })} />
+                    </div>
+                </div>
+            );
         case 'audio-player':
             return (
                  <div className="grid gap-4">
@@ -676,6 +697,7 @@ export function BlockLayoutBuilder({ isOpen, setIsOpen, editingLayout }: BlockLa
                  {type === 'audio-player' && <AudioPlayerPreview config={config} />}
                  {type === 'testimonials' && <TestimonialsPreview config={config} />}
                  {type === 'contact-form' && <ContactFormPreview config={config} />}
+                 {type === 'subscription-form' && <SubscriptionFormPreview config={config} />}
             </div>
         </div>
         <SheetFooter>

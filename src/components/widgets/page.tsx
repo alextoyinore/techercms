@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github } from "lucide-react";
+import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Podcast, Mail } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, where, or, and } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
@@ -55,12 +56,16 @@ const availableWidgets = {
         { type: 'tag-cloud', name: 'Tag Cloud', description: 'A cloud of your most used tags.' },
         { type: 'post-showcase', name: 'Post Showcase', description: 'Display posts from a specific category or tag.' },
     ],
+    'Media': [
+        { type: 'audio-player', name: 'Audio Player', description: 'Plays a sequential list of posts with audio.', icon: Podcast },
+    ],
     'Navigation': [
         { type: 'navigation-menu', name: 'Navigation Menu', description: 'Display a reusable navigation menu.' },
     ],
     'Utility': [
         { type: 'search', name: 'Search', description: 'Display a search form.' },
         { type: 'weather', name: 'Weather', description: 'Display current weather for a location.' },
+        { type: 'subscription-form', name: 'Subscription Form', description: 'Display a newsletter subscription form.', icon: Mail },
     ],
     'Social': [
         { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
@@ -130,6 +135,8 @@ type WidgetInstance = {
     order: number;
     config?: {
         title?: string;
+        description?: string;
+        buttonText?: string;
         html?: string;
         text?: string;
         count?: number;
@@ -249,6 +256,7 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     const renderConfigFields = () => {
         switch (instance.type) {
              case 'post-showcase':
+             case 'breaking-news':
                 return (
                     <div className="grid gap-4">
                         <div className="grid gap-2">
@@ -314,32 +322,36 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 onChange={(e) => setConfig({ ...config, count: parseInt(e.target.value, 10) || 3 })}
                             />
                         </div>
-                         <div className="grid gap-2">
-                            <Label>Layout</Label>
-                            <Select
-                                value={config.layout || 'list'}
-                                onValueChange={(value) => setConfig({ ...config, layout: value })}
-                            >
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="list">List</SelectItem>
-                                    <SelectItem value="grid">Grid</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {config.layout === 'grid' && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="widget-grid-cols">Grid Columns</Label>
-                                <Input
-                                    id="widget-grid-cols"
-                                    type="number"
-                                    min="1"
-                                    max="6"
-                                    value={config.gridColumns || 2}
-                                    onChange={(e) => setConfig({ ...config, gridColumns: parseInt(e.target.value, 10) || 2 })}
-                                />
-                            </div>
-                        )}
+                         {instance.type === 'post-showcase' && (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label>Layout</Label>
+                                    <Select
+                                        value={config.layout || 'list'}
+                                        onValueChange={(value) => setConfig({ ...config, layout: value })}
+                                    >
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="list">List</SelectItem>
+                                            <SelectItem value="grid">Grid</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {config.layout === 'grid' && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="widget-grid-cols">Grid Columns</Label>
+                                        <Input
+                                            id="widget-grid-cols"
+                                            type="number"
+                                            min="1"
+                                            max="6"
+                                            value={config.gridColumns || 2}
+                                            onChange={(e) => setConfig({ ...config, gridColumns: parseInt(e.target.value, 10) || 2 })}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                         )}
                     </div>
                 );
             case 'text':
@@ -362,6 +374,38 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 placeholder="Enter your text content here."
                                 value={config.text || ''}
                                 onChange={(e) => setConfig({ ...config, text: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                );
+            case 'subscription-form':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Subscribe to our Newsletter"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="widget-description">Description</Label>
+                            <Textarea
+                                id="widget-description"
+                                placeholder="Get the latest news and updates."
+                                value={config.description || ''}
+                                onChange={(e) => setConfig({ ...config, description: e.target.value })}
+                            />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="widget-button-text">Button Text</Label>
+                            <Input
+                                id="widget-button-text"
+                                placeholder="Subscribe"
+                                value={config.buttonText || ''}
+                                onChange={(e) => setConfig({ ...config, buttonText: e.target.value })}
                             />
                         </div>
                     </div>
@@ -459,7 +503,6 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                         </div>
                     </div>
                 );
-            case 'breaking-news':
             case 'live-score':
             case 'sporting-tables':
                 return (
