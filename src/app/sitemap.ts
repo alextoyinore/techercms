@@ -6,9 +6,15 @@ import { firebaseConfig } from '@/firebase/config';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
+  try {
+    // This will use the GCLOUD_PROJECT environment variable on App Hosting
+    initializeApp();
+  } catch (e: any) {
+    // Fallback for local development
+    initializeApp({
+      projectId: firebaseConfig.projectId,
+    });
+  }
 }
 
 const db = getFirestore();
