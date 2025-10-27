@@ -21,24 +21,30 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isProd = process.env.NODE_ENV === 'production';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script
-          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-          strategy="afterInteractive"
-          defer
-        />
-        <Script id="onesignal-init" strategy="afterInteractive">
-          {`
-            window.OneSignalDeferred = window.OneSignalDeferred || [];
-            OneSignalDeferred.push(async function(OneSignal) {
-              await OneSignal.init({
-                appId: "651bdd75-5895-47da-b889-f10fa291b5d6",
-              });
-            });
-          `}
-        </Script>
+        {isProd && (
+          <>
+            <Script
+              src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+              strategy="afterInteractive"
+              defer
+            />
+            <Script id="onesignal-init" strategy="afterInteractive">
+              {`
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(async function(OneSignal) {
+                  await OneSignal.init({
+                    appId: "651bdd75-5895-47da-b889-f10fa291b5d6",
+                  });
+                });
+              `}
+            </Script>
+          </>
+        )}
       </head>
       <body>
         <FirebaseClientProvider>
