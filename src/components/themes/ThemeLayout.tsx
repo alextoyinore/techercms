@@ -5,6 +5,7 @@ import { WidgetArea } from '@/components/widgets/WidgetArea';
 import Link from 'next/link';
 import { doc } from 'firebase/firestore';
 import { Menu } from '@/components/Menu';
+import { SubscriptionPopup } from '@/components/SubscriptionPopup';
 
 type SiteSettings = {
     siteName?: string;
@@ -86,6 +87,7 @@ export function ThemeLayout({ children, HeaderComponent, FooterComponent, pageId
             </main>
              <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
             <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} FooterComponent={FooterComponent} />
+            <SubscriptionPopup />
         </div>
     )
 }

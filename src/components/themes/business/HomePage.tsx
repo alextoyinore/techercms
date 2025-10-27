@@ -16,6 +16,7 @@ import { SearchForm } from '../SearchForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { PublicAuthNav } from '../PublicAuthNav';
 import { SubscriptionPopup } from '@/components/SubscriptionPopup';
+import { ThemeLayout } from '../ThemeLayout';
 
 type Post = {
   id: string;
@@ -185,87 +186,85 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-background text-foreground font-sans">
-        <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />
-        <main className="container mx-auto py-8 px-4 min-h-screen-[calc(100vh-120px)]">
-            
-            {!hasContent ? (
-                <div className="text-center py-24">
-                    <p className="text-muted-foreground mt-4">You are here because we've detected a slow internet connection. You will be automatically redirected from this page once your internet is better. Otherwise, kindly refresh your browsere.</p>
-                </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
-                <div className="lg:col-span-8">
-                    {heroPost && (
-                        <div className="pb-6 border-b">
-                            <h1 className="font-black font-headline text-4xl lg:text-5xl leading-tight mb-4 hover:underline">
-                                <Link href={`/${heroPost.slug}`}>{heroPost.title}</Link>
-                            </h1>
-                            <p className="text-lg text-muted-foreground mb-4">{heroPost.excerpt}</p>
-                             {heroPost.featuredImageUrl && (
-                                <Link href={`/${heroPost.slug}`}>
-                                    <div className="relative aspect-video w-full overflow-hidden">
-                                        <Image
-                                            src={heroPost.featuredImageUrl}
-                                            alt={heroPost.title}
-                                            fill
-                                            className="object-cover"
-                                            priority
-                                        />
-                                    </div>
-                                </Link>
-                            )}
-                        </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-6">
-                        {topStories.map(post => <PostCard key={post.id} post={post} />)}
+    <ThemeLayout 
+        HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
+        FooterComponent={() => <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />}
+        className="bg-background text-foreground font-sans"
+    >
+        {hasContent ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
+            <div className="lg:col-span-8">
+                {heroPost && (
+                    <div className="pb-6 border-b">
+                        <h1 className="font-black font-headline text-4xl lg:text-5xl leading-tight mb-4 hover:underline">
+                            <Link href={`/${heroPost.slug}`}>{heroPost.title}</Link>
+                        </h1>
+                        <p className="text-lg text-muted-foreground mb-4">{heroPost.excerpt}</p>
+                         {heroPost.featuredImageUrl && (
+                            <Link href={`/${heroPost.slug}`}>
+                                <div className="relative aspect-video w-full overflow-hidden">
+                                    <Image
+                                        src={heroPost.featuredImageUrl}
+                                        alt={heroPost.title}
+                                        fill
+                                        className="object-cover"
+                                        priority
+                                    />
+                                </div>
+                            </Link>
+                        )}
                     </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-6">
+                    {topStories.map(post => <PostCard key={post.id} post={post} />)}
                 </div>
-                <aside className="lg:col-span-4 space-y-8">
-                  <div className="space-y-4">
-                      <h2 className="font-bold text-lg border-b-2 border-primary pb-2">Latest</h2>
-                      <ul className="space-y-3">
-                          {latestStories.map(post => (
-                              <li key={post.id} className="border-b pb-3 last:border-0">
-                                  <h4 className="font-semibold hover:underline leading-tight">
-                                      <Link href={`/${post.slug}`}>{post.title}</Link>
-                                  </h4>
-                                   <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM/dd')}`}>
-                                        <time className="text-xs text-muted-foreground/70 mt-1 block hover:underline">
-                                            {format(post.createdAt.toDate(), 'h:mm a')}
-                                        </time>
-                                   </Link>
-                              </li>
-                          ))}
-                      </ul>
-                  </div>
-                  <WidgetArea areaName="Sidebar" />
-                </aside>
-
-                <div className="lg:col-span-12 mt-8 pt-8 border-t">
-                  <h2 className="font-bold text-2xl border-b-2 border-primary pb-2 mb-6 flex items-center gap-2">
-                    <TrendingUp />
-                    Market Movers
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                    {moreStories.map(post => (
-                       <div key={post.id} className="group">
-                           <h4 className="font-semibold hover:underline leading-tight text-sm">
-                               <Link href={`/${post.slug}`}>{post.title}</Link>
-                           </h4>
-                           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
-                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="lg:col-span-12 mt-8">
-                  <WidgetArea areaName="Homepage Content" />
-                </div>
+            </div>
+            <aside className="lg:col-span-4 space-y-8">
+              <div className="space-y-4">
+                  <h2 className="font-bold text-lg border-b-2 border-primary pb-2">Latest</h2>
+                  <ul className="space-y-3">
+                      {latestStories.map(post => (
+                          <li key={post.id} className="border-b pb-3 last:border-0">
+                              <h4 className="font-semibold hover:underline leading-tight">
+                                  <Link href={`/${post.slug}`}>{post.title}</Link>
+                              </h4>
+                               <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM/dd')}`}>
+                                    <time className="text-xs text-muted-foreground/70 mt-1 block hover:underline">
+                                        {format(post.createdAt.toDate(), 'h:mm a')}
+                                    </time>
+                               </Link>
+                          </li>
+                      ))}
+                  </ul>
               </div>
-            )}
-        </main>
-        <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />
-        <SubscriptionPopup />
-    </div>
+              <WidgetArea areaName="Sidebar" />
+            </aside>
+
+            <div className="lg:col-span-12 mt-8 pt-8 border-t">
+              <h2 className="font-bold text-2xl border-b-2 border-primary pb-2 mb-6 flex items-center gap-2">
+                <TrendingUp />
+                Market Movers
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                {moreStories.map(post => (
+                   <div key={post.id} className="group">
+                       <h4 className="font-semibold hover:underline leading-tight text-sm">
+                           <Link href={`/${post.slug}`}>{post.title}</Link>
+                       </h4>
+                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{post.excerpt}</p>
+                   </div>
+                ))}
+              </div>
+            </div>
+            <div className="lg:col-span-12 mt-8">
+              <WidgetArea areaName="Homepage Content" />
+            </div>
+          </div>
+        ) : (
+            <div className="text-center py-24">
+                <p className="text-muted-foreground mt-4">You are here because we've detected a slow internet connection. You will be automatically redirected from this page once your internet is better. Otherwise, kindly refresh your browsere.</p>
+            </div>
+        )}
+    </ThemeLayout>
   );
 }
