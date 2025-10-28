@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { PaginationControls } from "@/components/pagination-controls";
 import { Switch } from "@/components/ui/switch";
+import { BreakingNewsIndicator } from "@/components/BreakingNewsIndicator";
 
 type Post = {
     id: string;
@@ -250,7 +251,12 @@ export default function PostsPage() {
                             <div className="h-10 w-[60px] bg-muted rounded-sm" />
                         )}
                     </TableCell>
-                  <TableCell className="font-medium">{post.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {post.isBreaking && <BreakingNewsIndicator />}
+                      <span>{post.title}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={post.status === "published" ? "default" : "secondary"}>
                       {post.status}

@@ -25,6 +25,7 @@ import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
 import { RelatedPostCard } from '../RelatedPostCard';
+import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
 
 type Post = {
   id: string;
@@ -34,6 +35,7 @@ type Post = {
   authorId: string;
   featuredImageUrl: string;
   createdAt: Timestamp;
+  isBreaking?: boolean;
   tagIds?: string[];
   metaDescription?: string;
   excerpt?: string;
@@ -205,7 +207,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                   <div className="lg:col-span-3">
                       <article className="max-w-none" ref={articleRef}>
                       <header className="mb-8">
-                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4">{item.title}</h1>}
+                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 flex items-center gap-4">{(item as Post).isBreaking && <BreakingNewsIndicator />} {item.title}</h1>}
                           <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4 flex-wrap">
                             <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                 <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
