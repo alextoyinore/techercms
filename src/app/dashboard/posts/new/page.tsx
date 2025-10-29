@@ -111,13 +111,14 @@ export default function NewPostPage() {
   useEffect(() => {
     const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
     const interval = setInterval(() => {
-      if (title.trim() && !isSubmitting && savedPostId) {
+      // Only auto-save if a title has been entered.
+      if (title.trim() && !isSubmitting) {
         handleSave('draft', false); // Autosave is a non-UI blocking save
       }
     }, autoSaveIntervalMinutes * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [title, isSubmitting, savedPostId, settings]);
+  }, [title, isSubmitting, settings, handleSave]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
@@ -263,7 +264,7 @@ export default function NewPostPage() {
     }
 
     if (!isManualSave) { // This is an auto-save
-        setIsSubmitting(true); // show subtle loading indicator
+        setIsSubmitting(true);
     } else { // This is a manual save from button click
         setIsSubmitting(true);
         setSubmissionStatus(status);
@@ -308,6 +309,23 @@ export default function NewPostPage() {
       
       if (!savedPostId) {
         setSavedPostId(postRef.id); // Store the ID for future auto-saves
+         if (isManualSave) {
+          router.push(`/dashboard/posts/edit/${postRef.id}`);
+        } else {
+          // It was an auto-save of a new post, redirect to edit page
+          toast({
+            title: 'Draft Auto-Saved',
+            description: 'Continuing will auto-save your work.',
+            action: (
+              <ToastAction
+                altText="Edit Post"
+                onClick={() => router.push(`/dashboard/posts/edit/${postRef.id}`)}
+              >
+                Edit
+              </ToastAction>
+            ),
+          });
+        }
       }
 
       if (isManualSave) {
@@ -315,7 +333,11 @@ export default function NewPostPage() {
             title: `Post ${status === 'published' ? 'Published' : 'Saved'}`,
             description: `Your post "${title}" has been successfully saved.`,
         });
-        router.push(`/dashboard/posts/edit/${postRef.id}`);
+        if (savedPostId) {
+            // No redirect if it's just an update
+        } else {
+            router.push(`/dashboard/posts/edit/${postRef.id}`);
+        }
       } else {
          toast({ description: "Draft auto-saved.", duration: 2000 });
       }
@@ -689,5 +711,3 @@ export default function NewPostPage() {
     </div>
   );
 }
-
-    
