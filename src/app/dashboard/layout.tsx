@@ -1,11 +1,11 @@
 
 'use client';
 
-import { Sidebar, SidebarFooter, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { Loading } from "@/components/loading";
@@ -17,8 +17,17 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
 
 type UserRole = {
-  role: 'superuser' | 'writer' | string;
+  role: 'superuser' | 'writer' | 'editor' | 'subscriber';
 };
+
+const adminOnlyPaths = [
+  '/dashboard/layouts',
+  '/dashboard/widgets',
+  '/dashboard/navigation',
+  '/dashboard/users',
+  '/dashboard/settings',
+  '/dashboard/themes',
+];
 
 export default function DashboardLayout({
   children,
@@ -29,6 +38,7 @@ export default function DashboardLayout({
   const firestore = useFirestore();
   const [user, authLoading, authError] = useAuthState(auth);
   const router = useRouter();
+  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
 
   const userRef = useMemoFirebase(() => {
@@ -43,33 +53,43 @@ export default function DashboardLayout({
     setIsClient(true);
   }, []);
 
+  const isAccessingAdminPage = adminOnlyPaths.some(p => pathname.startsWith(p));
+
+  // Primary loading state check
+  const isLoading = authLoading || roleLoading || !isClient;
+  
   useEffect(() => {
-    if (authLoading || roleLoading || !isClient) return;
+    if (isLoading) return;
 
     if (!user) {
       router.push('/');
       return;
     }
     
-    const allowedRoles = ['superuser', 'writer', 'editor', 'subscriber'];
-    if (!userRole || !allowedRoles.includes(userRole)) {
-        router.push('/');
+    // If user data is loaded and they are trying to access an admin page without the superuser role
+    if (userData && isAccessingAdminPage && userRole !== 'superuser') {
+        router.push('/dashboard');
     }
 
-  }, [authLoading, roleLoading, user, userRole, router, isClient]);
-
-  const isLoading = authLoading || roleLoading || !isClient;
-  const isAuthorized = user && userRole && ['superuser', 'writer', 'editor', 'subscriber'].includes(userRole);
+  }, [isLoading, user, userData, userRole, isAccessingAdminPage, router]);
 
 
   if (isLoading) {
     return <Loading />;
   }
   
-  if (!isAuthorized) {
+  // If user is not authenticated after loading, they will be redirected by the effect above.
+  // Render loading to prevent flashing content during redirect.
+  if (!user) {
+     return <Loading />;
+  }
+  
+  // If the user's role is loaded, but they are not a superuser and are trying to access an admin page
+  if (userData && isAccessingAdminPage && userRole !== 'superuser') {
+    // The redirect has been initiated. Show a loading screen to prevent flashing the unauthorized page content.
     return <Loading />;
   }
-
+  
   if (authError) {
     return <div>Error: {authError.message}</div>;
   }

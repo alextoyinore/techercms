@@ -39,10 +39,7 @@ import { collection, doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter } from 'next/navigation';
 import { PaginationControls } from '@/components/pagination-controls';
-import { Loading } from '@/components/loading';
 
 type User = {
   id: string;
@@ -58,8 +55,6 @@ export default function UsersPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const [currentUser, authLoading] = useAuthState(auth);
-  const router = useRouter();
 
   const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -73,23 +68,6 @@ export default function UsersPage() {
 
   const usersCollection = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
   const { data: allUsers, isLoading: isLoadingUsers } = useCollection<User>(usersCollection);
-  
-  const currentUserDocRef = useMemoFirebase(() => {
-    if (!firestore || !currentUser) return null;
-    return doc(firestore, 'users', currentUser.uid);
-  }, [firestore, currentUser]);
-  
-  const { data: currentUserData, isLoading: userLoading } = useDoc<User>(currentUserDocRef);
-
-  useEffect(() => {
-    // Wait until both auth and user data loading are complete
-    if (!authLoading && !userLoading) {
-      // If loading is done and the user is not a superuser, then redirect
-      if (currentUserData?.role !== 'superuser') {
-        router.push('/dashboard');
-      }
-    }
-  }, [authLoading, userLoading, currentUserData, router]);
 
   const filteredUsers = useMemo(() => {
     if (!allUsers) return [];
@@ -110,15 +88,6 @@ export default function UsersPage() {
     if (!filteredUsers) return 1;
     return Math.ceil(filteredUsers.length / pageSize);
   }, [filteredUsers, pageSize]);
-
-
-  if (authLoading || userLoading) {
-    return <Loading />;
-  }
-  
-  if (currentUserData?.role !== 'superuser') {
-    return <Loading />; // Show loading while redirecting
-  }
 
   const handleCreateUser = async () => {
     if (!newEmail || !newPassword) {
@@ -260,7 +229,7 @@ export default function UsersPage() {
                       <Select 
                           value={user.role} 
                           onValueChange={(value) => handleRoleChange(user.id, value as User['role'])}
-                          disabled={user.id === currentUser?.uid}
+                          disabled={user.id === auth.currentUser?.uid}
                       >
                           <SelectTrigger className="w-32">
                               <SelectValue />

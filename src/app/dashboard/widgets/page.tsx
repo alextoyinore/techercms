@@ -17,7 +17,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Podcast, Mail } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useAuth, useDoc } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, where, or, and } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -35,9 +35,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useRouter } from 'next/navigation';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { Loading } from '@/components/loading';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -130,10 +127,6 @@ type NavigationMenu = {
     id: string;
     name: string;
 }
-
-type UserRole = {
-  role: 'superuser' | 'writer' | string;
-};
 
 type WidgetInstance = {
     id: string;
@@ -761,16 +754,6 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [activeItem, setActiveItem] = useState<any>(null);
-    const auth = useAuth();
-    const [currentUser, authLoading] = useAuthState(auth);
-    const router = useRouter();
-
-    const userRef = useMemoFirebase(() => {
-        if (!firestore || !currentUser) return null;
-        return doc(firestore, 'users', currentUser.uid);
-    }, [firestore, currentUser]);
-
-    const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
     const areasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -1029,24 +1012,6 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     const pageDescription = pageId 
         ? "Manage widgets specifically for this page. These will override theme-wide widgets in the same areas."
         : "Manage widgets for your entire site. These appear in areas defined by your active theme.";
-
-    useEffect(() => {
-        // Wait until both auth and user data loading are complete
-        if (!pageId && !authLoading && !userLoading) {
-          // If loading is done and the user is not a superuser, then redirect
-          if (userData?.role !== 'superuser') {
-            router.push('/dashboard');
-          }
-        }
-    }, [pageId, authLoading, userLoading, userData, router]);
-    
-    if (!pageId && (authLoading || userLoading)) {
-        return <Loading />;
-    }
-    
-    if (!pageId && userData?.role !== 'superuser') {
-        return <Loading />; // Show loading while redirecting
-    }
 
     return (
         <DndContext 

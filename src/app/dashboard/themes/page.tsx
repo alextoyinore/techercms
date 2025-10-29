@@ -32,8 +32,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter } from 'next/navigation';
-import { Loading } from '@/components/loading';
 
 const builtInWebsiteThemes = [
     {
@@ -69,7 +67,7 @@ type CustomTheme = {
 };
 
 type UserRole = {
-  role: 'superuser' | 'writer' | string;
+  role: 'superuser' | 'writer' | 'editor' | 'subscriber';
 };
 
 
@@ -77,8 +75,7 @@ export default function ThemesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const auth = useAuth();
-    const [currentUser, authLoading] = useAuthState(auth);
-    const router = useRouter();
+    const [user] = useAuthState(auth);
     const [isActivatingWebsiteTheme, setIsActivatingWebsiteTheme] = useState<string | null>(null);
 
     const { 
@@ -92,11 +89,12 @@ export default function ThemesPage() {
     const [isActivatingDashboard, setIsActivatingDashboard] = useState<string | null>(null);
 
     const userRef = useMemoFirebase(() => {
-        if (!firestore || !currentUser) return null;
-        return doc(firestore, 'users', currentUser.uid);
-    }, [firestore, currentUser]);
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
 
-    const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
+    const { data: userData } = useDoc<UserRole>(userRef);
+    const isSuperuser = userData?.role === 'superuser';
 
     const settingsRef = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -118,12 +116,6 @@ export default function ThemesPage() {
             setActiveWebsiteTheme(settings.activeTheme);
         }
     }, [settings]);
-
-    const isSuperuser = userData?.role === 'superuser';
-
-    if (authLoading || userLoading) {
-      return <Loading />;
-    }
 
     const handleActivateWebsiteTheme = async (themeName: string, isCustom: boolean) => {
         if (!firestore) {
