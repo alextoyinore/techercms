@@ -31,6 +31,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter } from 'next/navigation';
 
 const builtInWebsiteThemes = [
     {
@@ -65,10 +67,17 @@ type CustomTheme = {
   baseTheme: string;
 };
 
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
+};
+
+
 export default function ThemesPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const auth = useAuth();
+    const [currentUser, authLoading] = useAuthState(auth);
+    const router = useRouter();
     const [isActivatingWebsiteTheme, setIsActivatingWebsiteTheme] = useState<string | null>(null);
 
     const { 
@@ -80,6 +89,13 @@ export default function ThemesPage() {
     } = useTheme();
 
     const [isActivatingDashboard, setIsActivatingDashboard] = useState<string | null>(null);
+
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !currentUser) return null;
+        return doc(firestore, 'users', currentUser.uid);
+    }, [firestore, currentUser]);
+
+    const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
     const settingsRef = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -101,6 +117,11 @@ export default function ThemesPage() {
             setActiveWebsiteTheme(settings.activeTheme);
         }
     }, [settings]);
+
+    if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+        router.push('/dashboard');
+        return null;
+    }
 
     const handleActivateWebsiteTheme = async (themeName: string, isCustom: boolean) => {
         if (!firestore) {
@@ -387,6 +408,3 @@ export default function ThemesPage() {
     </div>
   );
 }
-
-    
-    

@@ -47,14 +47,14 @@ const navItems = [
     { href: "/dashboard/media", icon: ImageIcon, label: "Media", requiredRole: null },
     { href: "/dashboard/categories", icon: Folder, label: "Categories", requiredRole: null },
     { href: "/dashboard/tags", icon: Tag, label: "Tags", requiredRole: null },
-    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes", requiredRole: null },
-    { href: "/dashboard/layouts", icon: LayoutGrid, label: "Layouts", requiredRole: null },
-    { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets", requiredRole: null },
-    { href: "/dashboard/navigation", icon: Menu, label: "Navigation", requiredRole: null },
+    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes", requiredRole: 'superuser' },
+    { href: "/dashboard/layouts", icon: LayoutGrid, label: "Layouts", requiredRole: 'superuser' },
+    { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets", requiredRole: 'superuser' },
+    { href: "/dashboard/navigation", icon: Menu, label: "Navigation", requiredRole: 'superuser' },
     { href: "/dashboard/seo-analyzer", icon: Sparkles, label: "SEO Analyzer", requiredRole: null },
     { href: "/dashboard/users", icon: Users, label: "Users", requiredRole: 'superuser' },
     { href: "/dashboard/profile", icon: UserIcon, label: "Profile", requiredRole: null },
-    { href: "/dashboard/settings", icon: Settings, label: "Settings", requiredRole: null },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings", requiredRole: 'superuser' },
 ];
 
 export function DashboardNav({ user }: { user: FirebaseUser | null }) {

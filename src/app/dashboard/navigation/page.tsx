@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import {
   collection,
   doc,
@@ -59,7 +59,8 @@ import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, Pointer
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-
+import { useRouter } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 type NavigationMenu = {
   id: string;
@@ -90,6 +91,10 @@ type Category = {
 
 type SiteSettings = {
     menuAssignments?: Record<string, string>;
+};
+
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
 };
 
 type MenuItemWithChildren = NavigationMenuItem & { children: MenuItemWithChildren[] };
@@ -614,6 +619,16 @@ export default function NavigationPage() {
   const { toast } = useToast();
   const [newMenuName, setNewMenuName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const auth = useAuth();
+  const [currentUser, authLoading] = useAuthState(auth);
+  const router = useRouter();
+
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !currentUser) return null;
+    return doc(firestore, 'users', currentUser.uid);
+  }, [firestore, currentUser]);
+
+  const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
   const menusQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -635,6 +650,11 @@ export default function NavigationPage() {
         setAssignments(settings.menuAssignments);
     }
   }, [settings]);
+
+  if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+    router.push('/dashboard');
+    return null;
+  }
 
   const handleAddMenu = async () => {
     if (!newMenuName.trim() || !firestore) return;

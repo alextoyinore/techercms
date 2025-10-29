@@ -1,11 +1,37 @@
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageLayoutsView } from './PageLayoutsView';
 import { BlockLayoutsView } from './BlockLayoutsView';
+import { useAuth, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
+};
 
 export default function LayoutsPage() {
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const [currentUser, authLoading] = useAuthState(auth);
+  const router = useRouter();
+
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !currentUser) return null;
+    return doc(firestore, 'users', currentUser.uid);
+  }, [firestore, currentUser]);
+
+  const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
+
+  if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+    router.push('/dashboard');
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

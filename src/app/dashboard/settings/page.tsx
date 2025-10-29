@@ -23,7 +23,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useAuth } from '@/firebase';
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
@@ -33,6 +33,8 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { MediaLibrary } from '@/components/media-library';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter } from 'next/navigation';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -54,9 +56,16 @@ type Page = {
     title: string;
 }
 
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
+};
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
+  const [currentUser, authLoading] = useAuthState(auth);
+  const router = useRouter();
   
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   
@@ -70,6 +79,13 @@ export default function SettingsPage() {
   const [timezone, setTimezone] = useState<string>('');
   const [hideAllPageTitles, setHideAllPageTitles] = useState(false);
   const [autoSaveInterval, setAutoSaveInterval] = useState(5);
+
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !currentUser) return null;
+    return doc(firestore, 'users', currentUser.uid);
+  }, [firestore, currentUser]);
+
+  const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -109,6 +125,11 @@ export default function SettingsPage() {
       }
     }
   }, [settings, isLoadingSettings]);
+
+  if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+    router.push('/dashboard');
+    return null;
+  }
 
   const handleSaveSettings = async () => {
     if (!firestore) {
@@ -289,5 +310,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

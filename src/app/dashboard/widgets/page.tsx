@@ -16,8 +16,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Podcast } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { GripVertical, X, Cog, Library, Trash2, Plus, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Podcast, Mail } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase, useAuth, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, setDoc, query, where, or, and } from 'firebase/firestore';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay, useDraggable, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -35,6 +35,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useRouter } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -65,6 +67,7 @@ const availableWidgets = {
     'Utility': [
         { type: 'search', name: 'Search', description: 'Display a search form.' },
         { type: 'weather', name: 'Weather', description: 'Display current weather for a location.' },
+        { type: 'subscription-form', name: 'Subscription Form', description: 'Display a newsletter subscription form.', icon: Mail },
     ],
     'Social': [
         { type: 'social-follow', name: 'Social Follow', description: 'Display links to your social media profiles.' },
@@ -127,6 +130,10 @@ type NavigationMenu = {
     name: string;
 }
 
+type UserRole = {
+  role: 'superuser' | 'writer' | string;
+};
+
 type WidgetInstance = {
     id: string;
     widgetAreaId: string;
@@ -134,6 +141,8 @@ type WidgetInstance = {
     order: number;
     config?: {
         title?: string;
+        description?: string;
+        buttonText?: string;
         html?: string;
         text?: string;
         count?: number;
@@ -371,6 +380,38 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                                 placeholder="Enter your text content here."
                                 value={config.text || ''}
                                 onChange={(e) => setConfig({ ...config, text: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                );
+            case 'subscription-form':
+                return (
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="widget-title">Title</Label>
+                            <Input
+                                id="widget-title"
+                                placeholder="Subscribe to our Newsletter"
+                                value={config.title || ''}
+                                onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                            />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="widget-description">Description</Label>
+                            <Textarea
+                                id="widget-description"
+                                placeholder="Get the latest news and updates."
+                                value={config.description || ''}
+                                onChange={(e) => setConfig({ ...config, description: e.target.value })}
+                            />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="widget-button-text">Button Text</Label>
+                            <Input
+                                id="widget-button-text"
+                                placeholder="Subscribe"
+                                value={config.buttonText || ''}
+                                onChange={(e) => setConfig({ ...config, buttonText: e.target.value })}
                             />
                         </div>
                     </div>
@@ -719,6 +760,16 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [activeItem, setActiveItem] = useState<any>(null);
+    const auth = useAuth();
+    const [currentUser, authLoading] = useAuthState(auth);
+    const router = useRouter();
+
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !currentUser) return null;
+        return doc(firestore, 'users', currentUser.uid);
+    }, [firestore, currentUser]);
+
+    const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
     const areasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -969,6 +1020,11 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
                 </SortableContext>
             </div>
         );
+    }
+
+    if (!pageId && !authLoading && !userLoading && userData?.role !== 'superuser') {
+        router.push('/dashboard');
+        return null;
     }
 
     const allWidgets = Object.values(availableWidgets).flat();
