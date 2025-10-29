@@ -46,6 +46,7 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'featured-and-list', label: 'Featured & List', icon: Rows, defaultConfig: { title: 'Latest' } },
     { type: 'big-featured', label: 'Big Featured', icon: RectangleHorizontal, defaultConfig: { title: 'Featured Story' } },
     { type: 'tabbed-posts', label: 'Tabbed Posts', icon: PanelTop, defaultConfig: { title: '' } },
+    { type: 'chart', label: 'Chart', icon: BarChart, defaultConfig: { title: 'Chart' } },
     { type: 'categories-list', label: 'Categories List', icon: List, defaultConfig: { title: 'Categories' } },
     { type: 'search', label: 'Search', icon: Search, defaultConfig: { title: 'Search' } },
     { type: 'tag-cloud', label: 'Tag Cloud', icon: Cloud, defaultConfig: { title: 'Tag Cloud' } },
@@ -63,4 +64,3 @@ export const availableWidgets: Omit<Widget, 'id' | 'areaName' | 'config'>[] = [
     { type: 'sporting-tables', label: 'Sporting Tables', icon: BarChart, defaultConfig: { title: 'League Standings' } },
     { type: 'weather', label: 'Weather', icon: CloudSun, defaultConfig: { title: 'Weather', location: 'New York, NY' } },
 ];
-

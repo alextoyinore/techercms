@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
@@ -26,6 +27,7 @@ import { ReadingProgress } from '@/components/ReadingProgress';
 import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
 import { RelatedPostCard } from '../RelatedPostCard';
 import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
+import { ChartWidget } from '@/components/widgets/ChartWidget';
 
 type Post = {
   id: string;
@@ -64,10 +66,19 @@ type SiteSettings = {
 
 const parserOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
-        if (domNode instanceof Element && domNode.attribs && domNode.attribs['data-type'] === 'related-post') {
-            const postId = domNode.attribs['data-id'];
-            if (postId) {
-                return <RelatedPostCard postId={postId} />;
+        if (domNode instanceof Element && domNode.attribs) {
+            if (domNode.attribs['data-type'] === 'related-post') {
+                const postId = domNode.attribs['data-id'];
+                if (postId) {
+                    return <RelatedPostCard postId={postId} />;
+                }
+            }
+            if (domNode.attribs['data-type'] === 'chart-widget') {
+                const chartId = domNode.attribs['data-chart-id'];
+                const chartName = domNode.attribs['data-chart-name'];
+                if (chartId) {
+                    return <ChartWidget chartId={chartId} title={chartName} />;
+                }
             }
         }
     },

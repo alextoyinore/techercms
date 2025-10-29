@@ -43,6 +43,7 @@ import {
   RectangleHorizontal,
   Link as LinkIcon,
   Link2,
+  BarChart,
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
@@ -53,6 +54,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
+import { ChartWidget } from './widgets/ChartWidget';
 
 // Custom Tiptap Node for Related Post
 const RelatedPostNode = Node.create({
@@ -115,11 +117,71 @@ const RelatedPostNode = Node.create({
   },
 });
 
+const ChartNode = Node.create({
+  name: 'chartWidget',
+  group: 'block',
+  atom: true,
+  
+  addAttributes() {
+    return {
+      'data-chart-id': { default: null },
+      'data-chart-name': { default: 'Chart' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="chart-widget"]' }];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', { ...HTMLAttributes, 'data-type': 'chart-widget' }];
+  },
+  
+  addNodeView() {
+    return ({ node }) => {
+      const { 'data-chart-name': name } = node.attrs;
+      const dom = document.createElement('div');
+      dom.setAttribute('data-type', 'chart-widget');
+      dom.className = 'my-4 p-3 rounded-md border border-dashed flex items-center gap-2 bg-muted/50 cursor-default';
+      
+      const icon = document.createElement('span');
+      icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>`;
+      icon.className = 'text-muted-foreground';
+      
+      const text = document.createElement('span');
+      text.className = 'text-sm font-medium text-muted-foreground';
+      text.textContent = `Chart: ${name}`;
+
+      dom.append(icon, text);
+      return { dom };
+    };
+  },
+
+  addCommands() {
+    return {
+      setChartWidget: (options) => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: { 
+            'data-chart-id': options.id,
+            'data-chart-name': options.name,
+          },
+        });
+      },
+    };
+  },
+});
+
 
 type Post = {
   id: string;
   title: string;
   slug: string;
+};
+
+type ChartData = {
+    id: string;
+    name: string;
 };
 
 const PostPicker = ({ onSelectPost }: { onSelectPost: (post: Post) => void }) => {
@@ -167,6 +229,52 @@ const PostPicker = ({ onSelectPost }: { onSelectPost: (post: Post) => void }) =>
     )
 }
 
+const ChartPicker = ({ onSelectChart }: { onSelectChart: (chart: ChartData) => void }) => {
+    const firestore = useFirestore();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const chartsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'charts'));
+    }, [firestore]);
+
+    const { data: charts, isLoading } = useCollection<ChartData>(chartsQuery);
+
+    const filteredCharts = useMemo(() => {
+        if (!charts) return [];
+        if (!searchTerm) return charts;
+        return charts.filter(chart => chart.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }, [charts, searchTerm]);
+
+    return (
+        <div className="flex flex-col gap-4">
+            <Input 
+                placeholder="Search charts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <ScrollArea className="h-64 border rounded-md">
+                <div className="p-2">
+                    {isLoading && <p className="text-sm text-muted-foreground p-2">Loading charts...</p>}
+                    {!isLoading && filteredCharts.map(chart => (
+                        <div 
+                            key={chart.id}
+                            className="p-2 rounded-md hover:bg-accent cursor-pointer"
+                            onClick={() => onSelectChart(chart)}
+                        >
+                            <p className="font-medium text-sm">{chart.name}</p>
+                        </div>
+                    ))}
+                    {!isLoading && filteredCharts.length === 0 && (
+                         <p className="text-sm text-muted-foreground p-2 text-center">No charts found.</p>
+                    )}
+                </div>
+            </ScrollArea>
+        </div>
+    )
+}
+
+
 const RichTextEditor = ({
   content,
   onChange,
@@ -206,6 +314,7 @@ const RichTextEditor = ({
         openOnClick: false,
       }),
       RelatedPostNode,
+      ChartNode,
     ],
     content: content,
     editorProps: {
@@ -222,6 +331,7 @@ const RichTextEditor = ({
 
   const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
   const [isPostPickerOpen, setIsPostPickerOpen] = useState(false);
+  const [isChartPickerOpen, setIsChartPickerOpen] = useState(false);
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
@@ -257,6 +367,13 @@ const RichTextEditor = ({
     if (editor && post) {
         editor.chain().focus().setRelatedPost({ id: post.id, slug: post.slug, title: post.title }).run();
         setIsPostPickerOpen(false);
+    }
+  }, [editor]);
+  
+  const addChart = useCallback((chart: ChartData) => {
+    if (editor && chart) {
+        editor.chain().focus().setChartWidget({ id: chart.id, name: chart.name }).run();
+        setIsChartPickerOpen(false);
     }
   }, [editor]);
 
@@ -426,6 +543,19 @@ const RichTextEditor = ({
                     <DialogTitle>Insert Related Post</DialogTitle>
                 </DialogHeader>
                 <PostPicker onSelectPost={addRelatedPost} />
+            </DialogContent>
+        </Dialog>
+         <Dialog open={isChartPickerOpen} onOpenChange={setIsChartPickerOpen}>
+            <DialogTrigger asChild>
+                <Toggle size="sm" disabled={disabled} aria-label="Insert Chart">
+                    <BarChart className="h-4 w-4" />
+                </Toggle>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Insert Chart</DialogTitle>
+                </DialogHeader>
+                <ChartPicker onSelectChart={addChart} />
             </DialogContent>
         </Dialog>
         <MediaLibrary onSelect={addImageFromUrl}>

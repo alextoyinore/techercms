@@ -28,6 +28,7 @@ import { SubscriptionWidget } from './SubscriptionWidget';
 import { FeaturedTopAndGridWidget } from './FeaturedTopAndGridWidget';
 import { FeaturedAndListWidget } from './FeaturedAndListWidget';
 import { BigFeaturedWidget } from './BigFeaturedWidget';
+import { ChartWidget } from './ChartWidget';
 
 
 const widgetComponents: Record<string, React.FC<any>> = {
@@ -55,6 +56,7 @@ const widgetComponents: Record<string, React.FC<any>> = {
     'featured-top-and-grid': FeaturedTopAndGridWidget,
     'featured-and-list': FeaturedAndListWidget,
     'big-featured': BigFeaturedWidget,
+    'chart': ChartWidget,
 };
 
 type WidgetInstance = {
