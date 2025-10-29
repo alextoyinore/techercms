@@ -116,7 +116,7 @@ export default function NewPostPage() {
       return;
     }
 
-    if (isSubmitting) return;
+    if (isSubmitting && isManualSave) return;
 
     if (isManualSave) {
         setIsSubmitting(true);
@@ -183,17 +183,14 @@ export default function NewPostPage() {
     const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
     
     const interval = setInterval(() => {
-      // Use a function to get the latest title value inside the interval
-      setTitle(currentTitle => {
-        if (currentTitle.trim()) {
-          handleSave('draft', false);
-        }
-        return currentTitle;
-      });
+      // Using a function to get the latest title value inside the interval
+      if (title.trim()) {
+        handleSave('draft', false);
+      }
     }, autoSaveIntervalMinutes * 60 * 1000);
   
     return () => clearInterval(interval);
-  }, [settings, handleSave]);
+  }, [settings, title, handleSave]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
@@ -237,14 +234,28 @@ export default function NewPostPage() {
       checked ? [...prev, categoryId] : prev.filter(id => id !== categoryId)
     );
   };
-
-  const handleAddTag = (tag: string) => {
-    const newTagValue = tag.trim();
-    if (newTagValue && !tags.includes(newTagValue)) {
-      setTags([...tags, newTagValue]);
+  
+  const processTags = (input: string) => {
+    const newTags = input.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag && !tags.includes(tag));
+    
+    if (newTags.length > 0) {
+        setTags([...tags, ...newTags]);
     }
     setNewTag('');
+  }
+
+  const handleAddTag = () => {
+    processTags(newTag);
   };
+  
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      processTags(newTag);
+    }
+  }
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
@@ -647,35 +658,20 @@ export default function NewPostPage() {
                 ))}
               </div>
               <div className="grid gap-2 relative">
-                <Label htmlFor="tags">Add Tags</Label>
-                 <div className="flex gap-2">
+                <Label htmlFor="tags">Add Tags (comma-separated)</Label>
+                <div className="flex gap-2">
                     <Input
                         id="tags"
-                        placeholder="New tag"
+                        placeholder="e.g., tech, news"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
+                        onKeyDown={handleTagInputKeyDown}
                         disabled={isSubmitting}
                     />
-                    <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
+                    <Button variant="outline" size="icon" onClick={handleAddTag} disabled={isSubmitting}>
                         <PlusCircle className="h-4 w-4" />
                     </Button>
                 </div>
-                 {newTag.length > 0 && filteredTags.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-10 mt-1 border bg-background shadow-md rounded-md">
-                         <ul className='max-h-48 overflow-y-auto p-1'>
-                            {filteredTags.map(tag => (
-                                <li 
-                                    key={tag.id}
-                                    className="p-2 text-sm hover:bg-accent cursor-pointer rounded-sm"
-                                    onClick={() => handleAddTag(tag.name)}
-                                >
-                                    {tag.name}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -685,3 +681,4 @@ export default function NewPostPage() {
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -54,15 +55,16 @@ export default function TagPage() {
   const firestore = useFirestore();
   const params = useParams();
   const slug = params.slug as string;
+  const decodedSlug = decodeURIComponent(slug);
 
   const postsQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
+    if (!firestore || !decodedSlug) return null;
     return query(
       collection(firestore, 'posts'),
       where('status', '==', 'published'),
-      where('tagIds', 'array-contains', slug)
+      where('tagIds', 'array-contains', decodedSlug)
     );
-  }, [firestore, slug]);
+  }, [firestore, decodedSlug]);
 
   const { data: posts, isLoading: isLoadingPosts } = useCollection<Post>(postsQuery);
 
@@ -78,7 +80,7 @@ export default function TagPage() {
   return (
     <ThemeLayout HeaderComponent={PublicHeader} FooterComponent={PublicFooter}>
         <div className="mb-8 pb-4 border-b">
-            <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {slug}</h1>
+            <h1 className="text-3xl font-black font-headline tracking-tight lg:text-4xl">Tag: {decodedSlug}</h1>
         </div>
 
         {!isLoadingPosts && (!sortedPosts || sortedPosts.length === 0) && (
