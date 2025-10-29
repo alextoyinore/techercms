@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -245,6 +246,17 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
     const navMenusCollection = useMemoFirebase(() => firestore ? collection(firestore, 'navigation_menus') : null, [firestore]);
     const { data: navMenus } = useCollection<NavigationMenu>(navMenusCollection);
 
+    const [categorySearch, setCategorySearch] = useState('');
+    const sortedCategories = useMemo(() => {
+        if (!categories) return [];
+        return [...categories].sort((a, b) => a.name.localeCompare(b.name));
+    }, [categories]);
+    const filteredCategories = useMemo(() => {
+        if (!sortedCategories) return [];
+        if (!categorySearch) return sortedCategories;
+        return sortedCategories.filter(cat => cat.name.toLowerCase().includes(categorySearch.toLowerCase()));
+    }, [sortedCategories, categorySearch]);
+
     const handleCategoryChange = (categoryId: string, checked: boolean) => {
         const currentIds = config.sourceIds || [];
         const newIds = checked
@@ -252,6 +264,11 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
             : currentIds.filter((id: string) => id !== categoryId);
         setConfig({ ...config, sourceIds: newIds });
     };
+
+    const selectedCategories = useMemo(() => {
+        if (!config.sourceIds || !categories) return [];
+        return config.sourceIds.map((id: string) => categories.find(c => c.id === id)).filter(Boolean) as Category[];
+    }, [config.sourceIds, categories]);
 
     const renderConfigFields = () => {
         switch (instance.type) {
@@ -285,9 +302,22 @@ function SortableWidgetInstance({ instance, onDelete, onSaveConfig }: { instance
                         {config.sourceType === 'category' && (
                              <div className="grid gap-2">
                                 <Label>Categories</Label>
+                                {selectedCategories.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 border-b pb-2">
+                                        {selectedCategories.map(cat => (
+                                            <Badge key={cat.id} variant="secondary" className="flex items-center gap-1">
+                                                {cat.name}
+                                                <button onClick={() => handleCategoryChange(cat.id, false)}>
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                )}
+                                <Input placeholder="Search categories..." value={categorySearch} onChange={e => setCategorySearch(e.target.value)} />
                                 <ScrollArea className="h-40 rounded-md border p-2">
                                     <div className='grid gap-2'>
-                                    {categories?.map(cat => (
+                                    {filteredCategories?.map(cat => (
                                         <div key={cat.id} className="flex items-center gap-2">
                                             <Checkbox
                                                 id={`cat-${cat.id}`}
