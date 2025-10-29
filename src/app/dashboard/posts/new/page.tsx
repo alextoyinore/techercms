@@ -238,8 +238,8 @@ export default function NewPostPage() {
   
   const processTags = useCallback((input: string) => {
     const newTags = input.split(',')
-        .map(tag => tag.trim().replace(/^#/, ''))
-        .filter(tag => tag && !tags.includes(tag));
+      .map(tag => tag.trim().replace(/^#/, '').trim())
+      .filter(tag => tag && !tags.includes(tag));
     
     if (newTags.length > 0) {
         setTags(prev => [...prev, ...newTags]);
@@ -247,22 +247,6 @@ export default function NewPostPage() {
     setNewTag('');
   }, [tags]);
 
-
-  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.includes(',')) {
-      processTags(value);
-    } else {
-      setNewTag(value);
-    }
-  }
-
-  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      processTags(newTag);
-    }
-  }
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
@@ -669,12 +653,27 @@ export default function NewPostPage() {
                 <div className="flex gap-2">
                     <Input
                         id="tags"
-                        placeholder="Add a tag..."
+                        placeholder="Add tags, separated by commas"
                         value={newTag}
-                        onChange={handleTagInputChange}
-                        onKeyDown={handleTagInputKeyDown}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onBlur={(e) => processTags(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                processTags(newTag);
+                            }
+                        }}
                         disabled={isSubmitting}
                     />
+                     <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => processTags(newTag)} 
+                        disabled={isSubmitting}
+                        aria-label="Add tags"
+                    >
+                        <PlusCircle className="h-4 w-4" />
+                    </Button>
                 </div>
                  <p className="text-xs text-muted-foreground">Separate tags with a comma or press Enter.</p>
               </div>
@@ -686,5 +685,3 @@ export default function NewPostPage() {
     </div>
   );
 }
-
-    
