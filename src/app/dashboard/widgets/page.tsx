@@ -37,6 +37,7 @@ import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { Loading } from '@/components/loading';
 
 const socialPlatforms = [
     { value: 'twitter', label: 'Twitter', icon: Twitter },
@@ -1022,22 +1023,30 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         );
     }
 
-    useEffect(() => {
-        if (!pageId && !authLoading && !userLoading && userData?.role !== 'superuser') {
-            router.push('/dashboard');
-        }
-    }, [pageId, authLoading, userLoading, userData, router]);
-
-    if (!pageId && (authLoading || userLoading || userData?.role !== 'superuser')) {
-        return null; // Or a loading spinner
-    }
-
     const allWidgets = Object.values(availableWidgets).flat();
     
     const pageTitle = pageId ? "Page Widgets" : "Theme Widgets";
     const pageDescription = pageId 
         ? "Manage widgets specifically for this page. These will override theme-wide widgets in the same areas."
         : "Manage widgets for your entire site. These appear in areas defined by your active theme.";
+
+    useEffect(() => {
+        // Wait until both auth and user data loading are complete
+        if (!pageId && !authLoading && !userLoading) {
+          // If loading is done and the user is not a superuser, then redirect
+          if (userData?.role !== 'superuser') {
+            router.push('/dashboard');
+          }
+        }
+    }, [pageId, authLoading, userLoading, userData, router]);
+    
+    if (!pageId && (authLoading || userLoading)) {
+        return <Loading />;
+    }
+    
+    if (!pageId && userData?.role !== 'superuser') {
+        return <Loading />; // Show loading while redirecting
+    }
 
     return (
         <DndContext 

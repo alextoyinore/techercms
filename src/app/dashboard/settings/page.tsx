@@ -35,6 +35,7 @@ import { MediaLibrary } from '@/components/media-library';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
+import { Loading } from '@/components/loading';
 
 type SiteSettings = {
   activeTheme?: string;
@@ -127,13 +128,22 @@ export default function SettingsPage() {
   }, [settings, isLoadingSettings]);
 
   useEffect(() => {
-    if (!authLoading && !userLoading && userData?.role !== 'superuser') {
-      router.push('/dashboard');
+    // Wait until both auth and user data loading are complete
+    if (!authLoading && !userLoading) {
+      // If loading is done and the user is not a superuser, then redirect
+      if (userData?.role !== 'superuser') {
+        router.push('/dashboard');
+      }
     }
   }, [authLoading, userLoading, userData, router]);
 
-  if (authLoading || userLoading || userData?.role !== 'superuser') {
-    return null; // or a loading spinner
+
+  if (authLoading || userLoading) {
+    return <Loading />;
+  }
+  
+  if (userData?.role !== 'superuser') {
+    return <Loading />; // Show loading while redirecting
   }
 
   const handleSaveSettings = async () => {

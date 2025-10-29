@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { PaginationControls } from '@/components/pagination-controls';
+import { Loading } from '@/components/loading';
 
 type User = {
   id: string;
@@ -81,8 +82,12 @@ export default function UsersPage() {
   const { data: currentUserData, isLoading: userLoading } = useDoc<User>(currentUserDocRef);
 
   useEffect(() => {
-    if (!authLoading && !userLoading && currentUserData?.role !== 'superuser') {
-      router.push('/dashboard');
+    // Wait until both auth and user data loading are complete
+    if (!authLoading && !userLoading) {
+      // If loading is done and the user is not a superuser, then redirect
+      if (currentUserData?.role !== 'superuser') {
+        router.push('/dashboard');
+      }
     }
   }, [authLoading, userLoading, currentUserData, router]);
 
@@ -107,8 +112,12 @@ export default function UsersPage() {
   }, [filteredUsers, pageSize]);
 
 
-  if (authLoading || userLoading || currentUserData?.role !== 'superuser') {
-    return null; // or a loading spinner
+  if (authLoading || userLoading) {
+    return <Loading />;
+  }
+  
+  if (currentUserData?.role !== 'superuser') {
+    return <Loading />; // Show loading while redirecting
   }
 
   const handleCreateUser = async () => {
