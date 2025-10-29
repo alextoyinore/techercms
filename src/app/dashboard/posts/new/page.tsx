@@ -130,14 +130,10 @@ export default function NewPostPage() {
         postRef = doc(collection(firestore, "posts"));
     }
 
-    // This logic can stay as it is for now, for audio generation on manual save.
     let finalAudioUrl = audioUrl;
     let finalTags = [...tags];
 
     let finalMetaDescription = metaDescription;
-    if (isManualSave && !finalMetaDescription && content) {
-      // Meta description generation logic...
-    }
 
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
@@ -165,10 +161,8 @@ export default function NewPostPage() {
             title: `Post ${status === 'published' ? 'Published' : 'Saved'}`,
             description: `Your post "${title}" has been successfully saved.`,
         });
-        // On manual save, we always redirect to the edit page.
         router.push(`/dashboard/posts/edit/${postRef.id}`);
       } else {
-         // On auto-save, just show a subtle toast
          toast({ description: "Draft auto-saved.", duration: 2000 });
       }
 
@@ -199,6 +193,7 @@ export default function NewPostPage() {
   const wordCount = useMemo(() => {
     if (!content) return 0;
     const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
     doc.querySelectorAll('[data-type="related-post"]').forEach(el => el.remove());
     const text = doc.body.textContent || "";
     if (!text.trim()) return 0;
