@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from "next/image";
@@ -9,7 +10,7 @@ import {
 import { MoreVertical, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useFirestore, useCollection, useAuth, useMemoFirebase } from "@/firebase";
-import { collection, doc, query, where, Timestamp } from "firebase/firestore";
+import { collection, doc, query, orderBy, Timestamp } from "firebase/firestore";
 import { MediaUploader } from "@/components/media-uploader";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,9 +37,9 @@ export default function MediaPage() {
   const { toast } = useToast();
 
   const mediaCollection = useMemoFirebase(() => {
-    if (!firestore || !auth?.currentUser) return null;
-    return query(collection(firestore, 'media'), where('authorId', '==', auth.currentUser.uid));
-  }, [firestore, auth?.currentUser]);
+    if (!firestore) return null;
+    return query(collection(firestore, 'media'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
 
   const { data: mediaItems, isLoading } = useCollection<MediaItem>(mediaCollection);
 
@@ -114,5 +115,3 @@ export default function MediaPage() {
     </div>
   );
 }
-
-    

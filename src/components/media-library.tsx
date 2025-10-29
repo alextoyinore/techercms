@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useFirestore, useCollection, useAuth, useMemoFirebase } from "@/firebase";
-import { collection, query, where, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { MediaUploader } from './media-uploader';
 
 type MediaItem = {
@@ -37,9 +38,9 @@ export function MediaLibrary({ children, onSelect }: MediaLibraryProps) {
   const auth = useAuth();
 
   const mediaCollection = useMemoFirebase(() => {
-    if (!firestore || !auth?.currentUser) return null;
-    return query(collection(firestore, 'media'), where('authorId', '==', auth.currentUser.uid));
-  }, [firestore, auth?.currentUser]);
+    if (!firestore) return null;
+    return query(collection(firestore, 'media'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
 
   const { data: mediaItems, isLoading } = useCollection<MediaItem>(mediaCollection);
 
