@@ -236,23 +236,29 @@ export default function NewPostPage() {
     );
   };
   
-  const processTags = (input: string) => {
+  const processTags = useCallback((input: string) => {
     const newTags = input.split(',')
         .map(tag => tag.trim().replace(/^#/, ''))
         .filter(tag => tag && !tags.includes(tag));
     
     if (newTags.length > 0) {
-        setTags([...tags, ...newTags]);
+        setTags(prev => [...prev, ...newTags]);
     }
     setNewTag('');
+  }, [tags]);
+
+
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.includes(',')) {
+      processTags(value);
+    } else {
+      setNewTag(value);
+    }
   }
 
-  const handleAddTag = () => {
-    processTags(newTag);
-  };
-  
   const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       processTags(newTag);
     }
@@ -659,20 +665,18 @@ export default function NewPostPage() {
                 ))}
               </div>
               <div className="grid gap-2 relative">
-                <Label htmlFor="tags">Add Tags (comma-separated)</Label>
+                <Label htmlFor="tags">Add Tags</Label>
                 <div className="flex gap-2">
                     <Input
                         id="tags"
-                        placeholder="e.g., tech, news"
+                        placeholder="Add a tag..."
                         value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
+                        onChange={handleTagInputChange}
                         onKeyDown={handleTagInputKeyDown}
                         disabled={isSubmitting}
                     />
-                    <Button variant="outline" size="icon" onClick={handleAddTag} disabled={isSubmitting}>
-                        <PlusCircle className="h-4 w-4" />
-                    </Button>
                 </div>
+                 <p className="text-xs text-muted-foreground">Separate tags with a comma or press Enter.</p>
               </div>
             </CardContent>
           </Card>
@@ -682,3 +686,5 @@ export default function NewPostPage() {
     </div>
   );
 }
+
+    
