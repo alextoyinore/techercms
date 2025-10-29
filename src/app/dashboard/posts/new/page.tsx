@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -108,22 +108,97 @@ export default function NewPostPage() {
   }, [firestore]);
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
   
+  const handleSave = useCallback(async (status: 'draft' | 'published', isManualSave: boolean) => {
+    if (!title.trim() || !firestore || !auth?.currentUser) {
+      if (isManualSave) {
+        toast({ variant: "destructive", title: "Title is missing" });
+      }
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    if (isManualSave) {
+        setIsSubmitting(true);
+        setSubmissionStatus(status);
+    }
+    
+    let postRef: DocumentReference;
+    if (savedPostId) {
+        postRef = doc(firestore, "posts", savedPostId);
+    } else {
+        postRef = doc(collection(firestore, "posts"));
+    }
+
+    // This logic can stay as it is for now, for audio generation on manual save.
+    let finalAudioUrl = audioUrl;
+    let finalTags = [...tags];
+
+    let finalMetaDescription = metaDescription;
+    if (isManualSave && !finalMetaDescription && content) {
+      // Meta description generation logic...
+    }
+
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
+
+    const postData = {
+        title, slug, titleKeywords, content, excerpt, status, isBreaking,
+        metaDescription: finalMetaDescription,
+        featuredImageUrl, audioUrl: finalAudioUrl,
+        authorId: auth.currentUser.uid,
+        categoryIds: selectedCategories,
+        tagIds: finalTags,
+        updatedAt: serverTimestamp(),
+        ...(savedPostId ? {} : { createdAt: serverTimestamp() }),
+    };
+
+    try {
+      await setDocumentNonBlocking(postRef, postData, { merge: true });
+      
+      if (!savedPostId) {
+        setSavedPostId(postRef.id);
+      }
+
+      if (isManualSave) {
+        toast({
+            title: `Post ${status === 'published' ? 'Published' : 'Saved'}`,
+            description: `Your post "${title}" has been successfully saved.`,
+        });
+        // On manual save, we always redirect to the edit page.
+        router.push(`/dashboard/posts/edit/${postRef.id}`);
+      } else {
+         // On auto-save, just show a subtle toast
+         toast({ description: "Draft auto-saved.", duration: 2000 });
+      }
+
+    } catch (error: any) {
+        if(isManualSave) {
+            toast({ variant: "destructive", title: "Uh oh! Something went wrong." });
+        }
+        console.error("Save error:", error);
+    } finally {
+        if (isManualSave) {
+            setIsSubmitting(false);
+            setSubmissionStatus(null);
+        }
+    }
+  }, [title, content, excerpt, metaDescription, featuredImageUrl, audioUrl, selectedCategories, tags, isBreaking, firestore, auth, savedPostId, isSubmitting, toast, router]);
+
   useEffect(() => {
     const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
     const interval = setInterval(() => {
-      // Only auto-save if a title has been entered.
-      if (title.trim() && !isSubmitting) {
-        handleSave('draft', false); // Autosave is a non-UI blocking save
+      if (title.trim()) {
+        handleSave('draft', false);
       }
     }, autoSaveIntervalMinutes * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [title, isSubmitting, settings, handleSave]);
+  }, [title, settings, handleSave]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
     doc.querySelectorAll('[data-type="related-post"]').forEach(el => el.remove());
     const text = doc.body.textContent || "";
     if (!text.trim()) return 0;
@@ -254,107 +329,6 @@ export default function NewPostPage() {
     }
   };
   
-    // Core save logic
-  const handleSave = async (status: 'draft' | 'published', isManualSave: boolean) => {
-    if (!title.trim() || !firestore || !auth?.currentUser) {
-      if (isManualSave) {
-        toast({ variant: "destructive", title: "Title is missing" });
-      }
-      return;
-    }
-
-    if (!isManualSave) { // This is an auto-save
-        setIsSubmitting(true);
-    } else { // This is a manual save from button click
-        setIsSubmitting(true);
-        setSubmissionStatus(status);
-    }
-    
-    let postRef: DocumentReference;
-    if (savedPostId) {
-        postRef = doc(firestore, "posts", savedPostId);
-    } else {
-        postRef = doc(collection(firestore, "posts"));
-    }
-
-    let finalAudioUrl = audioUrl;
-    let finalTags = [...tags];
-
-    if (shouldGenerateAudio && !audioUrl) {
-      // Audio generation logic... (same as before)
-    }
-
-    let finalMetaDescription = metaDescription;
-    if (isManualSave && !finalMetaDescription && content) {
-      // Meta description generation logic... (same as before)
-    }
-
-    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
-
-    const postData = {
-        title, slug, titleKeywords, content, excerpt, status, isBreaking,
-        metaDescription: finalMetaDescription,
-        featuredImageUrl, audioUrl: finalAudioUrl,
-        authorId: auth.currentUser.uid,
-        categoryIds: selectedCategories,
-        tagIds: finalTags,
-        updatedAt: serverTimestamp(),
-        // Only set createdAt if it's a new document
-        ...(savedPostId ? {} : { createdAt: serverTimestamp() }),
-    };
-
-    try {
-      await setDocumentNonBlocking(postRef, postData, { merge: true });
-      
-      if (!savedPostId) {
-        setSavedPostId(postRef.id); // Store the ID for future auto-saves
-         if (isManualSave) {
-          router.push(`/dashboard/posts/edit/${postRef.id}`);
-        } else {
-          // It was an auto-save of a new post, redirect to edit page
-          toast({
-            title: 'Draft Auto-Saved',
-            description: 'Continuing will auto-save your work.',
-            action: (
-              <ToastAction
-                altText="Edit Post"
-                onClick={() => router.push(`/dashboard/posts/edit/${postRef.id}`)}
-              >
-                Edit
-              </ToastAction>
-            ),
-          });
-        }
-      }
-
-      if (isManualSave) {
-        toast({
-            title: `Post ${status === 'published' ? 'Published' : 'Saved'}`,
-            description: `Your post "${title}" has been successfully saved.`,
-        });
-        if (savedPostId) {
-            // No redirect if it's just an update
-        } else {
-            router.push(`/dashboard/posts/edit/${postRef.id}`);
-        }
-      } else {
-         toast({ description: "Draft auto-saved.", duration: 2000 });
-      }
-
-    } catch (error: any) {
-        toast({ variant: "destructive", title: "Uh oh! Something went wrong." });
-    } finally {
-        if (isManualSave) {
-            setIsSubmitting(false);
-            setSubmissionStatus(null);
-        } else {
-            setIsSubmitting(false);
-        }
-    }
-  };
-
-
   const handleSubmit = (status: 'draft' | 'published') => {
     handleSave(status, true);
   };
