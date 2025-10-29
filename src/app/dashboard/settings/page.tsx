@@ -46,6 +46,7 @@ type SiteSettings = {
   timezone?: string;
   dashboardTheme?: string;
   hideAllPageTitles?: boolean;
+  autoSaveInterval?: number;
 };
 
 type Page = {
@@ -68,6 +69,7 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState<string>('en');
   const [timezone, setTimezone] = useState<string>('');
   const [hideAllPageTitles, setHideAllPageTitles] = useState(false);
+  const [autoSaveInterval, setAutoSaveInterval] = useState(5);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -92,6 +94,7 @@ export default function SettingsPage() {
       setHomepagePageId(settings.homepagePageId);
       setLanguage(settings.language || 'en');
       setHideAllPageTitles(settings.hideAllPageTitles || false);
+      setAutoSaveInterval(settings.autoSaveInterval || 5);
       if (settings.timezone) {
         setTimezone(settings.timezone);
       }
@@ -123,6 +126,7 @@ export default function SettingsPage() {
         language,
         timezone,
         hideAllPageTitles,
+        autoSaveInterval,
     };
     try {
         await setDoc(doc(firestore, 'site_settings', 'config'), settingsToSave, { merge: true });
@@ -256,6 +260,22 @@ export default function SettingsPage() {
                         </div>
                     </RadioGroup>
                 </div>
+
+                <div className='grid gap-2 max-w-sm'>
+                    <Label>Auto-save interval</Label>
+                    <div className='flex items-center gap-4'>
+                        <Slider
+                            value={[autoSaveInterval]}
+                            onValueChange={(value) => setAutoSaveInterval(value[0])}
+                            min={1}
+                            max={10}
+                            step={1}
+                        />
+                        <span className='text-sm text-muted-foreground w-20 text-center'>{autoSaveInterval} min</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Sets the auto-save frequency for new posts.</p>
+                </div>
+
             </CardContent>
         </Card>
       </div>
@@ -269,3 +289,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

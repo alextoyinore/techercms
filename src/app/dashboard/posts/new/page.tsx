@@ -29,7 +29,7 @@ import { PageHeader } from '@/components/page-header';
 import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone, Podcast } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useAuth, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, writeBatch, DocumentReference } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +51,10 @@ type Tag = {
     id: string;
     name: string;
     slug: string;
+};
+
+type SiteSettings = {
+    autoSaveInterval?: number;
 };
 
 export default function NewPostPage() {
@@ -84,8 +88,13 @@ export default function NewPostPage() {
   
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
 
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'site_settings', 'config');
+  }, [firestore]);
+  const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
   const categoriesCollection = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -100,14 +109,15 @@ export default function NewPostPage() {
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
   
   useEffect(() => {
-    const autoSaveInterval = setInterval(() => {
+    const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
+    const interval = setInterval(() => {
       if (title.trim() && !isSubmitting && savedPostId) {
         handleSave('draft', false); // Autosave is a non-UI blocking save
       }
-    }, 2 * 60 * 1000); // every 2 minutes
+    }, autoSaveIntervalMinutes * 60 * 1000);
 
-    return () => clearInterval(autoSaveInterval);
-  }, [title, isSubmitting, savedPostId]);
+    return () => clearInterval(interval);
+  }, [title, isSubmitting, savedPostId, settings]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
@@ -679,3 +689,5 @@ export default function NewPostPage() {
     </div>
   );
 }
+
+    
