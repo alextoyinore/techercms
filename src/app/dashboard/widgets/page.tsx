@@ -1022,9 +1022,14 @@ export default function WidgetsPage({ pageId }: { pageId?: string }) {
         );
     }
 
-    if (!pageId && !authLoading && !userLoading && userData?.role !== 'superuser') {
-        router.push('/dashboard');
-        return null;
+    useEffect(() => {
+        if (!pageId && !authLoading && !userLoading && userData?.role !== 'superuser') {
+            router.push('/dashboard');
+        }
+    }, [pageId, authLoading, userLoading, userData, router]);
+
+    if (!pageId && (authLoading || userLoading || userData?.role !== 'superuser')) {
+        return null; // Or a loading spinner
     }
 
     const allWidgets = Object.values(availableWidgets).flat();

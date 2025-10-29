@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
@@ -57,7 +57,7 @@ export default function UsersPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const [currentUser] = useAuthState(auth);
+  const [currentUser, authLoading] = useAuthState(auth);
   const router = useRouter();
 
   const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
@@ -78,7 +78,13 @@ export default function UsersPage() {
     return doc(firestore, 'users', currentUser.uid);
   }, [firestore, currentUser]);
   
-  const { data: currentUserData } = useDoc<User>(currentUserDocRef);
+  const { data: currentUserData, isLoading: userLoading } = useDoc<User>(currentUserDocRef);
+
+  useEffect(() => {
+    if (!authLoading && !userLoading && currentUserData?.role !== 'superuser') {
+      router.push('/dashboard');
+    }
+  }, [authLoading, userLoading, currentUserData, router]);
 
   const filteredUsers = useMemo(() => {
     if (!allUsers) return [];
@@ -101,9 +107,8 @@ export default function UsersPage() {
   }, [filteredUsers, pageSize]);
 
 
-  if (currentUserData && currentUserData.role !== 'superuser') {
-    router.push('/dashboard');
-    return null;
+  if (authLoading || userLoading || currentUserData?.role !== 'superuser') {
+    return null; // or a loading spinner
   }
 
   const handleCreateUser = async () => {

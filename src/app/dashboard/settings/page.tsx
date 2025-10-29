@@ -126,9 +126,14 @@ export default function SettingsPage() {
     }
   }, [settings, isLoadingSettings]);
 
-  if (!authLoading && !userLoading && userData?.role !== 'superuser') {
-    router.push('/dashboard');
-    return null;
+  useEffect(() => {
+    if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+      router.push('/dashboard');
+    }
+  }, [authLoading, userLoading, userData, router]);
+
+  if (authLoading || userLoading || userData?.role !== 'superuser') {
+    return null; // or a loading spinner
   }
 
   const handleSaveSettings = async () => {

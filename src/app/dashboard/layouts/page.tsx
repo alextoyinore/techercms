@@ -9,6 +9,7 @@ import { useAuth, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useEffect } from 'react';
 
 type UserRole = {
   role: 'superuser' | 'writer' | string;
@@ -27,9 +28,15 @@ export default function LayoutsPage() {
 
   const { data: userData, isLoading: userLoading } = useDoc<UserRole>(userRef);
 
-  if (!authLoading && !userLoading && userData?.role !== 'superuser') {
-    router.push('/dashboard');
-    return null;
+  useEffect(() => {
+    if (!authLoading && !userLoading && userData?.role !== 'superuser') {
+      router.push('/dashboard');
+    }
+  }, [authLoading, userLoading, userData, router]);
+
+
+  if (authLoading || userLoading || userData?.role !== 'superuser') {
+    return null; // or a loading spinner
   }
 
   return (
