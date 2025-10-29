@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow to fetch ticker data from Polygon.io API.
@@ -27,15 +28,11 @@ export async function getTickerData(input: GetTickerDataInput): Promise<GetTicke
   return getTickerDataFlow(input);
 }
 
-const majors = new Set(['USD', 'CAD', 'JPY', 'GBP', 'EUR', 'CHF', 'AUD', 'NZD', 'XAU']);
+const specificPairs = new Set([
+    'C:EURUSD', 'C:GBPUSD', 'C:USDJPY', 'C:XAUUSD', 'C:USDCAD',
+    'C:AUDUSD', 'C:USDCHF', 'C:EURCHF', 'C:EURJPY', 'C:GBPJPY'
+]);
 
-function isMajorPair(ticker: string): boolean {
-    const cleanTicker = ticker.startsWith('C:') ? ticker.substring(2) : ticker;
-    if (cleanTicker.length !== 6) return false;
-    const base = cleanTicker.substring(0, 3);
-    const quote = cleanTicker.substring(3);
-    return majors.has(base) && majors.has(quote);
-}
 
 const getTickerDataFlow = ai.defineFlow(
   {
@@ -66,7 +63,7 @@ const getTickerDataFlow = ai.defineFlow(
     }
     
     if (market === 'fx') {
-        tickers = tickers.filter(t => isMajorPair(t.ticker));
+        tickers = tickers.filter(t => specificPairs.has(t.ticker));
     }
 
 
