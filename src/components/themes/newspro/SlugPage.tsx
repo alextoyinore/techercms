@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
@@ -26,6 +25,7 @@ import { ReadingProgress } from '@/components/ReadingProgress';
 import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
 import { RelatedPostCard } from '../RelatedPostCard';
 import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
+import { PostAuthor } from '../PostAuthor';
 
 type Post = {
   id: string;
@@ -211,6 +211,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                           <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4 flex-wrap">
                             <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                 <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
+                            </Link>
+                            <span className="mx-1">by</span>
+                            <Link href={`/author/${item.authorId}`} className="hover:underline">
+                              <PostAuthor authorId={item.authorId} />
                             </Link>
                             {views && (
                                 <div className="flex items-center gap-1">

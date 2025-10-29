@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +38,7 @@ import { MediaLibrary } from '@/components/media-library';
 import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { Switch } from '@/components/ui/switch';
+import { ToastAction } from '@/components/ui/toast';
 
 type Category = {
   id: string;
@@ -94,6 +95,25 @@ export default function NewPostPage() {
     return collection(firestore, 'tags');
   }, [firestore]);
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
+  
+    useEffect(() => {
+    const timer = setTimeout(() => {
+      if (title.trim() && !isSubmitting) {
+        toast({
+          title: 'Still there?',
+          description: 'Don\'t forget to save your masterpiece.',
+          action: (
+            <ToastAction altText="Save Draft" onClick={() => handleSubmit('draft')}>
+              Save Draft
+            </ToastAction>
+          ),
+          duration: 10000,
+        });
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearTimeout(timer);
+  }, [title, isSubmitting, toast]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;

@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
@@ -220,7 +219,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                           <div>
                             <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
                             <span className='mx-1'>by</span>
-                            <PostAuthor authorId={item.authorId} />
+                            <Link href={`/author/${item.authorId}`} className="hover:underline">
+                              <PostAuthor authorId={item.authorId} />
+                            </Link>
                           </div>
                           {views && (
                             <div className="flex items-center gap-1">
