@@ -47,7 +47,7 @@ const navItems = [
     { href: "/dashboard/media", icon: ImageIcon, label: "Media", requiredRole: null },
     { href: "/dashboard/categories", icon: Folder, label: "Categories", requiredRole: null },
     { href: "/dashboard/tags", icon: Tag, label: "Tags", requiredRole: null },
-    { href: "/dashboard/themes", icon: Paintbrush, label: "Themes", requiredRole: 'superuser' },
+    { href: "/dashboard/themes", icon: Paintbrush, label: "Appearance", requiredRole: null },
     { href: "/dashboard/layouts", icon: LayoutGrid, label: "Layouts", requiredRole: 'superuser' },
     { href: "/dashboard/widgets", icon: LayoutTemplate, label: "Widgets", requiredRole: 'superuser' },
     { href: "/dashboard/navigation", icon: Menu, label: "Navigation", requiredRole: 'superuser' },

@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
+import { Loading } from '@/components/loading';
 
 const builtInWebsiteThemes = [
     {
@@ -118,9 +119,10 @@ export default function ThemesPage() {
         }
     }, [settings]);
 
-    if (!authLoading && !userLoading && userData?.role !== 'superuser') {
-        router.push('/dashboard');
-        return null;
+    const isSuperuser = userData?.role === 'superuser';
+
+    if (authLoading || userLoading) {
+      return <Loading />;
     }
 
     const handleActivateWebsiteTheme = async (themeName: string, isCustom: boolean) => {
@@ -200,130 +202,134 @@ export default function ThemesPage() {
         title="Appearance"
         description="Manage your website's themes and visual customization."
       >
-        <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
-          <Button variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              Create Custom Theme
-          </Button>
-        </WebsiteThemeCustomizer>
+        {isSuperuser && (
+            <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
+            <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Create Custom Theme
+            </Button>
+            </WebsiteThemeCustomizer>
+        )}
       </PageHeader>
       <div className="grid gap-6">
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Website Themes</CardTitle>
-                <CardDescription>Choose a theme to change the look and feel of your public-facing website.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 {(customThemes || []).map((theme) => {
-                    const isActive = theme.name === activeWebsiteTheme;
-                    const isProcessing = isActivatingWebsiteTheme === theme.name;
+        {isSuperuser && (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Website Themes</CardTitle>
+                    <CardDescription>Choose a theme to change the look and feel of your public-facing website.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {(customThemes || []).map((theme) => {
+                        const isActive = theme.name === activeWebsiteTheme;
+                        const isProcessing = isActivatingWebsiteTheme === theme.name;
 
-                    return (
-                        <Card key={theme.id} className="flex flex-col">
-                            <CardHeader>
-                                <div className="relative aspect-video w-full">
-                                    <Image
-                                        src={theme.previewImageUrl || PlaceHolderImages[0].imageUrl}
-                                        alt={theme.name}
-                                        fill
-                                        className="rounded-md object-cover"
-                                    />
-                                    {isActive && (
-                                        <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
-                                            <CheckCircle className="h-10 w-10 text-white" />
-                                        </div>
-                                    )}
-                                </div>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
-                                <CardDescription className="mt-2">{theme.description || 'A custom user theme.'}</CardDescription>
-                            </CardContent>
-                            <div className="p-4 pt-0 flex gap-2">
-                                <Button
-                                    className="w-full"
-                                    onClick={() => handleActivateWebsiteTheme(theme.name, true)}
-                                    disabled={isActive || !!isActivatingWebsiteTheme}
-                                >
-                                    {isProcessing ? (
-                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
-                                    ) : isActive ? (
-                                        'Active'
-                                    ) : (
-                                        'Activate'
-                                    )}
-                                </Button>
-                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <WebsiteThemeCustomizer themeSource={theme} builtInThemes={builtInWebsiteThemes}>
-                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                                Edit
+                        return (
+                            <Card key={theme.id} className="flex flex-col">
+                                <CardHeader>
+                                    <div className="relative aspect-video w-full">
+                                        <Image
+                                            src={theme.previewImageUrl || PlaceHolderImages[0].imageUrl}
+                                            alt={theme.name}
+                                            fill
+                                            className="rounded-md object-cover"
+                                        />
+                                        {isActive && (
+                                            <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                                <CheckCircle className="h-10 w-10 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                    <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
+                                    <CardDescription className="mt-2">{theme.description || 'A custom user theme.'}</CardDescription>
+                                </CardContent>
+                                <div className="p-4 pt-0 flex gap-2">
+                                    <Button
+                                        className="w-full"
+                                        onClick={() => handleActivateWebsiteTheme(theme.name, true)}
+                                        disabled={isActive || !!isActivatingWebsiteTheme}
+                                    >
+                                        {isProcessing ? (
+                                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
+                                        ) : isActive ? (
+                                            'Active'
+                                        ) : (
+                                            'Activate'
+                                        )}
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <WebsiteThemeCustomizer themeSource={theme} builtInThemes={builtInWebsiteThemes}>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                    Edit
+                                                </DropdownMenuItem>
+                                            </WebsiteThemeCustomizer>
+                                            <DropdownMenuItem onClick={() => handleDeleteCustomTheme(theme)} className='text-destructive'>
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete
                                             </DropdownMenuItem>
-                                        </WebsiteThemeCustomizer>
-                                        <DropdownMenuItem onClick={() => handleDeleteCustomTheme(theme)} className='text-destructive'>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </Card>
-                    )
-                })}
-                {builtInWebsiteThemes.map((theme) => {
-                    const image = PlaceHolderImages.find(img => img.id === theme.imageHintId) || PlaceHolderImages[0];
-                    const isActive = theme.name === activeWebsiteTheme;
-                    const isProcessing = isActivatingWebsiteTheme === theme.name;
-
-                    return (
-                        <Card key={theme.name} className="flex flex-col">
-                            <CardHeader>
-                                <div className="relative aspect-video w-full">
-                                    <Image
-                                        src={image.imageUrl}
-                                        alt={theme.name}
-                                        fill
-                                        className="rounded-md object-cover"
-                                    />
-                                    {isActive && (
-                                        <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
-                                            <CheckCircle className="h-10 w-10 text-white" />
-                                        </div>
-                                    )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
-                                <CardDescription className="mt-2">{theme.description}</CardDescription>
-                            </CardContent>
-                            <div className="p-4 pt-0 flex gap-2">
-                                <Button
-                                    className="w-full"
-                                    onClick={() => handleActivateWebsiteTheme(theme.name, false)}
-                                    disabled={isActive || !!isActivatingWebsiteTheme}
-                                >
-                                    {isProcessing ? (
-                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
-                                    ) : isActive ? (
-                                        'Active'
-                                    ) : (
-                                        'Activate'
-                                    )}
-                                </Button>
-                                <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
-                                    <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
-                                </WebsiteThemeCustomizer>
-                            </div>
-                        </Card>
-                    )
-                })}
-                </div>
-            </CardContent>
-        </Card>
+                            </Card>
+                        )
+                    })}
+                    {builtInWebsiteThemes.map((theme) => {
+                        const image = PlaceHolderImages.find(img => img.id === theme.imageHintId) || PlaceHolderImages[0];
+                        const isActive = theme.name === activeWebsiteTheme;
+                        const isProcessing = isActivatingWebsiteTheme === theme.name;
+
+                        return (
+                            <Card key={theme.name} className="flex flex-col">
+                                <CardHeader>
+                                    <div className="relative aspect-video w-full">
+                                        <Image
+                                            src={image.imageUrl}
+                                            alt={theme.name}
+                                            fill
+                                            className="rounded-md object-cover"
+                                        />
+                                        {isActive && (
+                                            <div className='absolute inset-0 bg-black/50 flex items-center justify-center rounded-md'>
+                                                <CheckCircle className="h-10 w-10 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="flex-grow">
+                                    <CardTitle className="font-headline text-lg">{theme.name}</CardTitle>
+                                    <CardDescription className="mt-2">{theme.description}</CardDescription>
+                                </CardContent>
+                                <div className="p-4 pt-0 flex gap-2">
+                                    <Button
+                                        className="w-full"
+                                        onClick={() => handleActivateWebsiteTheme(theme.name, false)}
+                                        disabled={isActive || !!isActivatingWebsiteTheme}
+                                    >
+                                        {isProcessing ? (
+                                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Activating...</>
+                                        ) : isActive ? (
+                                            'Active'
+                                        ) : (
+                                            'Activate'
+                                        )}
+                                    </Button>
+                                    <WebsiteThemeCustomizer themeSource="new" builtInThemes={builtInWebsiteThemes}>
+                                        <Button variant="outline" size="icon"><Palette className='h-4 w-4' /></Button>
+                                    </WebsiteThemeCustomizer>
+                                </div>
+                            </Card>
+                        )
+                    })}
+                    </div>
+                </CardContent>
+            </Card>
+        )}
         
         <Card>
             <CardHeader>
