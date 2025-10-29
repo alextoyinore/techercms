@@ -109,13 +109,14 @@ export default function NewPostPage() {
   const { data: allTags, isLoading: isLoadingTags } = useCollection<Tag>(tagsCollection);
   
   const handleSave = useCallback(async (status: 'draft' | 'published', isManualSave: boolean) => {
-    if (!title.trim() || !firestore || !auth?.currentUser) {
+    if (!title.trim()) {
       if (isManualSave) {
         toast({ variant: "destructive", title: "Title is missing" });
       }
       return;
     }
 
+    if (!firestore || !auth?.currentUser) return;
     if (isSubmitting && isManualSave) return;
 
     if (isManualSave) {
@@ -237,7 +238,7 @@ export default function NewPostPage() {
   
   const processTags = (input: string) => {
     const newTags = input.split(',')
-        .map(tag => tag.trim())
+        .map(tag => tag.trim().replace(/^#/, ''))
         .filter(tag => tag && !tags.includes(tag));
     
     if (newTags.length > 0) {
