@@ -181,14 +181,19 @@ export default function NewPostPage() {
 
   useEffect(() => {
     const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
+    
     const interval = setInterval(() => {
-      if (title.trim()) {
-        handleSave('draft', false);
-      }
+      // Use a function to get the latest title value inside the interval
+      setTitle(currentTitle => {
+        if (currentTitle.trim()) {
+          handleSave('draft', false);
+        }
+        return currentTitle;
+      });
     }, autoSaveIntervalMinutes * 60 * 1000);
-
+  
     return () => clearInterval(interval);
-  }, [title, settings, handleSave]);
+  }, [settings, handleSave]);
   
   const wordCount = useMemo(() => {
     if (!content) return 0;
