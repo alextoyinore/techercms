@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Loader2, Podcast, Megaphone } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2, Podcast, Megaphone, Star } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
     DropdownMenu,
@@ -30,7 +30,7 @@ import {
   } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { collection, doc, Timestamp, getDocs } from "firebase/firestore";
+import { collection, doc, Timestamp, getDocs, getDoc } from "firebase/firestore";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,7 @@ type Post = {
     featuredImageUrl?: string;
     audioUrl?: string;
     isBreaking?: boolean;
+    tagIds?: string[];
 };
 
 export default function PostsPage() {
@@ -144,6 +145,35 @@ export default function PostsPage() {
         });
       }
     };
+    
+    const handleFeaturedChange = async (post: Post, checked: boolean) => {
+        if (!firestore) return;
+        const postRef = doc(firestore, 'posts', post.id);
+        const currentTags = post.tagIds || [];
+        
+        let newTags;
+        if (checked) {
+            // Add 'featured' tag if it doesn't exist
+            newTags = [...new Set([...currentTags, 'featured'])];
+        } else {
+            // Remove 'featured' tag
+            newTags = currentTags.filter(tag => tag !== 'featured');
+        }
+
+        try {
+            await setDocumentNonBlocking(postRef, { tagIds: newTags }, { merge: true });
+            toast({
+                title: "Post Updated",
+                description: `Post has been ${checked ? 'featured' : 'unfeatured'}.`
+            });
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: error.message || "Could not update the post's featured status."
+            });
+        }
+    };
 
 
     const handleDelete = (postId: string, postTitle: string) => {
@@ -212,6 +242,7 @@ export default function PostsPage() {
                 <TableHead>Views</TableHead>
                 <TableHead>Audio</TableHead>
                 <TableHead>Breaking</TableHead>
+                <TableHead>Featured</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -221,14 +252,14 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={9} className="text-center">
+                    <TableCell colSpan={10} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={9} className="text-center">
+                    <TableCell colSpan={10} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
@@ -277,6 +308,13 @@ export default function PostsPage() {
                           checked={post.isBreaking}
                           onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
                           aria-label="Mark as breaking news"
+                        />
+                    </TableCell>
+                    <TableCell>
+                        <Switch
+                          checked={(post.tagIds || []).includes('featured')}
+                          onCheckedChange={(checked) => handleFeaturedChange(post, checked)}
+                          aria-label="Mark as featured"
                         />
                     </TableCell>
                   <TableCell>
