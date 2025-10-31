@@ -59,6 +59,8 @@ import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, Pointer
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type NavigationMenu = {
   id: string;
@@ -204,6 +206,9 @@ function MenuItemsManager({
     'custom'
   );
 
+  const [categorySearch, setCategorySearch] = useState('');
+  const [parentSearch, setParentSearch] = useState('');
+
   const menuItemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
@@ -238,8 +243,27 @@ function MenuItemsManager({
     if (!firestore) return null;
     return query(collection(firestore, 'categories'));
   }, [firestore]);
-  const { data: categories, isLoading: isLoadingCategories } =
+  const { data: allCategories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesQuery);
+  
+  const sortedCategories = useMemo(() => {
+    if (!allCategories) return [];
+    return [...allCategories].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCategories]);
+
+  const filteredCategories = useMemo(() => {
+    if (!sortedCategories) return [];
+    if (!categorySearch) return sortedCategories;
+    return sortedCategories.filter(cat => cat.name.toLowerCase().includes(categorySearch.toLowerCase()));
+  }, [sortedCategories, categorySearch]);
+
+  const filteredParents = useMemo(() => {
+    if (!localMenuItems) return [];
+    const potentialParents = localMenuItems.filter(item => item.id !== (editingItem as NavigationMenuItem).id);
+    if (!parentSearch) return potentialParents;
+    return potentialParents.filter(item => item.label.toLowerCase().includes(parentSearch.toLowerCase()));
+  }, [localMenuItems, parentSearch, editingItem]);
+
 
   useEffect(() => {
     if (isSheetOpen && (editingItem as NavigationMenuItem).id) {
@@ -285,7 +309,6 @@ function MenuItemsManager({
       return;
     }
     
-    // Ensure parentId is either a string or null/undefined for Firestore
     if (itemToSave.parentId === 'none' || itemToSave.parentId === '') {
         itemToSave = { ...itemToSave, parentId: undefined };
     }
@@ -297,7 +320,6 @@ function MenuItemsManager({
           'navigation_menu_items',
           itemToSave.id
         );
-        // If parent changed, we might need to re-order siblings
         const originalItem = localMenuItems.find(i => i.id === itemToSave.id);
         if (originalItem?.parentId !== itemToSave.parentId) {
             itemToSave.order = getOrderForNewItem(itemToSave.parentId);
@@ -380,16 +402,17 @@ function MenuItemsManager({
     }
   };
 
-  const handleCategorySelect = (slug: string) => {
-    const selectedCategory = categories?.find(c => c.slug === slug);
-    if (selectedCategory) {
-      setEditingItem({
-        ...editingItem,
-        url: `/category/${slug}`,
-        label: selectedCategory.name,
-        type: 'category'
-      });
-    }
+  const handleCategorySelect = (category: Category) => {
+    setEditingItem({
+      ...editingItem,
+      url: `/category/${category.slug}`,
+      label: category.name,
+      type: 'category'
+    });
+  };
+
+  const handleParentSelect = (parentId: string) => {
+     setEditingItem({ ...editingItem, parentId });
   };
   
   const sensors = useSensors(useSensor(PointerSensor, {
@@ -418,7 +441,6 @@ function MenuItemsManager({
   
       const batch = writeBatch(firestore);
       const siblings = newLocalItems.filter(i => i.parentId === activeItem.parentId).sort((a,b) => {
-        // Find their new order in the moved array to determine sort
         return newLocalItems.indexOf(a) - newLocalItems.indexOf(b);
       });
 
@@ -536,28 +558,31 @@ function MenuItemsManager({
 
               {linkType === 'category' && (
                 <div className="grid gap-2">
-                  <Label htmlFor="category-select">Select a Category</Label>
-                  <Select
-                    onValueChange={handleCategorySelect}
-                    value={(editingItem as NavigationMenuItem).url?.split('/')[2]}
-                    disabled={isLoadingCategories}
-                  >
-                    <SelectTrigger id="category-select">
-                      <SelectValue placeholder="Choose a category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories?.map(cat => (
-                        <SelectItem key={cat.id} value={cat.slug}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                      {!isLoadingCategories && categories?.length === 0 && (
-                        <SelectItem value="no-categories" disabled>
-                          No categories available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <Label>Select a Category</Label>
+                   <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start font-normal">
+                                {allCategories?.find(c => c.slug === (editingItem as NavigationMenuItem).url?.split('/')[2])?.name || 'Choose a category...'}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Input placeholder="Search categories..." className="m-2 w-[calc(100%-1rem)]" value={categorySearch} onChange={e => setCategorySearch(e.target.value)} />
+                             <ScrollArea className="h-48">
+                                <div className="grid gap-1 p-1">
+                                    {filteredCategories.map(cat => (
+                                        <Button
+                                            key={cat.id}
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            onClick={() => handleCategorySelect(cat)}
+                                        >
+                                            {cat.name}
+                                        </Button>
+                                    ))}
+                                </div>
+                             </ScrollArea>
+                        </PopoverContent>
+                   </Popover>
                 </div>
               )}
 
@@ -574,26 +599,32 @@ function MenuItemsManager({
               </div>
 
                <div className="grid gap-2">
-                  <Label htmlFor="parent-select">Parent</Label>
-                  <Select
-                    value={(editingItem as Partial<NavigationMenuItem>).parentId || 'none'}
-                    onValueChange={(value) => setEditingItem({ ...editingItem, parentId: value })}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger id="parent-select">
-                      <SelectValue placeholder="No Parent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Parent</SelectItem>
-                      {localMenuItems
-                        .filter(item => item.id !== (editingItem as NavigationMenuItem).id) // Can't be its own parent
-                        .map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Parent</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start font-normal">
+                                {localMenuItems?.find(i => i.id === (editingItem as NavigationMenuItem).parentId)?.label || 'No Parent'}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Input placeholder="Search items..." className="m-2 w-[calc(100%-1rem)]" value={parentSearch} onChange={e => setParentSearch(e.target.value)} />
+                            <ScrollArea className="h-48">
+                                 <div className="grid gap-1 p-1">
+                                     <Button variant="ghost" className="w-full justify-start" onClick={() => handleParentSelect('none')}>No Parent</Button>
+                                    {filteredParents.map(item => (
+                                        <Button
+                                            key={item.id}
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            onClick={() => handleParentSelect(item.id)}
+                                        >
+                                            {item.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
             <SheetFooter>
