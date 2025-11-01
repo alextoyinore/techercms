@@ -368,6 +368,17 @@ export default function EditPostPage() {
             console.error("Failed to auto-generate meta description:", e);
         }
     }
+
+    let finalFocusKeyword = focusKeyword;
+    if (!finalFocusKeyword && content) {
+        try {
+            const result = await generateKeyword({ title, content });
+            finalFocusKeyword = result.focusKeyword;
+            toast({ title: 'Auto-Generated Focus Keyword', description: 'A focus keyword was created for you.' });
+        } catch (e) {
+            console.error("Failed to auto-generate focus keyword:", e);
+        }
+    }
     
     // Sync tags with the main tags collection
     const batch = writeBatch(firestore);
@@ -403,7 +414,7 @@ export default function EditPostPage() {
         content,
         excerpt,
         metaDescription: finalMetaDescription,
-        focusKeyword,
+        focusKeyword: finalFocusKeyword,
         featuredImageUrl,
         audioUrl: finalAudioUrl,
         status,

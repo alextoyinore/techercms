@@ -138,6 +138,27 @@ export default function NewPostPage() {
     let finalTags = [...tags];
 
     let finalMetaDescription = metaDescription;
+    if (isManualSave && !finalMetaDescription && content) {
+        try {
+            const result = await generateMetaDescription({ title, content });
+            finalMetaDescription = result.metaDescription;
+            toast({ title: 'Auto-Generated Meta Description', description: 'A meta description was created for you.' });
+        } catch (e) {
+            console.error("Failed to auto-generate meta description:", e);
+        }
+    }
+    
+    let finalFocusKeyword = focusKeyword;
+    if (isManualSave && !finalFocusKeyword && content) {
+        try {
+            const result = await generateKeyword({ title, content });
+            finalFocusKeyword = result.focusKeyword;
+            toast({ title: 'Auto-Generated Focus Keyword', description: 'A focus keyword was created for you.' });
+        } catch (e) {
+            console.error("Failed to auto-generate focus keyword:", e);
+        }
+    }
+
 
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     const titleKeywords = title.toLowerCase().split(' ').filter(Boolean);
@@ -145,7 +166,7 @@ export default function NewPostPage() {
     const postData = {
         title, slug, titleKeywords, content, excerpt, status, isBreaking,
         metaDescription: finalMetaDescription,
-        focusKeyword,
+        focusKeyword: finalFocusKeyword,
         featuredImageUrl, audioUrl: finalAudioUrl,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
