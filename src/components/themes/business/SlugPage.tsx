@@ -185,23 +185,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   const isLoading = isLoadingPosts || isLoadingPages || isLoadingSettings;
 
-  if (isLoading) {
+  if (isLoading || !item) {
     return <Loading />;
-  }
-
-  if (!item) {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
-            {/* <h1 className="text-6xl font-bold font-headline mb-4">404</h1>
-            <p className="text-xl text-muted-foreground mb-8">This page could not be found.</p>
-            <Button asChild variant="default" size="lg">
-                <Link href="/">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Return Home
-                </Link>
-            </Button> */}
-        </div>
-    );
   }
   
   const pageId = !isPost ? item.id : undefined;
