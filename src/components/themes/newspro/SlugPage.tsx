@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
@@ -207,7 +208,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   // Determine if the title should be shown
   const isHomepage = !isPost && settings?.homepagePageId === item.id;
   const pageShowTitle = !isPost ? (item as Page).showTitle : true;
-  const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
+  // ONLY show title in header for static pages that aren't the homepage
+  const displayTitleInHeader = !isPost && !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   const siteTitle = settings?.siteName || 'Techer CMS';
   const pageTitle = `${item.title} | ${siteTitle}`;
@@ -230,13 +232,13 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       </Head>
       <div className="bg-background text-foreground font-serif">
         {isPost && <ReadingProgress targetRef={articleRef} />}
-        <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} pageTitle={displayTitle ? item.title : undefined} />} FooterComponent={PublicFooter} pageId={pageId}>
+        <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} pageTitle={displayTitleInHeader ? item.title : undefined} />} FooterComponent={PublicFooter} pageId={pageId}>
           <main className="container mx-auto">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:max-w-7xl mx-auto py-12 px-4">
                   <div className="lg:col-span-3">
                       <article className="max-w-none" ref={articleRef}>
                       <header className="mb-8">
-                          {displayTitle && <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 flex items-center gap-4">{(item as Post).isBreaking && <BreakingNewsIndicator />} {item.title}</h1>}
+                          <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 flex items-center gap-4">{(item as Post).isBreaking && <BreakingNewsIndicator />} {item.title}</h1>
                           <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4 flex-wrap">
                             <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                 <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
