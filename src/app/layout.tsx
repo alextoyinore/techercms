@@ -10,7 +10,8 @@ import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
 export const metadata: Metadata = {
   title: "95news",
-  description: "Up-to-date news and information for workers and professionals",
+  keywords: "Breaking News, World News, Nigerian News, African News, Europe, Asia, North America, South America, US, Climate, Art, Culture, Music, Nigerian Music, Sports, Science, Tech, Innovation, Business, Markets, Photos, Video, Audio",
+  description: "Breaking News, World News, Nigerian News, African News, Europe, Asia, North America, South America, US, Sport, Science, Tech, Innovation, Business, Markets, Video & Audio",
   verification: {
     google: "UzT4k0mumgBwXSPmkuK6ARyI-pYNWiVB5i3GQAQjLUQ",
   },
