@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -33,7 +34,7 @@ export const MagazineProHeader: React.FC<{ siteName?: string, pageTitle?: string
                 {siteName || ''}
                 {pageTitle && (
                     <>
-                        <span className="text-muted-foreground/50 text-2xl font-light">|</span>
+                        <span className="text-muted-foreground/50 text-2xl font-thin">|</span>
                         <span className="text-xl font-semibold text-foreground">{pageTitle}</span>
                     </>
                 )}

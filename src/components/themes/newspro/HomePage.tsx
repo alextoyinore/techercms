@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -51,7 +52,7 @@ export function PublicHeader({ siteName, siteLogoUrl, pageTitle }: { siteName?: 
                     )}
                      {pageTitle && (
                         <>
-                            <span className="text-muted-foreground/50 text-2xl font-light">|</span>
+                            <span className="text-muted-foreground/50 text-2xl font-thin">|</span>
                             <span className="text-xl font-semibold text-foreground tracking-normal">{pageTitle}</span>
                         </>
                     )}
