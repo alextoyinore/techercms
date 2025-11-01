@@ -145,14 +145,16 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
-  const hasContent = sortedPosts.length > 0;
-  const [mainStory, ...otherStories] = sortedPosts;
-  const topStories = otherStories.slice(0, 2);
-  const secondaryStories = otherStories.slice(2, 6);
+  const isLoading = isLoadingPosts || isLoadingSettings;
 
-  if (isLoadingPosts || isLoadingSettings) {
+  if (isLoading) {
     return <Loading />;
   }
+  
+  const hasContent = sortedPosts && sortedPosts.length > 0;
+  const [mainStory, ...otherStories] = sortedPosts || [];
+  const topStories = otherStories.slice(0, 2);
+  const secondaryStories = otherStories.slice(2, 6);
 
   return (
     <div className="bg-background text-foreground font-serif">

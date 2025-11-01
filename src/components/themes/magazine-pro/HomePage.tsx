@@ -133,11 +133,11 @@ export default function HomePage() {
     });
   }, [posts]);
   
-  const hasContent = sortedPosts.length > 0;
-
   if (isLoadingPosts) {
       return <Loading />;
   }
+
+  const hasContent = sortedPosts && sortedPosts.length > 0;
 
   return (
     <ThemeLayout HeaderComponent={hasContent ? MagazineProHeader : undefined} FooterComponent={hasContent ? MagazineProFooter : undefined}>
@@ -157,35 +157,37 @@ export default function HomePage() {
             </div>
         )}
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {sortedPosts.map((post) => (
-                <Card key={post.id} className="flex flex-col overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
-                     <Link href={`/${post.slug}`} className="block">
-                        <div className="relative aspect-video">
-                            <Image 
-                                src={post.featuredImageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
-                                alt={post.title}
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                    </Link>
-                    <CardHeader>
-                        <CardTitle className="font-headline text-xl leading-snug">
-                            <Link href={`/${post.slug}`}>{post.title}</Link>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <p className="text-muted-foreground line-clamp-3">{post.excerpt}</p>
-                    </CardContent>
-                    <div className="p-4 pt-0 text-xs text-muted-foreground">
-                        <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
-                            <span className="hover:underline">{post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}</span>
-                        </Link>
-                    </div>
-                </Card>
-            ))}
-        </div>
+        {hasContent && (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {sortedPosts.map((post) => (
+                  <Card key={post.id} className="flex flex-col overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                       <Link href={`/${post.slug}`} className="block">
+                          <div className="relative aspect-video">
+                              <Image 
+                                  src={post.featuredImageUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                                  alt={post.title}
+                                  fill
+                                  className="object-cover"
+                              />
+                          </div>
+                      </Link>
+                      <CardHeader>
+                          <CardTitle className="font-headline text-xl leading-snug">
+                              <Link href={`/${post.slug}`}>{post.title}</Link>
+                          </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                          <p className="text-muted-foreground line-clamp-3">{post.excerpt}</p>
+                      </CardContent>
+                      <div className="p-4 pt-0 text-xs text-muted-foreground">
+                          <Link href={`/archive/${format(post.createdAt.toDate(), 'yyyy/MM')}`}>
+                              <span className="hover:underline">{post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}</span>
+                          </Link>
+                      </div>
+                  </Card>
+              ))}
+          </div>
+        )}
     </ThemeLayout>
   );
 }

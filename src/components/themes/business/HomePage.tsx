@@ -180,17 +180,17 @@ export default function HomePage() {
     return [...posts].sort((a, b) => (b.createdAt?.toDate() ?? 0) > (a.createdAt?.toDate() ?? 0) ? 1 : -1);
   }, [posts]);
 
-  const hasContent = sortedPosts.length > 0;
-  const [heroPost, ...otherPosts] = sortedPosts;
-  const topStories = otherPosts.slice(0, 4);
-  const latestStories = otherPosts.slice(4, 9);
-  const moreStories = otherPosts.slice(9, 15);
-
   const isLoading = isLoadingPosts || isLoadingSettings;
 
   if (isLoading) {
     return <Loading />;
   }
+  
+  const hasContent = sortedPosts && sortedPosts.length > 0;
+  const [heroPost, ...otherPosts] = sortedPosts || [];
+  const topStories = otherPosts.slice(0, 4);
+  const latestStories = otherPosts.slice(4, 9);
+  const moreStories = otherPosts.slice(9, 15);
 
   return (
     <ThemeLayout 
