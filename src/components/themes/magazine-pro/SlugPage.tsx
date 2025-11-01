@@ -42,6 +42,7 @@ type Post = {
   isBreaking?: boolean;
   tagIds?: string[];
   metaDescription?: string;
+  focusKeyword?: string;
   categoryIds?: string[];
   audioUrl?: string;
 };
@@ -208,6 +209,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const siteTitle = settings?.siteName || 'Techer CMS';
   const pageTitle = `${item.title} - ${siteTitle}`;
   const metaDescription = (item as Post)?.metaDescription || (item as any)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
+  const focusKeyword = (item as Post)?.focusKeyword || '';
   const readTime = isPost ? calculateReadTime(item.content) : null;
 
 
@@ -216,6 +218,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={metaDescription} />
+        {focusKeyword && <meta name="keywords" content={focusKeyword} />}
     </Head>
     {isPost && <ReadingProgress targetRef={articleRef} />}
     <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
@@ -298,3 +301,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    

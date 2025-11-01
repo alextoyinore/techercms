@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -25,7 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone, Podcast } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone, Podcast, Key } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
@@ -37,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loading } from '@/components/loading';
 import { MediaLibrary } from '@/components/media-library';
 import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
+import { generateKeyword } from '@/ai/flows/generate-keyword';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { Switch } from '@/components/ui/switch';
 
@@ -59,6 +61,7 @@ type Post = {
     content: string;
     excerpt: string;
     metaDescription?: string;
+    focusKeyword?: string;
     featuredImageUrl: string;
     audioUrl?: string;
     slug: string;
@@ -84,6 +87,7 @@ export default function EditPostPage() {
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+  const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -95,6 +99,7 @@ export default function EditPostPage() {
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+  const [isGeneratingKeyword, setIsGeneratingKeyword] = useState(false);
   const [shouldGenerateAudio, setShouldGenerateAudio] = useState(false);
   
   // State for new category dialog
@@ -169,6 +174,7 @@ export default function EditPostPage() {
       setContent(post.content || '');
       setExcerpt(post.excerpt || '');
       setMetaDescription(post.metaDescription || '');
+      setFocusKeyword(post.focusKeyword || '');
       setFeaturedImageUrl(post.featuredImageUrl || '');
       setAudioUrl(post.audioUrl || '');
       setSelectedCategories(post.categoryIds || []);
@@ -184,10 +190,13 @@ export default function EditPostPage() {
     );
   };
 
-  const handleAddTag = (tag: string) => {
-    const newTagValue = tag.trim();
-    if (newTagValue && !tags.includes(newTagValue)) {
-      setTags([...tags, newTagValue]);
+  const processTags = (input: string) => {
+    const newTags = input
+      .split(',')
+      .map(tag => tag.trim().replace(/^#/, '').trim())
+      .filter(tag => tag && !tags.includes(tag));
+    if (newTags.length > 0) {
+      setTags(prev => [...prev, ...newTags]);
     }
     setNewTag('');
   };
@@ -273,6 +282,27 @@ export default function EditPostPage() {
       toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
     } finally {
       setIsGeneratingMeta(false);
+    }
+  };
+  
+  const handleGenerateKeyword = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate a keyword.',
+      });
+      return;
+    }
+    setIsGeneratingKeyword(true);
+    try {
+      const result = await generateKeyword({ title, content });
+      setFocusKeyword(result.focusKeyword);
+      toast({ title: 'Focus Keyword Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingKeyword(false);
     }
   };
 
@@ -373,6 +403,7 @@ export default function EditPostPage() {
         content,
         excerpt,
         metaDescription: finalMetaDescription,
+        focusKeyword,
         featuredImageUrl,
         audioUrl: finalAudioUrl,
         status,
@@ -484,6 +515,91 @@ export default function EditPostPage() {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">SEO</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="focus-keyword" className="flex items-center gap-2"><Key className="h-4 w-4" /> Focus Keyword</Label>
+                    <div className="flex gap-2">
+                        <Input 
+                            id="focus-keyword"
+                            value={focusKeyword}
+                            onChange={(e) => setFocusKeyword(e.target.value)}
+                            placeholder="e.g., Next.js Performance"
+                            disabled={isSubmitting || isGeneratingKeyword}
+                        />
+                        <Button variant="outline" size="icon" onClick={handleGenerateKeyword} disabled={isGeneratingKeyword || !title || !content} aria-label="Generate Keyword">
+                            {isGeneratingKeyword ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="meta-description">Meta Description</Label>
+                    <Textarea 
+                        id="meta-description"
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="A concise summary for search engines."
+                        disabled={isSubmitting || isGeneratingMeta}
+                        maxLength={155}
+                        rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
+                </div>
+                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content} className="w-fit">
+                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Description
+                </Button>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Tags</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className='flex items-center gap-1'>
+                        {tag}
+                        <button onClick={() => handleRemoveTag(tag)} disabled={isSubmitting}>
+                            <X className="h-3 w-3" />
+                        </button>
+                    </Badge>
+                ))}
+              </div>
+              <div className="grid gap-2 relative">
+                <Label htmlFor="tags-input">Add Tags</Label>
+                 <div className="flex gap-2">
+                    <Input
+                        id="tags-input"
+                        placeholder="Add tags, separated by commas"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onBlur={(e) => processTags(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                processTags(newTag);
+                            }
+                        }}
+                        disabled={isSubmitting}
+                    />
+                     <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => processTags(newTag)} 
+                        disabled={isSubmitting}
+                        aria-label="Add tags"
+                    >
+                        <PlusCircle className="h-4 w-4" />
+                    </Button>
+                </div>
+                 <p className="text-xs text-muted-foreground">Separate tags with a comma or press Enter.</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-20">
@@ -548,29 +664,6 @@ export default function EditPostPage() {
                         Generate audio on save
                     </Label>
                 </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">SEO</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="meta-description">Meta Description</Label>
-                    <Textarea 
-                        id="meta-description"
-                        value={metaDescription}
-                        onChange={(e) => setMetaDescription(e.target.value)}
-                        placeholder="A concise summary for search engines."
-                        disabled={isSubmitting || isGeneratingMeta}
-                        maxLength={155}
-                    />
-                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
-                </div>
-                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content}>
-                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Generate Description
-                </Button>
             </CardContent>
           </Card>
           <Card>
@@ -724,57 +817,10 @@ export default function EditPostPage() {
                 </Dialog>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Tags</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className='flex items-center gap-1'>
-                        {tag}
-                        <button onClick={() => handleRemoveTag(tag)} disabled={isSubmitting}>
-                            <X className="h-3 w-3" />
-                        </button>
-                    </Badge>
-                ))}
-              </div>
-              <div className="grid gap-2 relative">
-                <Label htmlFor="tags">Add Tags</Label>
-                <div className="flex gap-2">
-                    <Input
-                        id="tags"
-                        placeholder="New tag"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(newTag))}
-                        disabled={isSubmitting}
-                    />
-                    <Button variant="outline" size="icon" onClick={() => handleAddTag(newTag)} disabled={isSubmitting}>
-                        <PlusCircle className="h-4 w-4" />
-                    </Button>
-                </div>
-                 {newTag.length > 0 && filteredTags.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-10 mt-1 border bg-background shadow-md rounded-md">
-                         <ul className='max-h-48 overflow-y-auto p-1'>
-                            {filteredTags.map(tag => (
-                                <li 
-                                    key={tag.id}
-                                    className="p-2 text-sm hover:bg-accent cursor-pointer rounded-sm"
-                                    onClick={() => handleAddTag(tag.name)}
-                                >
-                                    {tag.name}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
 }
+
+    
