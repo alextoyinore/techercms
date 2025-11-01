@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -179,6 +179,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       trackView(item.id);
     }
   }, [isPost, item?.id]);
+
+  const readTime = isPost ? calculateReadTime(item.content) : null;
 
   const isLoading = isLoadingPosts || isLoadingPages || isLoadingSettings;
 
