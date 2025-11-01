@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -17,6 +16,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { PublicAuthNav } from '../PublicAuthNav';
 import { SubscriptionPopup } from '@/components/SubscriptionPopup';
 import { ThemeLayout } from '../ThemeLayout';
+import { cn } from '@/lib/utils';
 
 type Post = {
   id: string;
@@ -34,14 +34,14 @@ type SiteSettings = {
   companyName?: string;
 }
 
-export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
+export function PublicHeader({ siteName, siteLogoUrl, pageTitle }: { siteName?: string, siteLogoUrl?: string, pageTitle?: string }) {
     const isSvg = siteLogoUrl?.endsWith('.svg');
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     return (
         <header className="pt-3 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
             <div className="container px-4 mx-auto flex justify-between items-center">
-                <Link href="/" className="text-2xl font-black font-headline text-primary tracking-tighter">
+                <Link href="/" className="flex items-center gap-3 text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
                         isSvg ? (
                             <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto" />
@@ -50,6 +50,12 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                         )
                     ) : (
                         siteName || ''
+                    )}
+                    {pageTitle && (
+                        <>
+                            <span className="text-muted-foreground/50 text-2xl font-light">|</span>
+                            <span className="text-xl font-semibold text-foreground tracking-normal">{pageTitle}</span>
+                        </>
                     )}
                 </Link>
                  <div className="hidden md:flex items-center gap-4">
@@ -187,8 +193,8 @@ export default function HomePage() {
 
   return (
     <ThemeLayout 
-        HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
-        FooterComponent={() => <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />}
+        HeaderComponent={PublicHeader} 
+        FooterComponent={PublicFooter} 
         className="bg-background text-foreground font-sans"
     >
         {hasContent ? (

@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -33,14 +32,14 @@ type SiteSettings = {
   companyName?: string;
 }
 
-export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, siteLogoUrl?: string }) {
+export function PublicHeader({ siteName, siteLogoUrl, pageTitle }: { siteName?: string, siteLogoUrl?: string, pageTitle?: string }) {
     const isSvg = siteLogoUrl?.endsWith('.svg');
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     return (
         <header className="sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b-4 border-primary">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                <Link href="/" className="text-4xl font-black font-headline tracking-tighter">
+                <Link href="/" className="flex items-center gap-3 text-4xl font-black font-headline tracking-tighter">
                      {siteLogoUrl ? (
                         isSvg ? (
                             <img src={siteLogoUrl} alt={siteName || 'Site Logo'} className="h-10 w-auto" />
@@ -49,6 +48,12 @@ export function PublicHeader({ siteName, siteLogoUrl }: { siteName?: string, sit
                         )
                     ) : (
                         siteName || ''
+                    )}
+                     {pageTitle && (
+                        <>
+                            <span className="text-muted-foreground/50 text-2xl font-light">|</span>
+                            <span className="text-xl font-semibold text-foreground tracking-normal">{pageTitle}</span>
+                        </>
                     )}
                 </Link>
                 <div className="hidden md:flex items-center gap-4">
@@ -150,7 +155,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-background text-foreground font-serif">
-        {hasContent && <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />}
+        <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />
         <main className="container mx-auto py-8 px-4">
             {!hasContent ? (
                  <div className="text-center py-24">
@@ -210,7 +215,7 @@ export default function HomePage() {
                 <WidgetArea areaName="Homepage Content" />
             </div>
         </main>
-        {hasContent && <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />}
+        <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} />
     </div>
   );
 }

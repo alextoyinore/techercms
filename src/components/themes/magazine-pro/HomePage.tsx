@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -19,7 +18,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { PublicAuthNav } from '../PublicAuthNav';
 
 
-export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName }) => {
+export const MagazineProHeader: React.FC<{ siteName?: string, pageTitle?: string }> = ({ siteName, pageTitle }) => {
     const [currentDate, setCurrentDate] = useState('');
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -30,8 +29,14 @@ export const MagazineProHeader: React.FC<{ siteName?: string }> = ({ siteName })
     return (
     <header className="sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-             <Link href="/" className="text-2xl font-bold font-headline text-primary">
+             <Link href="/" className="flex items-center gap-3 text-2xl font-bold font-headline text-primary">
                 {siteName || ''}
+                {pageTitle && (
+                    <>
+                        <span className="text-muted-foreground/50 text-2xl font-light">|</span>
+                        <span className="text-xl font-semibold text-foreground">{pageTitle}</span>
+                    </>
+                )}
             </Link>
             <div className="hidden md:flex items-center gap-4">
                 <nav>

@@ -1,10 +1,9 @@
-
 'use client';
 import { useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -64,6 +63,8 @@ type SiteSettings = {
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
     siteName?: string;
+    siteLogoUrl?: string;
+    siteDescription?: string;
 }
 
 const parserOptions: HTMLReactParserOptions = {
@@ -130,10 +131,18 @@ function PageContent({ page }: { page: Page }) {
 // Accept an optional preloadedItem prop
 export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Post }) {
   const params = useParams();
+  const pathname = usePathname();
   // If no preloadedItem is provided (e.g., navigating directly), use the slug from URL
   const slug = preloadedItem ? (preloadedItem as any).slug : params.slug as string;
   const firestore = useFirestore();
   const articleRef = useRef<HTMLElement>(null);
+  const [currentUrl, setCurrentUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        setCurrentUrl(window.location.href);
+    }
+  }, [pathname]);
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !slug || preloadedItem) return null;
@@ -207,9 +216,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const displayTitle = !isHomepage && !settings?.hideAllPageTitles && pageShowTitle;
 
   const siteTitle = settings?.siteName || 'Techer CMS';
-  const pageTitle = `${item.title} - ${siteTitle}`;
-  const metaDescription = (item as Post)?.metaDescription || (item as any)?.excerpt || `Read more about ${item.title} on ${siteTitle}`;
-  const focusKeyword = (item as Post)?.focusKeyword || '';
+  const pageTitle = `${item.title} | ${siteTitle}`;
+  const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || settings?.siteDescription || '';
+  const ogImage = item.featuredImageUrl || settings?.siteLogoUrl || '';
   const readTime = isPost ? calculateReadTime(item.content) : null;
 
 
@@ -218,10 +227,16 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={metaDescription} />
-        {focusKeyword && <meta name="keywords" content={focusKeyword} />}
+        <meta property="og:title" content={item.title} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:type" content={isPost ? 'article' : 'website'} />
+        <meta property="og:site_name" content={siteTitle} />
+        <meta name="twitter:card" content="summary_large_image" />
     </Head>
     {isPost && <ReadingProgress targetRef={articleRef} />}
-    <ThemeLayout HeaderComponent={MagazineProHeader} FooterComponent={MagazineProFooter} pageId={pageId}>
+    <ThemeLayout HeaderComponent={() => <MagazineProHeader siteName={settings?.siteName} pageTitle={displayTitle ? item.title : undefined} />} FooterComponent={MagazineProFooter} pageId={pageId}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
               <div className="lg:col-span-9">
                   <article className="max-w-none" ref={articleRef}>

@@ -1,4 +1,3 @@
-
 'use client';
 import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
@@ -13,9 +12,9 @@ type SiteSettings = {
     companyName?: string;
 }
 
-function PublicHeader({ siteName, HeaderComponent }: { siteName?: string, HeaderComponent?: React.FC<{siteName?: string}> }) {
+function PublicHeader({ siteName, pageTitle, HeaderComponent }: { siteName?: string, pageTitle?: string, HeaderComponent?: React.FC<any> }) {
     if (HeaderComponent) {
-        return <HeaderComponent siteName={siteName} />;
+        return <HeaderComponent siteName={siteName} pageTitle={pageTitle} />;
     }
 
     return (
@@ -77,11 +76,14 @@ export function ThemeLayout({ children, HeaderComponent, FooterComponent, pageId
 
     const { data: settings } = useDoc<SiteSettings>(settingsRef);
     
+    // Extract pageTitle from HeaderComponent props if available
+    const pageTitle = HeaderComponent?.displayName?.includes('pageTitle') ? (HeaderComponent as any).pageTitle : undefined;
+
     return (
         <div className={className}>
             <WidgetArea areaName="Header" />
             <WidgetArea areaName="Page Header" isPageSpecific={!!pageId} pageId={pageId} />
-            <PublicHeader siteName={settings?.siteName} HeaderComponent={HeaderComponent} />
+            <PublicHeader siteName={settings?.siteName} HeaderComponent={HeaderComponent} pageTitle={pageTitle} />
             <main className="container mx-auto py-8 px-6">
                 {children}
             </main>
