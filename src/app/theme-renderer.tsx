@@ -137,6 +137,12 @@ export function ThemeRenderer({ pageType }: ThemeRendererProps) {
     return <Loading />;
   }
   
+  // This logic is now safe because we wait for `isLoading` above.
+  if (pageType === 'home' && settings && settings.homepageType === 'static' && settings.homepagePageId) {
+    // If it's a static homepage, we need to resolve the theme first.
+    return <ActiveThemeResolver pageType={pageType} settings={settings} />;
+  }
+
   const finalSettings = settings || { activeTheme: 'Magazine Pro' };
 
   return <ActiveThemeResolver pageType={pageType} settings={finalSettings} />;
