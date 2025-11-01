@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, PlusCircle, Loader2, Podcast, Megaphone, Star } from "lucide-react";
+import { MoreHorizontal, PlusCircle, Loader2, Podcast, Megaphone, Star, View } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
     DropdownMenu,
@@ -27,6 +27,7 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
+    DropdownMenuCheckboxItem,
   } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ type Post = {
     audioUrl?: string;
     isBreaking?: boolean;
     tagIds?: string[];
+    focusKeyword?: string;
 };
 
 export default function PostsPage() {
@@ -61,6 +63,18 @@ export default function PostsPage() {
     const [filter, setFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [viewCounts, setViewCounts] = useState<Record<string, number | null>>({});
+    
+    const [columnVisibility, setColumnVisibility] = useState({
+        image: true,
+        title: true,
+        status: true,
+        views: true,
+        audio: true,
+        breaking: true,
+        featured: true,
+        keyword: false,
+        date: true,
+    });
 
     const postsCollection = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -192,6 +206,8 @@ export default function PostsPage() {
             });
         }
     }
+    
+    const visibleColumns = Object.values(columnVisibility).filter(Boolean).length + 2; // +2 for S/N and Actions
 
   return (
     <div className="flex flex-col gap-6">
@@ -230,20 +246,42 @@ export default function PostsPage() {
                     <SelectItem value="audio">Has Audio</SelectItem>
                 </SelectContent>
             </Select>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                        <View className="mr-2 h-4 w-4" />
+                        View
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                    {Object.entries(columnVisibility).map(([key, value]) => (
+                        <DropdownMenuCheckboxItem
+                            key={key}
+                            checked={value}
+                            onCheckedChange={(checked) => setColumnVisibility(prev => ({...prev, [key]: checked}))}
+                            className="capitalize"
+                        >
+                            {key}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">S/N</TableHead>
-                <TableHead className="w-[80px]">Image</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Views</TableHead>
-                <TableHead>Audio</TableHead>
-                <TableHead>Breaking</TableHead>
-                <TableHead>Featured</TableHead>
-                <TableHead>Date</TableHead>
+                {columnVisibility.image && <TableHead className="w-[80px]">Image</TableHead>}
+                {columnVisibility.title && <TableHead>Title</TableHead>}
+                {columnVisibility.status && <TableHead>Status</TableHead>}
+                {columnVisibility.views && <TableHead>Views</TableHead>}
+                {columnVisibility.audio && <TableHead>Audio</TableHead>}
+                {columnVisibility.breaking && <TableHead>Breaking</TableHead>}
+                {columnVisibility.featured && <TableHead>Featured</TableHead>}
+                {columnVisibility.keyword && <TableHead>Keyword</TableHead>}
+                {columnVisibility.date && <TableHead>Date</TableHead>}
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -252,14 +290,14 @@ export default function PostsPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                    <TableCell colSpan={10} className="text-center">
+                    <TableCell colSpan={visibleColumns} className="text-center">
                         Loading posts...
                     </TableCell>
                 </TableRow>
               )}
               {!isLoading && paginatedPosts.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={10} className="text-center">
+                    <TableCell colSpan={visibleColumns} className="text-center">
                         No posts found.
                     </TableCell>
                 </TableRow>
@@ -269,57 +307,74 @@ export default function PostsPage() {
                    <TableCell className="font-medium">
                         {(currentPage - 1) * pageSize + index + 1}
                     </TableCell>
+                    {columnVisibility.image && (
+                        <TableCell>
+                            {post.featuredImageUrl ? (
+                                <Image 
+                                    src={post.featuredImageUrl} 
+                                    alt={post.title} 
+                                    width={60} 
+                                    height={40} 
+                                    className="rounded-sm object-cover aspect-[3/2]" 
+                                />
+                            ) : (
+                                <div className="h-10 w-[60px] bg-muted rounded-sm" />
+                            )}
+                        </TableCell>
+                    )}
+                  {columnVisibility.title && (
+                    <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                        {post.isBreaking && <BreakingNewsIndicator />}
+                        <span>{post.title}</span>
+                        </div>
+                    </TableCell>
+                  )}
+                  {columnVisibility.status && (
                     <TableCell>
-                        {post.featuredImageUrl ? (
-                            <Image 
-                                src={post.featuredImageUrl} 
-                                alt={post.title} 
-                                width={60} 
-                                height={40} 
-                                className="rounded-sm object-cover aspect-[3/2]" 
+                        <Badge variant={post.status === "published" ? "default" : "secondary"}>
+                        {post.status}
+                        </Badge>
+                    </TableCell>
+                  )}
+                   {columnVisibility.views && (
+                        <TableCell>
+                            {viewCounts[post.id] === null ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                            viewCounts[post.id]
+                            )}
+                        </TableCell>
+                   )}
+                    {columnVisibility.audio && (
+                        <TableCell>
+                            {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
+                        </TableCell>
+                    )}
+                    {columnVisibility.breaking && (
+                        <TableCell>
+                            <Switch
+                            checked={post.isBreaking}
+                            onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
+                            aria-label="Mark as breaking news"
                             />
-                        ) : (
-                            <div className="h-10 w-[60px] bg-muted rounded-sm" />
-                        )}
-                    </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {post.isBreaking && <BreakingNewsIndicator />}
-                      <span>{post.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={post.status === "published" ? "default" : "secondary"}>
-                      {post.status}
-                    </Badge>
-                  </TableCell>
-                   <TableCell>
-                        {viewCounts[post.id] === null ? (
-                           <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                           viewCounts[post.id]
-                        )}
-                    </TableCell>
-                    <TableCell>
-                        {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
-                    </TableCell>
-                    <TableCell>
-                        <Switch
-                          checked={post.isBreaking}
-                          onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
-                          aria-label="Mark as breaking news"
-                        />
-                    </TableCell>
-                    <TableCell>
-                        <Switch
-                          checked={(post.tagIds || []).includes('featured')}
-                          onCheckedChange={(checked) => handleFeaturedChange(post, checked)}
-                          aria-label="Mark as featured"
-                        />
-                    </TableCell>
-                  <TableCell>
-                    {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
-                  </TableCell>
+                        </TableCell>
+                    )}
+                     {columnVisibility.featured && (
+                        <TableCell>
+                            <Switch
+                            checked={(post.tagIds || []).includes('featured')}
+                            onCheckedChange={(checked) => handleFeaturedChange(post, checked)}
+                            aria-label="Mark as featured"
+                            />
+                        </TableCell>
+                     )}
+                     {columnVisibility.keyword && <TableCell className="text-xs truncate max-w-24">{post.focusKeyword}</TableCell>}
+                     {columnVisibility.date && (
+                        <TableCell>
+                            {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
+                        </TableCell>
+                     )}
                   <TableCell className="text-right">
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
