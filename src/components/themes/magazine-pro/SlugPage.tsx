@@ -284,7 +284,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                             )}
 
                         <CommentsSection postId={item.id} />
-                        <RelatedPosts currentPost={item} />
+                        <RelatedPosts currentPost={item as Post} />
                     </>
                        
                   ) : (
@@ -301,5 +301,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

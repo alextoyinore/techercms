@@ -517,45 +517,6 @@ export default function EditPostPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">SEO</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-                <div className="grid gap-2">
-                    <Label htmlFor="focus-keyword" className="flex items-center gap-2"><Key className="h-4 w-4" /> Focus Keyword</Label>
-                    <div className="flex gap-2">
-                        <Input 
-                            id="focus-keyword"
-                            value={focusKeyword}
-                            onChange={(e) => setFocusKeyword(e.target.value)}
-                            placeholder="e.g., Next.js Performance"
-                            disabled={isSubmitting || isGeneratingKeyword}
-                        />
-                        <Button variant="outline" size="icon" onClick={handleGenerateKeyword} disabled={isGeneratingKeyword || !title || !content} aria-label="Generate Keyword">
-                            {isGeneratingKeyword ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
-                        </Button>
-                    </div>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="meta-description">Meta Description</Label>
-                    <Textarea 
-                        id="meta-description"
-                        value={metaDescription}
-                        onChange={(e) => setMetaDescription(e.target.value)}
-                        placeholder="A concise summary for search engines."
-                        disabled={isSubmitting || isGeneratingMeta}
-                        maxLength={155}
-                        rows={3}
-                    />
-                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
-                </div>
-                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content} className="w-fit">
-                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Generate Description
-                </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
               <CardTitle className="font-headline">Tags</CardTitle>
             </CardHeader>
             <CardContent>
@@ -598,6 +559,45 @@ export default function EditPostPage() {
                 </div>
                  <p className="text-xs text-muted-foreground">Separate tags with a comma or press Enter.</p>
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">SEO</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="focus-keyword" className="flex items-center gap-2"><Key className="h-4 w-4" /> Focus Keyword</Label>
+                    <div className="flex gap-2">
+                        <Input 
+                            id="focus-keyword"
+                            value={focusKeyword}
+                            onChange={(e) => setFocusKeyword(e.target.value)}
+                            placeholder="e.g., Next.js Performance"
+                            disabled={isSubmitting || isGeneratingKeyword}
+                        />
+                        <Button variant="outline" size="icon" onClick={handleGenerateKeyword} disabled={isGeneratingKeyword || !title || !content} aria-label="Generate Keyword">
+                            {isGeneratingKeyword ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="meta-description">Meta Description</Label>
+                    <Textarea 
+                        id="meta-description"
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="A concise summary for search engines."
+                        disabled={isSubmitting || isGeneratingMeta}
+                        maxLength={155}
+                        rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
+                </div>
+                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content} className="w-fit">
+                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Description
+                </Button>
             </CardContent>
           </Card>
         </div>
@@ -822,5 +822,3 @@ export default function EditPostPage() {
     </div>
   );
 }
-
-    
