@@ -22,7 +22,7 @@ import {
 import { PageHeader } from '@/components/page-header';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, Timestamp, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, Timestamp, doc, serverTimestamp, collectionGroup, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
@@ -46,6 +46,10 @@ type ContentItem = {
 type Category = {
     id: string;
     name: string;
+}
+
+type View = {
+    timestamp: Timestamp;
 }
 
 function StatCard({
@@ -104,6 +108,16 @@ export default function Dashboard() {
     [firestore]
   );
 
+  const fourteenDaysAgo = subDays(new Date(), 14);
+  const viewsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+        collectionGroup(firestore, 'views'),
+        where('timestamp', '>=', fourteenDaysAgo)
+    );
+  }, [firestore]);
+
+
   const { data: posts, isLoading: isLoadingPosts } =
     useCollection<ContentItem>(postsCollection);
   const { data: pages, isLoading: isLoadingPages } =
@@ -112,6 +126,7 @@ export default function Dashboard() {
     useCollection<ContentItem>(mediaCollection);
   const { data: categories, isLoading: isLoadingCategories } =
     useCollection<Category>(categoriesCollection);
+  const { data: recentViews, isLoading: isLoadingViews } = useCollection<View>(viewsQuery);
 
   const recentPosts = useMemo(() => {
     if (!posts) return [];
@@ -171,16 +186,35 @@ export default function Dashboard() {
     return data;
   }, [posts]);
 
+  const dailyViewsChartData = useMemo(() => {
+    if (!recentViews) return [];
+    const last14Days = Array.from({ length: 14 }, (_, i) => subDays(new Date(), i)).reverse();
+
+    const data = last14Days.map(day => {
+        const dayViews = recentViews.filter(view => view.timestamp && isSameDay(view.timestamp.toDate(), day)).length;
+        return {
+            date: format(day, 'MMM d'),
+            views: dayViews
+        }
+    });
+
+    return data;
+  }, [recentViews]);
+
 
   const chartConfig = {
       posts: {
         label: "Posts",
-        color: "hsl(var(--primary))",
+        color: "hsl(var(--chart-1))",
       },
        pages: {
         label: "Pages",
-        color: "hsl(var(--accent))",
+        color: "hsl(var(--chart-2))",
       },
+       views: {
+        label: "Views",
+        color: "hsl(var(--chart-3))",
+      }
   } satisfies import("@/components/ui/chart").ChartConfig;
 
 
@@ -274,7 +308,7 @@ export default function Dashboard() {
           />
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-max">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 auto-rows-max">
           <Card>
               <CardHeader>
                   <CardTitle className="font-headline">Quick Draft</CardTitle>
@@ -337,6 +371,31 @@ export default function Dashboard() {
                   </Button>
               </CardFooter>
           </Card>
+           <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Daily Views (Last 14 Days)</CardTitle>
+                <CardDescription>Total views across all posts.</CardDescription>
+            </CardHeader>
+            <CardContent className='h-[250px]'>
+                {isLoadingViews ? (
+                    <Skeleton className='w-full h-full'/>
+                ) : dailyViewsChartData.length > 0 ? (
+                    <ChartContainer config={chartConfig} className='w-full h-full'>
+                        <LineChart data={dailyViewsChartData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} fontSize={12} />
+                            <YAxis tickLine={false} axisLine={false} allowDecimals={false}/>
+                            <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                            <Line type="monotone" dataKey="views" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={true} />
+                        </LineChart>
+                    </ChartContainer>
+                ) : (
+                    <div className='flex items-center justify-center h-full text-center text-muted-foreground'>
+                        <p>No view data available. <br/> Views will be tracked as users visit posts.</p>
+                    </div>
+                )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Posts per Day (Last 14 Days)</CardTitle>
@@ -351,13 +410,38 @@ export default function Dashboard() {
                             <CartesianGrid vertical={false} />
                             <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} fontSize={12} />
                             <YAxis tickLine={false} axisLine={false} allowDecimals={false}/>
-                            <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                            <Line type="monotone" dataKey="posts" stroke="hsl(var(--primary))" strokeWidth={2} dot={true} />
+                            <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                            <Line type="monotone" dataKey="posts" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={true} />
                         </LineChart>
                     </ChartContainer>
                 ) : (
                     <div className='flex items-center justify-center h-full text-center text-muted-foreground'>
                         <p>Not enough data to display chart. <br/> Create some posts to get started.</p>
+                    </div>
+                )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Posts by Category</CardTitle>
+                <CardDescription>A breakdown of your content topics.</CardDescription>
+            </CardHeader>
+            <CardContent className='h-[250px]'>
+                {isLoadingPosts || isLoadingCategories ? (
+                    <Skeleton className='w-full h-full'/>
+                ) : postsPerCategoryChartData.length > 0 ? (
+                    <ChartContainer config={chartConfig} className='w-full h-full'>
+                        <BarChart data={postsPerCategoryChartData} accessibilityLayer layout="vertical">
+                            <CartesianGrid horizontal={false} />
+                            <YAxis dataKey="name" type="category" tickLine={false} tickMargin={10} axisLine={false} width={80} />
+                            <XAxis type="number" hide={true}/>
+                            <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                            <Bar dataKey="posts" fill="hsl(var(--chart-1))" radius={4} />
+                        </BarChart>
+                    </ChartContainer>
+                ) : (
+                     <div className='flex items-center justify-center h-full text-center text-muted-foreground'>
+                        <p>Not enough data to display chart. <br/> Assign posts to categories to see data here.</p>
                     </div>
                 )}
             </CardContent>
@@ -387,8 +471,8 @@ export default function Dashboard() {
                                 ))}
                                 </div>
                             )} />
-                            <Line type="monotone" dataKey="posts" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                            <Line type="monotone" dataKey="pages" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="posts" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="pages" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
                         </LineChart>
                     </ChartContainer>
                 ) : (
