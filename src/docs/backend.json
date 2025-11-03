@@ -58,6 +58,14 @@
           "type": "string",
           "description": "The main body content of the page."
         },
+        "metaDescription": {
+          "type": "string",
+          "description": "An SEO-friendly description for the page's meta tag."
+        },
+        "focusKeyword": {
+          "type": "string",
+          "description": "The primary keyword or keyphrase for the page's SEO."
+        },
         "featuredImageUrl": {
           "type": "string",
           "description": "The URL for the page's main image."
@@ -645,7 +653,7 @@
           "params": [
             {
               "name": "tagId",
-              "description": "The unique identifier for the tag."
+              "description": "The unique identifier of the tag."
             }
           ]
         }
@@ -811,4 +819,5 @@
   }
 }
 
+    
     

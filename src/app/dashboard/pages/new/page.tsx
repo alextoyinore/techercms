@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,13 +16,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, Loader2, Upload, Library } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Library, Sparkles, Key } from 'lucide-react';
 import { useFirestore, useAuth } from '@/firebase';
-import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
 import { MediaLibrary } from '@/components/media-library';
+import { Textarea } from '@/components/ui/textarea';
+import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
+import { generateKeyword } from '@/ai/flows/generate-keyword';
 
 const pageWidgetAreas = [
     { name: 'Page Header', description: 'Displays at the top of the page, above the main content.', theme: 'all' },
@@ -38,10 +42,14 @@ export default function NewPagePage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+  const [isGeneratingKeyword, setIsGeneratingKeyword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +111,48 @@ export default function NewPagePage() {
     }
   };
 
+  const handleGenerateMetaDescription = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate a description.',
+      });
+      return;
+    }
+    setIsGeneratingMeta(true);
+    try {
+      const result = await generateMetaDescription({ title, content });
+      setMetaDescription(result.metaDescription);
+      toast({ title: 'Meta Description Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingMeta(false);
+    }
+  };
+  
+  const handleGenerateKeyword = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate a keyword.',
+      });
+      return;
+    }
+    setIsGeneratingKeyword(true);
+    try {
+      const result = await generateKeyword({ title, content });
+      setFocusKeyword(result.focusKeyword);
+      toast({ title: 'Focus Keyword Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingKeyword(false);
+    }
+  };
+
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title) {
@@ -126,12 +176,36 @@ export default function NewPagePage() {
     setIsSubmitting(true);
     setSubmissionStatus(status);
     
+    let finalMetaDescription = metaDescription;
+    if (!finalMetaDescription && content) {
+        try {
+            const result = await generateMetaDescription({ title, content });
+            finalMetaDescription = result.metaDescription;
+            toast({ title: 'Auto-Generated Meta Description' });
+        } catch (e) {
+            console.error("Failed to auto-generate meta description:", e);
+        }
+    }
+
+    let finalFocusKeyword = focusKeyword;
+    if (!finalFocusKeyword && content) {
+        try {
+            const result = await generateKeyword({ title, content });
+            finalFocusKeyword = result.focusKeyword;
+            toast({ title: 'Auto-Generated Focus Keyword' });
+        } catch (e) {
+            console.error("Failed to auto-generate focus keyword:", e);
+        }
+    }
+
     const pageRef = doc(collection(firestore, "pages"));
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     const newPage = {
         title,
         content,
+        metaDescription: finalMetaDescription,
+        focusKeyword: finalFocusKeyword,
         featuredImageUrl,
         slug,
         status,
@@ -213,6 +287,45 @@ export default function NewPagePage() {
                   disabled={isSubmitting}
                 />
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">SEO</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="focus-keyword" className="flex items-center gap-2"><Key className="h-4 w-4" /> Focus Keyword</Label>
+                    <div className="flex gap-2">
+                        <Input 
+                            id="focus-keyword"
+                            value={focusKeyword}
+                            onChange={(e) => setFocusKeyword(e.target.value)}
+                            placeholder="e.g., Next.js Performance"
+                            disabled={isSubmitting || isGeneratingKeyword}
+                        />
+                        <Button variant="outline" size="icon" onClick={handleGenerateKeyword} disabled={isGeneratingKeyword || !title || !content} aria-label="Generate Keyword">
+                            {isGeneratingKeyword ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="meta-description">Meta Description</Label>
+                    <Textarea 
+                        id="meta-description"
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="A concise summary for search engines."
+                        disabled={isSubmitting || isGeneratingMeta}
+                        maxLength={155}
+                        rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
+                </div>
+                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content} className="w-fit">
+                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Description
+                </Button>
             </CardContent>
           </Card>
         </div>
@@ -313,3 +426,6 @@ export default function NewPagePage() {
     </div>
   );
 }
+
+
+    

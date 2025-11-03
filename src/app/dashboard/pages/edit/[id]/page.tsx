@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2, Construction } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Library, LayoutTemplate, Wand2, Construction, Sparkles, Key } from 'lucide-react';
 import { useFirestore, useAuth, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, serverTimestamp, Timestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -28,6 +28,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WidgetsPage from '@/app/dashboard/widgets/page';
 import { Switch } from '@/components/ui/switch';
 import PageBuilder from './page-builder';
+import { generateMetaDescription } from '@/ai/flows/generate-meta-description';
+import { generateKeyword } from '@/ai/flows/generate-keyword';
+import { Textarea } from '@/components/ui/textarea';
 
 
 type Page = {
@@ -35,6 +38,8 @@ type Page = {
     title: string;
     content: string;
     slug: string;
+    metaDescription?: string;
+    focusKeyword?: string;
     featuredImageUrl: string;
     status: 'draft' | 'published';
     authorId: string;
@@ -63,6 +68,8 @@ export default function EditPagePage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [builderEnabled, setBuilderEnabled] = useState(false);
   const [showTitle, setShowTitle] = useState(true);
@@ -70,6 +77,8 @@ export default function EditPagePage() {
   const [isInitializingWidgets, setIsInitializingWidgets] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
+  const [isGeneratingKeyword, setIsGeneratingKeyword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pageRef = useMemoFirebase(() => {
@@ -93,6 +102,8 @@ export default function EditPagePage() {
     if (page) {
       setTitle(page.title || '');
       setContent(page.content || '');
+      setMetaDescription(page.metaDescription || '');
+      setFocusKeyword(page.focusKeyword || '');
       setFeaturedImageUrl(page.featuredImageUrl || '');
       setBuilderEnabled(page.builderEnabled || false);
       setShowTitle(page.showTitle === undefined ? true : page.showTitle);
@@ -158,6 +169,48 @@ export default function EditPagePage() {
     }
   };
 
+  const handleGenerateMetaDescription = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate a description.',
+      });
+      return;
+    }
+    setIsGeneratingMeta(true);
+    try {
+      const result = await generateMetaDescription({ title, content });
+      setMetaDescription(result.metaDescription);
+      toast({ title: 'Meta Description Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingMeta(false);
+    }
+  };
+  
+  const handleGenerateKeyword = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate a keyword.',
+      });
+      return;
+    }
+    setIsGeneratingKeyword(true);
+    try {
+      const result = await generateKeyword({ title, content });
+      setFocusKeyword(result.focusKeyword);
+      toast({ title: 'Focus Keyword Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingKeyword(false);
+    }
+  };
+
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!title) {
         toast({
@@ -194,11 +247,35 @@ export default function EditPagePage() {
         }
     }
     
+    let finalMetaDescription = metaDescription;
+    if (!finalMetaDescription && content) {
+        try {
+            const result = await generateMetaDescription({ title, content });
+            finalMetaDescription = result.metaDescription;
+            toast({ title: 'Auto-Generated Meta Description', description: 'A meta description was created for you.' });
+        } catch (e) {
+            console.error("Failed to auto-generate meta description:", e);
+        }
+    }
+
+    let finalFocusKeyword = focusKeyword;
+    if (!finalFocusKeyword && content) {
+        try {
+            const result = await generateKeyword({ title, content });
+            finalFocusKeyword = result.focusKeyword;
+            toast({ title: 'Auto-Generated Focus Keyword', description: 'A focus keyword was created for you.' });
+        } catch (e) {
+            console.error("Failed to auto-generate focus keyword:", e);
+        }
+    }
+
     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
     const updatedPage: Partial<Page> = {
         title,
         content,
+        metaDescription: finalMetaDescription,
+        focusKeyword: finalFocusKeyword,
         featuredImageUrl,
         slug,
         status,
@@ -315,6 +392,45 @@ export default function EditPagePage() {
                 </div>
             </CardContent>
         </Card>
+        <Card>
+            <CardHeader>
+              <CardTitle className="font-headline">SEO</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                <div className="grid gap-2">
+                    <Label htmlFor="focus-keyword" className="flex items-center gap-2"><Key className="h-4 w-4" /> Focus Keyword</Label>
+                    <div className="flex gap-2">
+                        <Input 
+                            id="focus-keyword"
+                            value={focusKeyword}
+                            onChange={(e) => setFocusKeyword(e.target.value)}
+                            placeholder="e.g., Next.js Performance"
+                            disabled={isSubmitting || isGeneratingKeyword}
+                        />
+                        <Button variant="outline" size="icon" onClick={handleGenerateKeyword} disabled={isGeneratingKeyword || !title || !content} aria-label="Generate Keyword">
+                            {isGeneratingKeyword ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="meta-description">Meta Description</Label>
+                    <Textarea 
+                        id="meta-description"
+                        value={metaDescription}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="A concise summary for search engines."
+                        disabled={isSubmitting || isGeneratingMeta}
+                        maxLength={155}
+                        rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground">{metaDescription.length} / 155</p>
+                </div>
+                 <Button variant="outline" size="sm" onClick={handleGenerateMetaDescription} disabled={isGeneratingMeta || !title || !content} className="w-fit">
+                    {isGeneratingMeta ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Description
+                </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid auto-rows-max items-start gap-4 lg:col-span-1 lg:sticky lg:top-36">
@@ -488,4 +604,5 @@ export default function EditPagePage() {
   );
 }
 
+    
     
