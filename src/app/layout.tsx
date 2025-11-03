@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TypographyProvider } from "@/components/TypographyProvider";
 import { GlobalStyleProvider } from "@/components/GlobalStyleProvider";
 
+// This metadata object is for static metadata.
+// Dynamic metadata for individual pages will be handled in those pages.
 export const metadata: Metadata = {
   title: "95News",
   keywords: "Breaking News, World News, Nigerian News, African News, Europe, Asia, North America, South America, US, Climate, Art, Culture, Music, Nigerian Music, Sports, Science, Tech, Innovation, Business, Markets, Photos, Video, Audio",
@@ -15,7 +17,29 @@ export const metadata: Metadata = {
   verification: {
     google: "UzT4k0mumgBwXSPmkuK6ARyI-pYNWiVB5i3GQAQjLUQ",
   },
+  openGraph: {
+    title: '95News',
+    description: 'Breaking News, World News, and Analysis',
+    url: 'https://www.95news.com.ng',
+    siteName: '95News',
+    images: [
+      {
+        url: 'https://www.95news.com.ng/og-image.png', // IMPORTANT: Create this image in your public folder
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '95News',
+    description: 'Breaking News, World News, and Analysis',
+    images: ['https://www.95news.com.ng/og-image.png'], // IMPORTANT: Create this image in your public folder
+  },
 };
+
 
 export default async function RootLayout({
   children,

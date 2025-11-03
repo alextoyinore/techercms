@@ -64,6 +64,7 @@ type Page = {
 type SiteSettings = {
     siteName?: string;
     siteLogoUrl?: string;
+    siteDescription?: string;
     hideAllPageTitles?: boolean;
     homepagePageId?: string;
 }
@@ -223,38 +224,38 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   const { data: views } = useCollection(viewsQuery);
 
-    useEffect(() => {
-        if (isPost && item?.id && firestore) {
-            const track = async () => {
-                let sessionId = localStorage.getItem('user_session_id');
-                if (!sessionId) {
-                    sessionId = uuidv4();
-                    localStorage.setItem('user_session_id', sessionId);
-                }
+  useEffect(() => {
+    if (isPost && item?.id && firestore) {
+        const track = async () => {
+            let sessionId = localStorage.getItem('user_session_id');
+            if (!sessionId) {
+                sessionId = uuidv4();
+                localStorage.setItem('user_session_id', sessionId);
+            }
 
-                const VIEW_COOLDOWN_HOURS = 24;
-                const viewRef = doc(firestore, `posts/${item.id}/views/${sessionId}`);
+            const VIEW_COOLDOWN_HOURS = 24;
+            const viewRef = doc(firestore, `posts/${item.id}/views/${sessionId}`);
+            
+            try {
+                const viewDoc = await getDoc(viewRef);
+                const now = Timestamp.now();
                 
-                try {
-                    const viewDoc = await getDoc(viewRef);
-                    const now = Timestamp.now();
-                    
-                    if (viewDoc.exists()) {
-                        const lastViewTimestamp = viewDoc.data()?.timestamp as Timestamp;
-                        const hoursSinceLastView = (now.seconds - lastViewTimestamp.seconds) / 3600;
-                        if (hoursSinceLastView < VIEW_COOLDOWN_HOURS) {
-                            return; // Cooldown not elapsed
-                        }
+                if (viewDoc.exists()) {
+                    const lastViewTimestamp = viewDoc.data()?.timestamp as Timestamp;
+                    const hoursSinceLastView = (now.seconds - lastViewTimestamp.seconds) / 3600;
+                    if (hoursSinceLastView < VIEW_COOLDOWN_HOURS) {
+                        return; // Cooldown not elapsed
                     }
-                    // Set or update the timestamp
-                    await setDoc(viewRef, { timestamp: now });
-                } catch (error) {
-                    console.error("Error tracking view:", error);
                 }
-            };
-            track();
-        }
-    }, [isPost, item?.id, firestore]);
+                // Set or update the timestamp
+                await setDoc(viewRef, { timestamp: now });
+            } catch (error) {
+                console.error("Error tracking view:", error);
+            }
+        };
+        track();
+    }
+  }, [isPost, item?.id, firestore]);
 
   const readTime = isPost ? calculateReadTime(item.content) : null;
 
@@ -392,5 +393,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

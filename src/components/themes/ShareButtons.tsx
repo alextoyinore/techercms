@@ -17,7 +17,7 @@ import { deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/no
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp } from 'lucide-react';
+import { ThumbsUp, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -76,6 +76,22 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
     }
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(currentUrl).then(() => {
+      toast({
+        title: "Link Copied!",
+        description: "The post URL has been copied to your clipboard.",
+      });
+    }, (err) => {
+      console.error('Could not copy text: ', err);
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Could not copy the link. Please try again.",
+      });
+    });
+  };
+
 
   if (!currentUrl) {
     return null;
@@ -84,15 +100,25 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   return (
     <div className="my-8">
       <div className="flex items-center justify-between gap-4">
-        <Button 
-            variant="ghost"
-            onClick={handleLike}
-            className="flex items-center gap-2 px-2 hover:bg-transparent"
-        >
-            <ThumbsUp className={cn("h-8 w-8 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
-            <span className="font-semibold">Like</span>
-            <span className="font-semibold text-muted-foreground">({likeCount})</span>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button 
+                variant="ghost"
+                onClick={handleLike}
+                className="flex items-center gap-2 px-2 hover:bg-transparent"
+            >
+                <ThumbsUp className={cn("h-8 w-8 transition-colors", hasLiked && "fill-green-500 text-green-500")} />
+                <span className="font-semibold">Like</span>
+                <span className="font-semibold text-muted-foreground">({likeCount})</span>
+            </Button>
+            <Button 
+                variant="ghost"
+                onClick={handleCopyLink}
+                className="flex items-center gap-2 px-2 hover:bg-transparent"
+            >
+                <LinkIcon className="h-8 w-8"/>
+                <span className="font-semibold">Copy Link</span>
+            </Button>
+        </div>
         <div className="flex items-center gap-2">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground hidden sm:block">Share This</p>
             <FacebookShareButton url={currentUrl} quote={title}>
