@@ -39,9 +39,9 @@ export interface Theme {
 export const defaultTheme: Theme = {
   name: 'Default',
   colors: {
-    background: '0 0% 98%',
+    background: '0 0% 100%',
     foreground: '215 8% 20%',
-    card: '0 0% 100%',
+    card: '0 0% 98%',
     cardForeground: '215 8% 20%',
     popover: '0 0% 100%',
     popoverForeground: '215 8% 20%',

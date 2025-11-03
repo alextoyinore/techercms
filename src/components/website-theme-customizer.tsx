@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import {
   Sheet,
@@ -148,6 +148,16 @@ export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }:
     }
   }, [open, themeSource, settings]);
 
+  const applyLiveStyles = useCallback((newColors: ThemeColors) => {
+    const root = window.document.documentElement;
+    for (const key in newColors) {
+      if (key !== 'sidebar') {
+        const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+        root.style.setProperty(cssVar, newColors[key as keyof GlobalColors]);
+      }
+    }
+  }, []);
+
   const handleColorChange = (key: keyof GlobalColors, value: string) => {
     if (!colors) return;
     const newColors: ThemeColors = {
@@ -155,6 +165,7 @@ export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }:
       [key]: value
     };
     setColors(newColors);
+    applyLiveStyles(newColors);
   };
 
   const handleSidebarColorChange = (key: keyof ThemeColors['sidebar'], value: string) => {
@@ -164,6 +175,7 @@ export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }:
         sidebar: { ...colors.sidebar, [key]: value }
     };
     setColors(newColors);
+    applyLiveStyles(newColors);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
