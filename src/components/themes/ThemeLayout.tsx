@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { doc } from 'firebase/firestore';
 import { Menu } from '@/components/Menu';
 import { SubscriptionPopup } from '@/components/SubscriptionPopup';
+import { CookieConsentBanner } from '../CookieConsentBanner';
 
 type SiteSettings = {
     siteName?: string;
@@ -90,6 +91,7 @@ export function ThemeLayout({ children, HeaderComponent, FooterComponent, pageId
              <WidgetArea areaName="Page Footer" isPageSpecific={!!pageId} pageId={pageId} />
             <PublicFooter siteName={settings?.siteName} siteDescription={settings?.siteDescription} companyName={settings?.companyName} FooterComponent={FooterComponent} />
             <SubscriptionPopup />
+            <CookieConsentBanner />
         </div>
     )
 }
