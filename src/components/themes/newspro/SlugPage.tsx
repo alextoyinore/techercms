@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, usePathname } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, doc } from 'firebase/firestore';
+import { collection, query, where, Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,6 @@ import { ThemeLayout } from '../ThemeLayout';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
-import { trackView } from '@/app/actions/track-view';
 import { calculateReadTime } from '@/lib/utils';
 import { TextToSpeechPlayer } from '@/components/TextToSpeechPlayer';
 import { ReadingProgress } from '@/components/ReadingProgress';
@@ -196,15 +195,37 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const { data: views } = useCollection(viewsQuery);
   
   useEffect(() => {
-    if (isPost && item?.id) {
-        let sessionId = localStorage.getItem('user_session_id');
-        if (!sessionId) {
-            sessionId = uuidv4();
-            localStorage.setItem('user_session_id', sessionId);
-        }
-        trackView(item.id, sessionId);
+    if (isPost && item?.id && firestore) {
+        const track = async () => {
+            let sessionId = localStorage.getItem('user_session_id');
+            if (!sessionId) {
+                sessionId = uuidv4();
+                localStorage.setItem('user_session_id', sessionId);
+            }
+
+            const VIEW_COOLDOWN_HOURS = 24;
+            const viewRef = doc(firestore, `posts/${item.id}/views/${sessionId}`);
+            
+            try {
+                const viewDoc = await getDoc(viewRef);
+                const now = Timestamp.now();
+                
+                if (viewDoc.exists()) {
+                    const lastViewTimestamp = viewDoc.data()?.timestamp as Timestamp;
+                    const hoursSinceLastView = (now.seconds - lastViewTimestamp.seconds) / 3600;
+                    if (hoursSinceLastView < VIEW_COOLDOWN_HOURS) {
+                        return; // Cooldown not elapsed
+                    }
+                }
+                // Set or update the timestamp
+                await setDoc(viewRef, { timestamp: now });
+            } catch (error) {
+                console.error("Error tracking view:", error);
+            }
+        };
+        track();
     }
-  }, [isPost, item?.id]);
+}, [isPost, item?.id, firestore]);
 
   const isLoading = isLoadingPosts || isLoadingPages || isLoadingSettings;
 
