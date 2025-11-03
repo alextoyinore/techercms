@@ -196,7 +196,7 @@ export default function HomePage() {
     <ThemeLayout 
         HeaderComponent={PublicHeader} 
         FooterComponent={PublicFooter} 
-        className="bg-background text-foreground font-sans"
+        className="text-foreground font-sans"
     >
         {hasContent ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
