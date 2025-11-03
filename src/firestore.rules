@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for the CMS.
  *
@@ -76,14 +77,24 @@ service cloud.firestore {
       allow read;
       allow write: if isOwner(userId) || isSuperUser();
     }
+    
+    // Allows superusers to query all views across all posts for the dashboard
+    match /{path=**}/views/{viewId} {
+      allow get, list: if isSuperUser();
+    }
+    
+    // Allows superusers to query all comments across all posts for the dashboard
+    match /{path=**}/comments/{commentId} {
+      allow get, list: if isSuperUser();
+    }
 
-    // Posts Collection & Subcollections
+    // Posts
     match /posts/{postId} {
       allow get, list: if resource == null || resource.data.status == 'published' || isContentManager();
       allow create: if isContentManager() && isOwner(request.resource.data.authorId);
       allow update, delete: if isSuperUser() || (isWriter() && isOwnerOrLegacy(resource));
       
-      // Comments Subcollection
+      // Comments Subcollection (for individual post pages)
       match /comments/{commentId} {
         allow read;
         allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
@@ -95,11 +106,11 @@ service cloud.firestore {
         allow read;
         allow create, delete: if isOwner(userId);
       }
-      
+
       // Views Subcollection
       match /views/{viewId} {
-        allow read;
-        allow create; // Anyone can create a view record
+        allow get, list, create;
+        allow update, delete: if false;
       }
     }
 
@@ -174,6 +185,32 @@ service cloud.firestore {
     match /navigation_menu_items/{itemId} {
       allow read;
       allow write: if isSuperUser();
+    }
+
+    // Notifications for users
+    match /notifications/{notificationId} {
+      // A user can list their own notifications.
+      allow list: if isSignedIn() && request.query.where.userId == request.auth.uid;
+      
+      // A user can read their own notification directly.
+      allow get: if isSignedIn() && isOwner(resource.data.userId);
+
+      // Users can only update the 'isRead' status of their own notifications.
+      allow update: if isSignedIn() && isOwner(resource.data.userId)
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+
+      // Disallow client-side creation and deletion.
+      allow create, delete: if false;
+    }
+
+    // Newsletter Subscriptions
+    match /subscriptions/{subscriptionId} {
+      // Allow anyone to subscribe.
+      allow create;
+      // Allow server-side checks for existing emails.
+      allow list: if request.query.where.email != null;
+      // Disallow reading, updating, or deleting by clients.
+      allow get, update, delete: if false;
     }
   }
 }

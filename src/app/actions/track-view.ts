@@ -2,7 +2,6 @@
 'use server';
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import { headers } from 'next/headers';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { firebaseConfig } from '@/firebase/config';
 
@@ -15,24 +14,16 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// A view from the same IP will be counted again after this many hours.
+// A view from the same session will be counted again after this many hours.
 const VIEW_COOLDOWN_HOURS = 24;
 
-export async function trackView(postId: string) {
-  if (!postId) {
-    return { error: 'Post ID is required' };
-  }
-
-  const forwardedFor = headers().get('x-forwarded-for');
-  const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : headers().get('x-real-ip');
-
-  if (!ip) {
-    return { error: 'Could not determine IP address.' };
+export async function trackView(postId: string, sessionId: string) {
+  if (!postId || !sessionId) {
+    return { error: 'Post ID and Session ID are required' };
   }
 
   try {
-    const sanitizedIp = ip.replace(/\//g, '_');
-    const viewRef = db.collection('posts').doc(postId).collection('views').doc(sanitizedIp);
+    const viewRef = db.collection('posts').doc(postId).collection('views').doc(sessionId);
     const viewDoc = await viewRef.get();
 
     const now = Timestamp.now();

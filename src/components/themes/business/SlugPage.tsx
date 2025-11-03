@@ -28,6 +28,7 @@ import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-p
 import { RelatedPostCard } from '../RelatedPostCard';
 import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
 import { ChartWidget } from '@/components/widgets/ChartWidget';
+import { v4 as uuidv4 } from 'uuid';
 
 type Post = {
   id: string;
@@ -196,7 +197,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   useEffect(() => {
     if (isPost && item?.id) {
-      trackView(item.id);
+        let sessionId = localStorage.getItem('user_session_id');
+        if (!sessionId) {
+            sessionId = uuidv4();
+            localStorage.setItem('user_session_id', sessionId);
+        }
+        trackView(item.id, sessionId);
     }
   }, [isPost, item?.id]);
 
@@ -324,5 +330,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    
