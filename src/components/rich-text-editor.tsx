@@ -13,7 +13,6 @@ import Link from '@tiptap/extension-link';
 import TextStyle from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import TiptapFigure from '@tiptap/extension-figure';
-import TiptapFigcaption from '@tiptap/extension-figcaption';
 import {
   Bold,
   Italic,
@@ -318,7 +317,6 @@ const RichTextEditor = ({
       RelatedPostNode,
       ChartNode,
       TiptapFigure,
-      TiptapFigcaption,
     ],
     content: content,
     editorProps: {
@@ -622,5 +620,3 @@ const RichTextEditor = ({
 };
 
 export default RichTextEditor;
-
-    
