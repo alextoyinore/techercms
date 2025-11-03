@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Separator } from '../ui/separator';
+import { useState, useEffect } from 'react';
 
 type PublicAuthNavProps = {
     className?: string;
@@ -19,6 +20,12 @@ export function PublicAuthNav({ className, linkClassName, orientation = 'horizon
   const auth = useAuth();
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // This effect runs only on the client, after the initial render.
+    setIsClient(true);
+  }, []);
 
   const handleLogout = async () => {
     if (auth) {
@@ -27,7 +34,9 @@ export function PublicAuthNav({ className, linkClassName, orientation = 'horizon
     router.push('/');
   };
 
-  if (loading) {
+  if (loading || !isClient) {
+    // Render the loading skeleton on the server AND on the initial client render
+    // to prevent hydration mismatch.
     return <div className="h-6 w-24 animate-pulse bg-muted rounded-md" />;
   }
 
