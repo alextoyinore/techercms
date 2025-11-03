@@ -39,6 +39,7 @@ import { format } from 'date-fns';
 import { PaginationControls } from "@/components/pagination-controls";
 import { Switch } from "@/components/ui/switch";
 import { BreakingNewsIndicator } from "@/components/BreakingNewsIndicator";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type Post = {
     id: string;
@@ -54,11 +55,18 @@ type Post = {
     focusKeyword?: string;
 };
 
+type User = {
+    id: string;
+    displayName?: string;
+    photoURL?: string;
+};
+
 const VISIBILITY_STORAGE_KEY = 'post_column_visibility';
 
 const defaultVisibility = {
     image: true,
     title: true,
+    author: true,
     status: true,
     views: true,
     audio: true,
@@ -96,7 +104,18 @@ export default function PostsPage() {
         return collection(firestore, 'posts');
     }, [firestore]);
 
-    const { data: allPosts, isLoading } = useCollection<Post>(postsCollection);
+    const usersCollection = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'users');
+    }, [firestore]);
+
+    const { data: allPosts, isLoading: isLoadingPosts } = useCollection<Post>(postsCollection);
+    const { data: allUsers, isLoading: isLoadingUsers } = useCollection<User>(usersCollection);
+
+    const usersMap = useMemo(() => {
+        if (!allUsers) return new Map();
+        return new Map(allUsers.map(user => [user.id, user]));
+    }, [allUsers]);
     
     const sortedPosts = useMemo(() => {
       if (!allPosts) return [];
@@ -223,6 +242,7 @@ export default function PostsPage() {
     }
     
     const visibleColumns = Object.values(columnVisibility).filter(Boolean).length + 2; // +2 for S/N and Actions
+    const isLoading = isLoadingPosts || isLoadingUsers;
 
   return (
     <div className="flex flex-col gap-6">
@@ -290,6 +310,7 @@ export default function PostsPage() {
                 <TableHead className="w-[50px]">S/N</TableHead>
                 {columnVisibility.image && <TableHead className="w-[80px]">Image</TableHead>}
                 {columnVisibility.title && <TableHead>Title</TableHead>}
+                {columnVisibility.author && <TableHead>Author</TableHead>}
                 {columnVisibility.status && <TableHead>Status</TableHead>}
                 {columnVisibility.views && <TableHead>Views</TableHead>}
                 {columnVisibility.audio && <TableHead>Audio</TableHead>}
@@ -317,100 +338,114 @@ export default function PostsPage() {
                     </TableCell>
                 </TableRow>
               )}
-              {!isLoading && paginatedPosts.map((post, index) => (
-                <TableRow key={post.id}>
-                   <TableCell className="font-medium">
-                        {(currentPage - 1) * pageSize + index + 1}
-                    </TableCell>
-                    {columnVisibility.image && (
+              {!isLoading && paginatedPosts.map((post, index) => {
+                const author = usersMap.get(post.authorId);
+                return (
+                    <TableRow key={post.id}>
+                       <TableCell className="font-medium">
+                            {(currentPage - 1) * pageSize + index + 1}
+                        </TableCell>
+                        {columnVisibility.image && (
+                            <TableCell>
+                                {post.featuredImageUrl ? (
+                                    <Image 
+                                        src={post.featuredImageUrl} 
+                                        alt={post.title} 
+                                        width={60} 
+                                        height={40} 
+                                        className="rounded-sm object-cover aspect-[3/2]" 
+                                    />
+                                ) : (
+                                    <div className="h-10 w-[60px] bg-muted rounded-sm" />
+                                )}
+                            </TableCell>
+                        )}
+                      {columnVisibility.title && (
+                        <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                            {post.isBreaking && <BreakingNewsIndicator />}
+                            <span>{post.title}</span>
+                            </div>
+                        </TableCell>
+                      )}
+                       {columnVisibility.author && (
+                           <TableCell>
+                               <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                        <AvatarImage src={author?.photoURL} />
+                                        <AvatarFallback>{author?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs">{author?.displayName || 'Unknown'}</span>
+                               </div>
+                           </TableCell>
+                       )}
+                      {columnVisibility.status && (
                         <TableCell>
-                            {post.featuredImageUrl ? (
-                                <Image 
-                                    src={post.featuredImageUrl} 
-                                    alt={post.title} 
-                                    width={60} 
-                                    height={40} 
-                                    className="rounded-sm object-cover aspect-[3/2]" 
+                            <Badge variant={post.status === "published" ? "default" : "secondary"}>
+                            {post.status}
+                            </Badge>
+                        </TableCell>
+                      )}
+                       {columnVisibility.views && (
+                            <TableCell>
+                                {viewCounts[post.id] === null ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                viewCounts[post.id]
+                                )}
+                            </TableCell>
+                       )}
+                        {columnVisibility.audio && (
+                            <TableCell>
+                                {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
+                            </TableCell>
+                        )}
+                        {columnVisibility.breaking && (
+                            <TableCell>
+                                <Switch
+                                checked={post.isBreaking}
+                                onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
+                                aria-label="Mark as breaking news"
                                 />
-                            ) : (
-                                <div className="h-10 w-[60px] bg-muted rounded-sm" />
-                            )}
-                        </TableCell>
-                    )}
-                  {columnVisibility.title && (
-                    <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                        {post.isBreaking && <BreakingNewsIndicator />}
-                        <span>{post.title}</span>
-                        </div>
-                    </TableCell>
-                  )}
-                  {columnVisibility.status && (
-                    <TableCell>
-                        <Badge variant={post.status === "published" ? "default" : "secondary"}>
-                        {post.status}
-                        </Badge>
-                    </TableCell>
-                  )}
-                   {columnVisibility.views && (
-                        <TableCell>
-                            {viewCounts[post.id] === null ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                            viewCounts[post.id]
-                            )}
-                        </TableCell>
-                   )}
-                    {columnVisibility.audio && (
-                        <TableCell>
-                            {post.audioUrl && <Podcast className="h-4 w-4 text-muted-foreground" />}
-                        </TableCell>
-                    )}
-                    {columnVisibility.breaking && (
-                        <TableCell>
-                            <Switch
-                            checked={post.isBreaking}
-                            onCheckedChange={(checked) => handleBreakingChange(post.id, checked)}
-                            aria-label="Mark as breaking news"
-                            />
-                        </TableCell>
-                    )}
-                     {columnVisibility.featured && (
-                        <TableCell>
-                            <Switch
-                            checked={(post.tagIds || []).includes('featured')}
-                            onCheckedChange={(checked) => handleFeaturedChange(post, checked)}
-                            aria-label="Mark as featured"
-                            />
-                        </TableCell>
-                     )}
-                     {columnVisibility.keyword && <TableCell className="text-xs truncate max-w-24">{post.focusKeyword}</TableCell>}
-                     {columnVisibility.date && (
-                        <TableCell>
-                            {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
-                        </TableCell>
-                     )}
-                  <TableCell className="text-right">
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/posts/edit/${post.id}`}>Edit</Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(post.id, post.title)} className="text-destructive">
-                            Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                            </TableCell>
+                        )}
+                         {columnVisibility.featured && (
+                            <TableCell>
+                                <Switch
+                                checked={(post.tagIds || []).includes('featured')}
+                                onCheckedChange={(checked) => handleFeaturedChange(post, checked)}
+                                aria-label="Mark as featured"
+                                />
+                            </TableCell>
+                         )}
+                         {columnVisibility.keyword && <TableCell className="text-xs truncate max-w-24">{post.focusKeyword}</TableCell>}
+                         {columnVisibility.date && (
+                            <TableCell>
+                                {post.createdAt ? format(post.createdAt.toDate(), 'PP') : 'N/A'}
+                            </TableCell>
+                         )}
+                      <TableCell className="text-right">
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/posts/edit/${post.id}`}>Edit</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(post.id, post.title)} className="text-destructive">
+                                Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>

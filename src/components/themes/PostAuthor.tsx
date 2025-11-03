@@ -1,3 +1,4 @@
+
 'use client';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -7,7 +8,7 @@ type User = {
     displayName?: string;
 }
 
-export const PostAuthor: React.FC<{ authorId: string }> = ({ authorId }) => {
+export const PostAuthor: React.FC<{ authorId: string, className?: string }> = ({ authorId, className }) => {
     const firestore = useFirestore();
     const authorRef = useMemoFirebase(() => {
         if (!firestore || !authorId) return null;
@@ -19,7 +20,7 @@ export const PostAuthor: React.FC<{ authorId: string }> = ({ authorId }) => {
     if (!author) return null;
 
     return (
-        <span className="font-semibold">
+        <span className={`font-semibold ${className}`}>
             {author.displayName || 'Anonymous'}
         </span>
     );

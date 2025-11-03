@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
@@ -5,12 +6,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, usePathname } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, Timestamp, doc, getDoc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loading } from '@/components/loading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye, Clock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, Clock } from 'lucide-react';
 import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
@@ -24,7 +25,7 @@ import { ReadingProgress } from '@/components/ReadingProgress';
 import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
 import { RelatedPostCard } from '../RelatedPostCard';
 import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
-import { PostAuthor } from '../PostAuthor';
+import { PostAuthorWithAvatar } from '../PostAuthorWithAvatar';
 import { ChartWidget } from '@/components/widgets/ChartWidget';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -186,6 +187,34 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   }, [preloadedItem, posts, pages]);
 
   const isPost = item ? 'tagIds' in item : false;
+  const createdAt = item?.createdAt;
+
+  const prevPostQuery = useMemoFirebase(() => {
+      if (!firestore || !isPost || !createdAt) return null;
+      return query(
+          collection(firestore, 'posts'),
+          where('status', '==', 'published'),
+          where('createdAt', '<', createdAt),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+      );
+  }, [firestore, isPost, createdAt]);
+
+  const nextPostQuery = useMemoFirebase(() => {
+      if (!firestore || !isPost || !createdAt) return null;
+      return query(
+          collection(firestore, 'posts'),
+          where('status', '==', 'published'),
+          where('createdAt', '>', createdAt),
+          orderBy('createdAt', 'asc'),
+          limit(1)
+      );
+  }, [firestore, isPost, createdAt]);
+
+  const { data: prevPosts } = useCollection<Post>(prevPostQuery);
+  const { data: nextPosts } = useCollection<Post>(nextPostQuery);
+  const prevPost = prevPosts?.[0];
+  const nextPost = nextPosts?.[0];
   
   const viewsQuery = useMemoFirebase(() => {
     if (!firestore || !isPost || !item) return null;
@@ -274,12 +303,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                       <header className="mb-8">
                           <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 flex items-center gap-4">{(item as Post).isBreaking && <BreakingNewsIndicator />} {item.title}</h1>
                           <div className="text-muted-foreground text-sm font-semibold flex items-center gap-4 flex-wrap">
+                            <PostAuthorWithAvatar authorId={item.authorId} />
                             <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM')}`} className="hover:underline">
                                 <span>Published {item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</span>
-                            </Link>
-                            <span className="mx-1">by</span>
-                            <Link href={`/author/${item.authorId}`} className="hover:underline">
-                              <PostAuthor authorId={item.authorId} />
                             </Link>
                             {views && (
                                 <div className="flex items-center gap-1">
@@ -326,6 +352,21 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                                 </div>
                             </footer>
                             )}
+                            
+                            <div className="flex justify-between mt-8 pt-8 border-t">
+                                {prevPost ? (
+                                    <Link href={`/${prevPost.slug}`} className="text-left">
+                                        <p className="text-sm text-muted-foreground flex items-center gap-1"><ArrowLeft className="h-4 w-4" /> Previous Post</p>
+                                        <p className="font-semibold hover:underline">{prevPost.title}</p>
+                                    </Link>
+                                ) : <div></div>}
+                                 {nextPost ? (
+                                    <Link href={`/${nextPost.slug}`} className="text-right">
+                                        <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">Next Post <ArrowRight className="h-4 w-4" /></p>
+                                        <p className="font-semibold hover:underline">{nextPost.title}</p>
+                                    </Link>
+                                ) : <div></div>}
+                            </div>
 
                           <CommentsSection postId={item.id} />
 
