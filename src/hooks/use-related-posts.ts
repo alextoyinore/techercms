@@ -26,7 +26,7 @@ export const useRelatedPosts = (postId: string, categoryIds?: string[], tagIds?:
     // but a combined query is not possible with this data structure.
 
     return query(q, orderBy('createdAt', 'desc'), limit(3));
-  }, [firestore, postId, categoryIds, tagIds]);
+  }, [firestore, postId, categoryIds]);
 
   return useCollection(relatedQuery);
 };
