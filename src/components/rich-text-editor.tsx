@@ -3,7 +3,7 @@
 
 import { useEditor, EditorContent, Node } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Image, { Figure } from '@tiptap/extension-image';
+import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import Table from '@tiptap/extension-table';
 import TableCell from '@tiptap/extension-table-cell';
@@ -315,7 +315,6 @@ const RichTextEditor = ({
       }),
       RelatedPostNode,
       ChartNode,
-      Figure,
     ],
     content: content,
     editorProps: {
