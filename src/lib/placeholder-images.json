@@ -3,134 +3,56 @@
     {
       "id": "media-1",
       "description": "Abstract colorful background",
-      "imageUrl": "https://picsum.photos/seed/media1/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1717758220144-aae8c59dbd7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMGNvbG9yZnVsfGVufDB8fHx8MTc2MjE4OTQ1NHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract colorful"
     },
     {
       "id": "media-2",
       "description": "City skyline at night",
-      "imageUrl": "https://picsum.photos/seed/media2/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1588312744377-2adfb7b8578a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjaXR5JTIwbmlnaHR8ZW58MHx8fHwxNzYyMTg1NTQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "city night"
     },
     {
       "id": "media-3",
       "description": "Close-up of a flower",
-      "imageUrl": "https://picsum.photos/seed/media3/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1708484792955-00fe38775429?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmbG93ZXIlMjBtYWNyb3xlbnwwfHx8fDE3NjIxMjE0MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "flower macro"
     },
     {
       "id": "media-4",
       "description": "Mountain range with a lake",
-      "imageUrl": "https://picsum.photos/seed/media4/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1438382458652-54431bf59e01?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtb3VudGFpbiUyMGxha2V8ZW58MHx8fHwxNzYyMTkzODM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "mountain lake"
     },
     {
       "id": "media-5",
       "description": "A person working on a laptop",
-      "imageUrl": "https://picsum.photos/seed/media5/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1587614298171-a223667e51c2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjB3b3JraW5nfGVufDB8fHx8MTc2MjE1MTE4MXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person working"
     },
     {
       "id": "media-6",
       "description": "Modern architecture building",
-      "imageUrl": "https://picsum.photos/seed/media6/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1615406020658-6c4b805f1f30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYyMTkzNTU4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "modern architecture"
     },
     {
       "id": "media-7",
       "description": "A cup of coffee on a wooden table",
-      "imageUrl": "https://picsum.photos/seed/media7/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1614348531934-c338408a46bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjb2ZmZWUlMjB0YWJsZXxlbnwwfHx8fDE3NjIyMDUyMjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "coffee table"
     },
     {
       "id": "media-8",
       "description": "Forest path in autumn",
-      "imageUrl": "https://picsum.photos/seed/media8/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1507139722691-cc2c94e3a2b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmb3Jlc3QlMjBwYXRofGVufDB8fHx8MTc2MjEzMzExOHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "forest path"
-    },
-    {
-      "id": "theme-1",
-      "description": "Minimalist theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme1/600/400",
-      "imageHint": "minimalist blog"
-    },
-    {
-      "id": "theme-2",
-      "description": "Dark mode theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme2/600/400",
-      "imageHint": "dark website"
-    },
-    {
-      "id": "theme-3",
-      "description": "Vibrant portfolio theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme3/600/400",
-      "imageHint": "vibrant portfolio"
-    },
-    {
-      "id": "theme-4",
-      "description": "Corporate business theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme4/600/400",
-      "imageHint": "corporate business"
-    },
-    {
-      "id": "theme-5",
-      "description": "Forest green theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme5/600/400",
-      "imageHint": "forest green"
-    },
-    {
-      "id": "theme-6",
-      "description": "Sunset orange theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme6/600/400",
-      "imageHint": "sunset orange"
-    },
-    {
-      "id": "theme-7",
-      "description": "Oceanic teal theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme7/600/400",
-      "imageHint": "oceanic teal"
-    },
-    {
-      "id": "theme-8",
-      "description": "Rose gold theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme8/600/400",
-      "imageHint": "rose gold"
-    },
-    {
-      "id": "theme-9",
-      "description": "Newspaper theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme9/600/400",
-      "imageHint": "newspaper layout"
-    },
-    {
-      "id": "theme-10",
-      "description": "Tech blog theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme10/600/400",
-      "imageHint": "tech blog"
     },
     {
       "id": "theme-business",
       "description": "Business theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme-business/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1647510284152-473953f84acc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxmaW5hbmNpYWwlMjBuZXdzcGFwZXJ8ZW58MHx8fHwxNzYyMjEyMzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "financial newspaper"
-    },
-    {
-      "id": "theme-sports",
-      "description": "Sports theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme-sports/600/400",
-      "imageHint": "sports action"
-    },
-    {
-      "id": "theme-newspro",
-      "description": "NewsPro theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme-newspro/600/400",
-      "imageHint": "modern news"
-    },
-    {
-      "id": "theme-vogue",
-      "description": "Vogue theme preview",
-      "imageUrl": "https://picsum.photos/seed/theme-vogue/600/400",
-      "imageHint": "high fashion"
     }
   ]
 }

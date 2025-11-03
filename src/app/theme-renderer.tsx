@@ -9,16 +9,6 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
 const themes: Record<string, Record<string, any>> = {
-  'Magazine Pro': {
-    HomePage: dynamic(() => import('@/components/themes/magazine-pro/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/magazine-pro/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/magazine-pro/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/magazine-pro/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/magazine-pro/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/magazine-pro/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/magazine-pro/DatePage')),
-    NewsPage: dynamic(() => import('@/components/themes/magazine-pro/CategoryPage')), // Fallback
-  },
   'Business': {
     HomePage: dynamic(() => import('@/components/themes/business/HomePage')),
     SlugPage: dynamic(() => import('@/components/themes/business/SlugPage')),
@@ -28,16 +18,6 @@ const themes: Record<string, Record<string, any>> = {
     SearchPage: dynamic(() => import('@/components/themes/business/SearchPage')),
     DatePage: dynamic(() => import('@/components/themes/business/DatePage')),
     NewsPage: dynamic(() => import('@/components/themes/business/NewsPage')),
-  },
-  'NewsPro': {
-    HomePage: dynamic(() => import('@/components/themes/newspro/HomePage')),
-    SlugPage: dynamic(() => import('@/components/themes/newspro/SlugPage')),
-    CategoryPage: dynamic(() => import('@/components/themes/newspro/CategoryPage')),
-    TagPage: dynamic(() => import('@/components/themes/newspro/TagPage')),
-    AuthorPage: dynamic(() => import('@/components/themes/newspro/AuthorPage')),
-    SearchPage: dynamic(() => import('@/components/themes/newspro/SearchPage')),
-    DatePage: dynamic(() => import('@/components/themes/newspro/DatePage')),
-    NewsPage: dynamic(() => import('@/components/themes/newspro/CategoryPage')), // Fallback
   },
 };
 
@@ -75,7 +55,7 @@ function ActiveThemeResolver({ pageType, settings }: { pageType: ThemeRendererPr
       return customTheme.baseTheme;
     }
     // It's a built-in theme or the default
-    return settings.activeTheme && themes[settings.activeTheme] ? settings.activeTheme : 'Magazine Pro';
+    return settings.activeTheme && themes[settings.activeTheme] ? settings.activeTheme : 'Business';
   }, [customThemes, isLoadingCustomThemes, settings.activeTheme]);
 
 
@@ -83,7 +63,7 @@ function ActiveThemeResolver({ pageType, settings }: { pageType: ThemeRendererPr
     return <Loading />;
   }
 
-  const theme = themes[activeThemeName] || themes['Magazine Pro'];
+  const theme = themes[activeThemeName] || themes['Business'];
 
   if (pageType === 'home' && settings?.homepageType === 'static' && settings.homepagePageId) {
     return <StaticHomepageRenderer pageId={settings.homepagePageId} theme={theme} />;
@@ -143,7 +123,7 @@ export function ThemeRenderer({ pageType }: ThemeRendererProps) {
     return <ActiveThemeResolver pageType={pageType} settings={settings} />;
   }
 
-  const finalSettings = settings || { activeTheme: 'Magazine Pro' };
+  const finalSettings = settings || { activeTheme: 'Business' };
 
   return <ActiveThemeResolver pageType={pageType} settings={finalSettings} />;
 }

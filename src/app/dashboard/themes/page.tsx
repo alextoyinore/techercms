@@ -35,19 +35,9 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 
 const builtInWebsiteThemes = [
     {
-      name: 'Magazine Pro',
-      description: 'A classic, content-focused theme perfect for blogs and news sites.',
-      imageHintId: 'theme-1'
-    },
-    {
       name: 'Business',
       description: 'A professional, data-driven theme for financial news.',
       imageHintId: 'theme-business'
-    },
-    {
-      name: 'NewsPro',
-      description: 'A serious, authoritative theme for global news.',
-      imageHintId: 'theme-newspro'
     },
 ];
 
@@ -161,7 +151,7 @@ export default function ThemesPage() {
                 description: `"${theme.name}" has been deleted.`,
             });
             if (activeWebsiteTheme === theme.name) {
-                handleActivateWebsiteTheme('Magazine Pro', false);
+                handleActivateWebsiteTheme('Business', false);
             }
         } catch (error: any) {
              toast({
