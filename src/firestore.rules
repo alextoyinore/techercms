@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview Firestore Security Rules for the CMS.
  *
@@ -78,11 +77,6 @@ service cloud.firestore {
       allow write: if isOwner(userId) || isSuperUser();
     }
     
-    // Allows superusers to query all views across all posts for the dashboard
-    match /{path=**}/views/{viewId} {
-      allow get, list: if isSuperUser();
-    }
-    
     // Allows superusers to query all comments across all posts for the dashboard
     match /{path=**}/comments/{commentId} {
       allow get, list: if isSuperUser();
@@ -108,7 +102,7 @@ service cloud.firestore {
       }
 
       // Views Subcollection
-      match /views/{viewId} {
+      match /views/{sessionId} {
         allow get, list, create;
         allow update, delete: if false;
       }
