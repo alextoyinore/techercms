@@ -77,6 +77,11 @@ service cloud.firestore {
       allow write: if isOwner(userId) || isSuperUser();
     }
     
+    // Allows signed-in users to query all views across all posts for the dashboard
+    match /{path=**}/views/{sessionId} {
+      allow get, list: if isSignedIn();
+    }
+    
     // Allows superusers to query all comments across all posts for the dashboard
     match /{path=**}/comments/{commentId} {
       allow get, list: if isSuperUser();
