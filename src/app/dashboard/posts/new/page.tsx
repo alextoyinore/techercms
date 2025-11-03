@@ -70,6 +70,7 @@ export default function NewPostPage() {
   const [metaDescription, setMetaDescription] = useState('');
   const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [featuredImageCaption, setFeaturedImageCaption] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categorySearch, setCategorySearch] = useState('');
@@ -167,7 +168,7 @@ export default function NewPostPage() {
         title, slug, titleKeywords, content, excerpt, status, isBreaking,
         metaDescription: finalMetaDescription,
         focusKeyword: finalFocusKeyword,
-        featuredImageUrl, audioUrl: finalAudioUrl,
+        featuredImageUrl, featuredImageCaption, audioUrl: finalAudioUrl,
         authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
         tagIds: finalTags,
@@ -203,7 +204,7 @@ export default function NewPostPage() {
             setSubmissionStatus(null);
         }
     }
-  }, [title, content, excerpt, metaDescription, focusKeyword, featuredImageUrl, audioUrl, selectedCategories, tags, isBreaking, firestore, auth, savedPostId, isSubmitting, toast, router]);
+  }, [title, content, excerpt, metaDescription, focusKeyword, featuredImageUrl, featuredImageCaption, audioUrl, selectedCategories, tags, isBreaking, firestore, auth, savedPostId, isSubmitting, toast, router]);
 
   useEffect(() => {
     const autoSaveIntervalMinutes = settings?.autoSaveInterval || 5;
@@ -630,6 +631,16 @@ export default function NewPostPage() {
                             disabled={isSubmitting || isUploading}
                         />
                     </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="featured-image-caption">Image Caption</Label>
+                        <Input
+                            id="featured-image-caption"
+                            placeholder="e.g., Photo by Jane Doe"
+                            value={featuredImageCaption}
+                            onChange={(e) => setFeaturedImageCaption(e.target.value)}
+                            disabled={isSubmitting}
+                        />
+                    </div>
                     <input 
                       type="file" 
                       ref={fileInputRef} 
@@ -745,3 +756,5 @@ export default function NewPostPage() {
     </div>
   );
 }
+
+    

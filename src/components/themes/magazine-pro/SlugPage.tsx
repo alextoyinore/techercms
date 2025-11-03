@@ -37,6 +37,7 @@ type Post = {
   slug: string;
   authorId: string;
   featuredImageUrl: string;
+  featuredImageCaption?: string;
   status: 'draft' | 'published' | 'archived';
   createdAt: Timestamp;
   isBreaking?: boolean;
@@ -54,6 +55,7 @@ type Page = {
   slug: string;
   authorId: string;
   featuredImageUrl: string;
+  featuredImageCaption?: string;
   status: 'draft' | 'published';
   createdAt: Timestamp;
   builderEnabled?: boolean;
@@ -82,6 +84,23 @@ const parserOptions: HTMLReactParserOptions = {
                 const chartName = domNode.attribs['data-chart-name'];
                 if (chartId) {
                     return <ChartWidget chartId={chartId} title={chartName} />;
+                }
+            }
+            if (domNode.tagName === 'figure') {
+                const img = domNode.children.find(child => (child as Element).tagName === 'img');
+                const figcaption = domNode.children.find(child => (child as Element).tagName === 'figcaption');
+                
+                if (img) {
+                    return (
+                        <figure className="my-6">
+                            {domToReact([img])}
+                            {figcaption && (
+                                <figcaption className="text-center text-sm text-muted-foreground mt-2">
+                                    {domToReact(figcaption.children)}
+                                </figcaption>
+                            )}
+                        </figure>
+                    );
                 }
             }
         }
@@ -190,8 +209,12 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
   const isLoading = isLoadingPosts || isLoadingPages || isLoadingSettings;
 
-  if (isLoading || !item) {
+  if (isLoading) {
     return <Loading />;
+  }
+
+  if (!item) {
+    return null;
   }
   
   const pageId = !isPost ? item.id : undefined;
@@ -258,14 +281,15 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                   <TextToSpeechPlayer audioUrl={(item as Post).audioUrl} />
                   
                   {item.featuredImageUrl && (
-                      <div className="relative aspect-video w-full mb-8">
+                      <figure className="relative aspect-video w-full mb-8">
                       <Image
                           src={item.featuredImageUrl}
                           alt={item.title}
                           fill
                           className="object-cover"
                       />
-                      </div>
+                      {(item as Post).featuredImageCaption && <figcaption className="text-center text-xs text-muted-foreground mt-2">{(item as Post).featuredImageCaption}</figcaption>}
+                      </figure>
                   )}
                         <div className="prose dark:prose-invert lg:prose-lg max-w-none lg:leading-relaxed">
                             {parse(item.content, parserOptions)}
@@ -303,3 +327,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    

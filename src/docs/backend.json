@@ -70,6 +70,10 @@
           "type": "string",
           "description": "The URL for the page's main image."
         },
+        "featuredImageCaption": {
+          "type": "string",
+          "description": "Caption for the featured image."
+        },
         "status": {
           "type": "string",
           "description": "The publication status of the page.",
@@ -204,6 +208,10 @@
         "featuredImageUrl": {
           "type": "string",
           "description": "The URL for the post's main image."
+        },
+        "featuredImageCaption": {
+          "type": "string",
+          "description": "Caption for the featured image."
         },
         "audioUrl": {
           "type": "string",
@@ -819,5 +827,4 @@
   }
 }
 
-    
     

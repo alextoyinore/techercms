@@ -41,6 +41,7 @@ type Page = {
     metaDescription?: string;
     focusKeyword?: string;
     featuredImageUrl: string;
+    featuredImageCaption?: string;
     status: 'draft' | 'published';
     authorId: string;
     createdAt: Timestamp;
@@ -71,6 +72,7 @@ export default function EditPagePage() {
   const [metaDescription, setMetaDescription] = useState('');
   const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [featuredImageCaption, setFeaturedImageCaption] = useState('');
   const [builderEnabled, setBuilderEnabled] = useState(false);
   const [showTitle, setShowTitle] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +107,7 @@ export default function EditPagePage() {
       setMetaDescription(page.metaDescription || '');
       setFocusKeyword(page.focusKeyword || '');
       setFeaturedImageUrl(page.featuredImageUrl || '');
+      setFeaturedImageCaption(page.featuredImageCaption || '');
       setBuilderEnabled(page.builderEnabled || false);
       setShowTitle(page.showTitle === undefined ? true : page.showTitle);
     }
@@ -277,6 +280,7 @@ export default function EditPagePage() {
         metaDescription: finalMetaDescription,
         focusKeyword: finalFocusKeyword,
         featuredImageUrl,
+        featuredImageCaption,
         slug,
         status,
         builderEnabled,
@@ -476,6 +480,16 @@ export default function EditPagePage() {
                         disabled={isSubmitting || isUploading}
                     />
                 </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="featured-image-caption">Image Caption</Label>
+                    <Input
+                        id="featured-image-caption"
+                        placeholder="e.g., Photo by Jane Doe"
+                        value={featuredImageCaption}
+                        onChange={(e) => setFeaturedImageCaption(e.target.value)}
+                        disabled={isSubmitting}
+                    />
+                </div>
                 <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -604,5 +618,4 @@ export default function EditPagePage() {
   );
 }
 
-    
     

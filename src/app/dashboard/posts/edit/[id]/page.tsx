@@ -63,6 +63,7 @@ type Post = {
     metaDescription?: string;
     focusKeyword?: string;
     featuredImageUrl: string;
+    featuredImageCaption?: string;
     audioUrl?: string;
     slug: string;
     status: 'draft' | 'published' | 'archived';
@@ -89,6 +90,7 @@ export default function EditPostPage() {
   const [metaDescription, setMetaDescription] = useState('');
   const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [featuredImageCaption, setFeaturedImageCaption] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categorySearch, setCategorySearch] = useState('');
@@ -176,6 +178,7 @@ export default function EditPostPage() {
       setMetaDescription(post.metaDescription || '');
       setFocusKeyword(post.focusKeyword || '');
       setFeaturedImageUrl(post.featuredImageUrl || '');
+      setFeaturedImageCaption(post.featuredImageCaption || '');
       setAudioUrl(post.audioUrl || '');
       setSelectedCategories(post.categoryIds || []);
       setTags(post.tagIds || []);
@@ -416,6 +419,7 @@ export default function EditPostPage() {
         metaDescription: finalMetaDescription,
         focusKeyword: finalFocusKeyword,
         featuredImageUrl,
+        featuredImageCaption,
         audioUrl: finalAudioUrl,
         status,
         isBreaking,
@@ -718,6 +722,16 @@ export default function EditPostPage() {
                             disabled={isSubmitting || isUploading}
                         />
                     </div>
+                     <div className="grid gap-2">
+                        <Label htmlFor="featured-image-caption">Image Caption</Label>
+                        <Input
+                            id="featured-image-caption"
+                            placeholder="e.g., Photo by Jane Doe"
+                            value={featuredImageCaption}
+                            onChange={(e) => setFeaturedImageCaption(e.target.value)}
+                            disabled={isSubmitting}
+                        />
+                    </div>
                     <input 
                       type="file" 
                       ref={fileInputRef} 
@@ -833,3 +847,5 @@ export default function EditPostPage() {
     </div>
   );
 }
+
+    

@@ -45,6 +45,7 @@ export default function NewPagePage() {
   const [metaDescription, setMetaDescription] = useState('');
   const [focusKeyword, setFocusKeyword] = useState('');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [featuredImageCaption, setFeaturedImageCaption] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -207,6 +208,7 @@ export default function NewPagePage() {
         metaDescription: finalMetaDescription,
         focusKeyword: finalFocusKeyword,
         featuredImageUrl,
+        featuredImageCaption,
         slug,
         status,
         authorId: auth.currentUser.uid,
@@ -386,6 +388,16 @@ export default function NewPagePage() {
                         disabled={isSubmitting || isUploading}
                     />
                 </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="featured-image-caption">Image Caption</Label>
+                    <Input
+                        id="featured-image-caption"
+                        placeholder="e.g., Photo by Jane Doe"
+                        value={featuredImageCaption}
+                        onChange={(e) => setFeaturedImageCaption(e.target.value)}
+                        disabled={isSubmitting}
+                    />
+                </div>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -426,6 +438,5 @@ export default function NewPagePage() {
     </div>
   );
 }
-
 
     
