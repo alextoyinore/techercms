@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,7 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { useMemo, useState } from 'react';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subDays, startOfDay, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -133,8 +134,7 @@ export default function Dashboard() {
   const contentOverTimeChartData = useMemo(() => {
     if (!posts || !pages) return [];
 
-    const sixMonthsAgo = subMonths(new Date(), 5);
-    const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), i))).reverse();
+    const months = Array.from({ length: 6 }, (_, i) => startOfDay(subDays(new Date(), i * 30))).reverse();
     
     const data = months.map(monthDate => {
       const monthKey = format(monthDate, 'MMM yyyy');
@@ -154,6 +154,22 @@ export default function Dashboard() {
 
     return data;
   }, [posts, pages]);
+  
+  const dailyPostsChartData = useMemo(() => {
+    if (!posts) return [];
+    
+    const last14Days = Array.from({ length: 14 }, (_, i) => subDays(new Date(), i)).reverse();
+
+    const data = last14Days.map(day => {
+        const dayPosts = posts.filter(post => post.createdAt && isSameDay(post.createdAt.toDate(), day)).length;
+        return {
+            date: format(day, 'MMM d'),
+            posts: dayPosts
+        }
+    });
+
+    return data;
+  }, [posts]);
 
 
   const chartConfig = {
@@ -323,25 +339,25 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Posts per Category</CardTitle>
-                <CardDescription>A breakdown of your content distribution.</CardDescription>
+                <CardTitle className="font-headline">Posts per Day (Last 14 Days)</CardTitle>
+                <CardDescription>Your daily post creation trend.</CardDescription>
             </CardHeader>
             <CardContent className='h-[250px]'>
-                {isLoadingPosts || isLoadingCategories ? (
+                {isLoadingPosts ? (
                     <Skeleton className='w-full h-full'/>
-                ) : postsPerCategoryChartData.length > 0 ? (
+                ) : dailyPostsChartData.length > 0 ? (
                     <ChartContainer config={chartConfig} className='w-full h-full'>
-                        <BarChart data={postsPerCategoryChartData} accessibilityLayer>
+                        <LineChart data={dailyPostsChartData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
-                            <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
+                            <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} fontSize={12} />
                             <YAxis tickLine={false} axisLine={false} allowDecimals={false}/>
                             <Tooltip cursor={false} content={<ChartTooltipContent />} />
-                            <Bar dataKey="posts" fill="hsl(var(--primary))" radius={4} />
-                        </BarChart>
+                            <Line type="monotone" dataKey="posts" stroke="hsl(var(--primary))" strokeWidth={2} dot={true} />
+                        </LineChart>
                     </ChartContainer>
                 ) : (
                     <div className='flex items-center justify-center h-full text-center text-muted-foreground'>
-                        <p>No posts with categories yet. <br/> Assign posts to categories to see this chart.</p>
+                        <p>Not enough data to display chart. <br/> Create some posts to get started.</p>
                     </div>
                 )}
             </CardContent>
