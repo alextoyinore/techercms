@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 type ShareButtonsProps = {
   title: string;
@@ -31,6 +32,7 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   const firestore = useFirestore();
   const auth = useAuth();
   const user = auth?.currentUser;
+  const router = useRouter();
 
   // Set URL on client-side mount
   useEffect(() => {
@@ -55,11 +57,7 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
   
   const handleLike = () => {
     if (!user) {
-        toast({
-            variant: "destructive",
-            title: "Authentication Required",
-            description: "You must be logged in to like a post.",
-        });
+        router.push('/login');
         return;
     }
 
@@ -89,7 +87,6 @@ export const ShareButtons = ({ title, postId }: ShareButtonsProps) => {
         <Button 
             variant="ghost"
             onClick={handleLike}
-            disabled={!user}
             className="flex items-center gap-2 px-2 hover:bg-transparent"
         >
             <ThumbsUp className={cn("h-8 w-8 transition-colors", hasLiked && "fill-green-500 text-green-500")} />

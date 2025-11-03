@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 type Post = {
     authorId: string;
@@ -179,11 +180,11 @@ export function CommentsSection({ postId }: { postId: string }) {
                         </Button>
                     </div>
                 ) : (
-                    <p className="text-sm text-muted-foreground">You must be logged in to post a comment.</p>
+                    <p className="text-sm text-muted-foreground text-center">
+                        <Link href="/login" className="text-primary underline">Log in</Link> to post a comment.
+                    </p>
                 )}
             </div>
         </div>
     );
 }
-
-    
