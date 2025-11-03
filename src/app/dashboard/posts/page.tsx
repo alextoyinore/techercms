@@ -54,6 +54,20 @@ type Post = {
     focusKeyword?: string;
 };
 
+const VISIBILITY_STORAGE_KEY = 'post_column_visibility';
+
+const defaultVisibility = {
+    image: true,
+    title: true,
+    status: true,
+    views: true,
+    audio: true,
+    breaking: true,
+    featured: true,
+    keyword: false,
+    date: true,
+};
+
 export default function PostsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -64,17 +78,18 @@ export default function PostsPage() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [viewCounts, setViewCounts] = useState<Record<string, number | null>>({});
     
-    const [columnVisibility, setColumnVisibility] = useState({
-        image: true,
-        title: true,
-        status: true,
-        views: true,
-        audio: true,
-        breaking: true,
-        featured: true,
-        keyword: false,
-        date: true,
-    });
+    const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
+
+    useEffect(() => {
+        const storedVisibility = localStorage.getItem(VISIBILITY_STORAGE_KEY);
+        if (storedVisibility) {
+            setColumnVisibility(JSON.parse(storedVisibility));
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem(VISIBILITY_STORAGE_KEY, JSON.stringify(columnVisibility));
+    }, [columnVisibility]);
 
     const postsCollection = useMemoFirebase(() => {
         if (!firestore) return null;
