@@ -106,7 +106,7 @@ export function AuthForm() {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="mx-auto w-full max-w-[380px]">
         <CardHeader className="text-center p-6">
           <div className="flex items-center justify-center gap-2 mb-2">

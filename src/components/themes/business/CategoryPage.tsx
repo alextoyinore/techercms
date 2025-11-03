@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';
@@ -107,7 +108,7 @@ export default function CategoryPage() {
     <ThemeLayout 
         HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
         FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} 
-        className="bg-background text-foreground font-sans"
+        className="text-foreground font-sans"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
         <div className="lg:col-span-9">

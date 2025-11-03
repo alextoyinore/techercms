@@ -157,7 +157,7 @@ export default function HomePage() {
   const secondaryStories = otherStories.slice(2, 6);
 
   return (
-    <div className="bg-background text-foreground font-serif">
+    <div className="text-foreground font-serif">
         <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />
         <main className="container mx-auto py-8 px-4">
             {!hasContent ? (

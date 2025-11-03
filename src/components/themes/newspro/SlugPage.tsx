@@ -266,7 +266,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <meta property="og:site_name" content={siteTitle} />
           <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <div className="bg-background text-foreground font-serif">
+      <div className="text-foreground font-serif">
         {isPost && <ReadingProgress targetRef={articleRef} />}
         <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} pageTitle={displayTitleInHeader ? item.title : undefined} />} FooterComponent={PublicFooter} pageId={pageId}>
           <main className="container mx-auto">

@@ -124,7 +124,7 @@ export default function SearchPage() {
     <ThemeLayout 
         HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} />} 
         FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} 
-        className="bg-background text-foreground font-sans"
+        className="text-foreground font-sans"
     >
       <Suspense fallback={<Loading />}>
         <SearchResults />

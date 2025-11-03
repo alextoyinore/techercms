@@ -96,7 +96,7 @@ export default function DashboardLayout({
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen w-full bg-background text-foreground flex">
+      <div className="min-h-screen w-full text-foreground flex">
         <Sidebar collapsible="icon" className="flex flex-col border-r">
           <DashboardNav user={user} />
         </Sidebar>
