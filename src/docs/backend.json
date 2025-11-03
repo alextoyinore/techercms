@@ -24,6 +24,10 @@
                 "type": "string",
                 "description": "The URL for the user's profile picture."
             },
+            "bio": {
+                "type": "string",
+                "description": "A short biography of the user."
+            },
             "role": {
               "type": "string",
               "description": "The assigned role for the user.",
@@ -695,6 +699,22 @@
                 "entityName": "PostLike",
                 "schema": { "$ref": "#/backend/entities/PostLike" },
                 "description": "Stores likes for a specific post. The document ID is the user's UID."
+              }
+            },
+            {
+              "path": "views/{sessionId}",
+              "definition": {
+                  "entityName": "View",
+                  "schema": {
+                      "type": "object",
+                      "properties": {
+                          "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                          }
+                      }
+                  },
+                  "description": "Stores view records for a post. The document ID is a unique client-side session ID."
               }
             }
           ]

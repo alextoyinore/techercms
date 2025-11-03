@@ -16,12 +16,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import { Loader2, Upload } from 'lucide-react';
-import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useAuth, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { doc } from 'firebase/firestore';
+import { Textarea } from '@/components/ui/textarea';
+
+type UserProfile = {
+  bio?: string;
+  displayName?: string;
+  email?: string;
+  photoURL?: string;
+};
 
 function getInitial(displayName?: string | null, email?: string | null) {
   if (displayName) return displayName.charAt(0).toUpperCase();
@@ -39,6 +47,7 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [photoURL, setPhotoURL] = useState('');
+  const [bio, setBio] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +56,13 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfileData } = useDoc<UserProfile>(userRef);
 
   useEffect(() => {
     if (user) {
@@ -56,7 +72,10 @@ export default function ProfilePage() {
       setEmail(user.email || '');
       setPhotoURL(user.photoURL || '');
     }
-  }, [user]);
+    if (userProfileData) {
+        setBio(userProfileData.bio || '');
+    }
+  }, [user, userProfileData]);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -118,13 +137,15 @@ export default function ProfilePage() {
       await updateProfile(user, { displayName: newDisplayName, photoURL: photoURL });
 
       // 2. Update Firestore user document
-      const userRef = doc(firestore, 'users', user.uid);
-      const userData = {
-        displayName: newDisplayName,
-        email: user.email,
-        photoURL: photoURL
-      };
-      setDocumentNonBlocking(userRef, userData, { merge: true });
+      if (userRef) {
+        const userData = {
+            displayName: newDisplayName,
+            email: user.email,
+            photoURL: photoURL,
+            bio: bio,
+        };
+        setDocumentNonBlocking(userRef, userData, { merge: true });
+      }
 
       toast({
         title: 'Profile Updated',
@@ -223,6 +244,11 @@ export default function ProfilePage() {
                 <Input id="last-name" value={lastName} onChange={e => setLastName(e.target.value)} disabled={isSavingProfile || loadingUser} />
               </div>
             </div>
+             <div className="grid gap-2">
+                <Label htmlFor="bio">Biography</Label>
+                <Textarea id="bio" value={bio} onChange={e => setBio(e.target.value)} disabled={isSavingProfile || loadingUser} placeholder="Tell us a little about yourself..." />
+                <p className="text-sm text-muted-foreground">This will be displayed on your author page and post bylines.</p>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} disabled />
@@ -267,3 +293,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

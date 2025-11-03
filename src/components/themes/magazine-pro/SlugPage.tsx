@@ -28,6 +28,7 @@ import { RelatedPostCard } from '../RelatedPostCard';
 import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
 import { ChartWidget } from '@/components/widgets/ChartWidget';
 import { v4 as uuidv4 } from 'uuid';
+import { PostAuthorBio } from '../PostAuthorBio';
 
 type Post = {
   excerpt: string;
@@ -346,6 +347,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                         </div>
                         
                         <ShareButtons title={item.title} postId={item.id}/>
+                        
+                        <PostAuthorBio authorId={item.authorId} />
 
                         {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
                             <footer className="mt-12 pt-8 border-t">
@@ -392,3 +395,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    

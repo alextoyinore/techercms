@@ -28,6 +28,7 @@ import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
 import { PostAuthorWithAvatar } from '../PostAuthorWithAvatar';
 import { ChartWidget } from '@/components/widgets/ChartWidget';
 import { v4 as uuidv4 } from 'uuid';
+import { PostAuthorBio } from '../PostAuthorBio';
 
 type Post = {
   id: string;
@@ -341,6 +342,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                           </div>
                           <ShareButtons title={item.title} postId={item.id}/>
                           
+                          <PostAuthorBio authorId={item.authorId} />
+                          
                           {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
                             <footer className="mt-12 pt-8 border-t">
                                 <div className="flex flex-wrap gap-2">
@@ -388,3 +391,5 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
+
+    
