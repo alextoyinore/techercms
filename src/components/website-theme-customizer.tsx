@@ -155,11 +155,6 @@ export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }:
       [key]: value
     };
     setColors(newColors);
-    
-    // Apply changes live
-    const root = window.document.documentElement;
-    const cssVar = `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-    root.style.setProperty(cssVar, value);
   };
 
   const handleSidebarColorChange = (key: keyof ThemeColors['sidebar'], value: string) => {
@@ -169,11 +164,6 @@ export function WebsiteThemeCustomizer({ children, themeSource, builtInThemes }:
         sidebar: { ...colors.sidebar, [key]: value }
     };
     setColors(newColors);
-
-     // Apply changes live
-     const root = window.document.documentElement;
-     const cssVar = `--sidebar-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-     root.style.setProperty(cssVar, value);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -454,6 +444,3 @@ function hexToHsl(hex: string): { h: number, s: number, l: number } | null {
   
     return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
-
-    
-    
