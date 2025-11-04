@@ -16,7 +16,6 @@ import { WidgetArea } from '@/components/widgets/WidgetArea';
 import { PageBuilderRenderer } from '@/components/page-builder-renderer';
 import { PublicHeader, PublicFooter } from './HomePage';
 import { ThemeLayout } from '../ThemeLayout';
-import { PostAuthorWithAvatar } from '../PostAuthorWithAvatar';
 import { ShareButtons } from '../ShareButtons';
 import { RelatedPosts } from '../RelatedPosts';
 import { CommentsSection } from '@/components/comments/CommentsSection';
@@ -306,7 +305,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                           fill
                           className="object-cover"
                       />
-                      {(item as Post).featuredImageCaption && <figcaption className="text-center text-xs text-muted-foreground mt-2">{(item as Post).featuredImageCaption}</figcaption>}
+                      {item.featuredImageCaption && <figcaption className="text-center text-xs text-muted-foreground mt-2">{item.featuredImageCaption}</figcaption>}
                       </figure>
                   )}
                         <div className="prose dark:prose-invert lg:prose-lg max-w-none lg:leading-relaxed">
@@ -330,7 +329,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                         )}
 
                         <CommentsSection postId={item.id} />
-                        <RelatedPosts currentPost={item} />
+                        <RelatedPosts currentPost={item as Post} />
                     </>
                        
                   ) : (
