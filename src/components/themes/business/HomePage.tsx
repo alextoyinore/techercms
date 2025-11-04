@@ -40,7 +40,7 @@ export function PublicHeader({ siteName, siteLogoUrl, pageTitle }: { siteName?: 
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
     return (
-        <header className="pt-3 sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b border-border">
+        <header className="pt-3 sticky top-0 bg-white/95 backdrop-blur-sm z-20 border-b border-border">
             <div className="container px-4 mx-auto flex justify-between items-center">
                 <Link href="/" className="flex items-center gap-3 text-2xl font-black font-headline text-primary tracking-tighter">
                     {siteLogoUrl ? (
