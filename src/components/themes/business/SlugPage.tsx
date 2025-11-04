@@ -267,7 +267,7 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
           <meta property="og:site_name" content={siteTitle} />
           <meta name="twitter:card" content="summary_large_image" />
       </Head>
-      <div className="text-foreground font-sans">
+      <div className="font-sans">
           {isPost && <ReadingProgress targetRef={articleRef} />}
           <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} pageTitle={displayTitleInHeader ? item.title : undefined} />} FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} pageId={pageId}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
@@ -279,7 +279,6 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                     <header className="mb-8 border-b pb-4">
                       <h1 className="text-4xl font-black font-headline tracking-tight lg:text-6xl mb-4 flex items-center gap-4">{(item as Post).isBreaking && <BreakingNewsIndicator />} {item.title}</h1>
                       <div className="text-muted-foreground text-sm flex items-center gap-4 flex-wrap">
-                          <PostAuthorWithAvatar authorId={item.authorId} />
                           <span>Published <Link href={`/archive/${format(item.createdAt.toDate(), 'yyyy/MM/dd')}`} className="hover:underline">{item.createdAt ? format(item.createdAt.toDate(), 'PPpp') : ''}</Link></span>
                            {views && (
                             <div className="flex items-center gap-1">
