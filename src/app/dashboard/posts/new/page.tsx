@@ -41,6 +41,8 @@ import { generateKeyword } from '@/ai/flows/generate-keyword';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { Switch } from '@/components/ui/switch';
 import { ToastAction } from '@/components/ui/toast';
+import { generateExcerpt } from '@/ai/flows/generate-excerpt';
+import { generateTags } from '@/ai/flows/generate-tags';
 
 type Category = {
   id: string;
@@ -82,6 +84,8 @@ export default function NewPostPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingMeta, setIsGeneratingMeta] = useState(false);
   const [isGeneratingKeyword, setIsGeneratingKeyword] = useState(false);
+  const [isGeneratingExcerpt, setIsGeneratingExcerpt] = useState(false);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
   const [shouldGenerateAudio, setShouldGenerateAudio] = useState(false);
 
   // State for new category dialog
@@ -377,6 +381,48 @@ export default function NewPostPage() {
       setIsGeneratingKeyword(false);
     }
   };
+
+  const handleGenerateExcerpt = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate an excerpt.',
+      });
+      return;
+    }
+    setIsGeneratingExcerpt(true);
+    try {
+      const result = await generateExcerpt({ title, content });
+      setExcerpt(result.excerpt);
+      toast({ title: 'Excerpt Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingExcerpt(false);
+    }
+  };
+
+  const handleGenerateTags = async () => {
+    if (!title || !content) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Content',
+        description: 'Please provide a title and content to generate tags.',
+      });
+      return;
+    }
+    setIsGeneratingTags(true);
+    try {
+      const result = await generateTags({ title, content });
+      setTags(prev => [...new Set([...prev, ...result.tags])]);
+      toast({ title: 'Tags Generated!' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Generation Failed', description: error.message });
+    } finally {
+      setIsGeneratingTags(false);
+    }
+  };
   
   const handleSubmit = (status: 'draft' | 'published') => {
     handleSave(status, true);
@@ -472,13 +518,12 @@ export default function NewPostPage() {
                         disabled={isSubmitting}
                     />
                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        onClick={() => processTags(newTag)} 
-                        disabled={isSubmitting}
-                        aria-label="Add tags"
+                        variant="outline"
+                        onClick={handleGenerateTags}
+                        disabled={isGeneratingTags || !title || !content}
+                        aria-label="Generate Tags"
                     >
-                        <PlusCircle className="h-4 w-4" />
+                        {isGeneratingTags ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4" />}
                     </Button>
                 </div>
                  <p className="text-xs text-muted-foreground">Separate tags with a comma or press Enter.</p>
@@ -603,6 +648,10 @@ export default function NewPostPage() {
                     placeholder="Write a brief excerpt..."
                     disabled={isSubmitting}
                 />
+                 <Button variant="outline" size="sm" onClick={handleGenerateExcerpt} disabled={isGeneratingExcerpt || !title || !content} className="w-fit mt-2">
+                    {isGeneratingExcerpt ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate
+                </Button>
             </CardContent>
           </Card>
             <Card>
