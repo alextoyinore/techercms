@@ -18,6 +18,7 @@ import { PublicAuthNav } from '../PublicAuthNav';
 import { SubscriptionPopup } from '@/components/SubscriptionPopup';
 import { ThemeLayout } from '../ThemeLayout';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 type Post = {
   id: string;
@@ -109,17 +110,26 @@ export function PublicHeader({ siteName, siteLogoUrl, pageTitle }: { siteName?: 
 export function PublicFooter({ siteName, siteDescription, companyName }: { siteName?: string, siteDescription?: string, companyName?: string }) {
     return (
         <footer className="py-12 px-6 border-t mt-16 bg-card">
-            <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-2">
-                    <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
-                    {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
-                    <p className="text-sm text-muted-foreground mt-2">&copy; {new Date().getFullYear()} {companyName || siteName} All rights reserved.</p>
+            <div className="container mx-auto space-y-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="lg:col-span-2">
+                        <p className="font-bold font-headline text-primary text-lg">{siteName || ''}</p>
+                        {siteDescription && <p className="text-sm text-muted-foreground mt-2">{siteDescription}</p>}
+                    </div>
+                     <div className="space-y-4">
+                        <WidgetArea areaName="Footer Column 1" />
+                    </div>
+                    <div className="space-y-4">
+                        <WidgetArea areaName="Footer Column 2" />
+                    </div>
                 </div>
-                 <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 1" />
-                </div>
-                <div className="space-y-4">
-                    <WidgetArea areaName="Footer Column 2" />
+                <Separator />
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                     <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {companyName || siteName} All rights reserved.</p>
+                    <div className="flex items-center gap-6">
+                        <Menu locationId="business-footer-1" className="flex items-center gap-4 text-sm" linkClassName="text-muted-foreground hover:text-primary"/>
+                        <Menu locationId="business-footer-2" className="flex items-center gap-4 text-sm" linkClassName="text-muted-foreground hover:text-primary"/>
+                    </div>
                 </div>
             </div>
         </footer>
@@ -196,7 +206,7 @@ export default function HomePage() {
     <ThemeLayout 
         HeaderComponent={PublicHeader} 
         FooterComponent={PublicFooter} 
-        className="text-foreground font-sans"
+        className="text-foreground"
     >
         {hasContent ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
