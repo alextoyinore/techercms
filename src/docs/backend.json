@@ -108,6 +108,13 @@
             "type": "boolean",
             "description": "Whether or not to display the title on the page.",
             "default": true
+        },
+        "disabledWidgetAreas": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "A list of widget area names that should be disabled for this page."
         }
       },
       "required": [
@@ -848,4 +855,6 @@
 }
 
     
+    
+
     

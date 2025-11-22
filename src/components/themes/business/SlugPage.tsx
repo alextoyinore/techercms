@@ -28,6 +28,7 @@ import { BreakingNewsIndicator } from '@/components/BreakingNewsIndicator';
 import { ChartWidget } from '@/components/widgets/ChartWidget';
 import { v4 as uuidv4 } from 'uuid';
 import { PostAuthorBio } from '../PostAuthorBio';
+import { cn } from '@/lib/utils';
 
 type Post = {
   id: string;
@@ -58,6 +59,7 @@ type Page = {
   createdAt: Timestamp;
   builderEnabled?: boolean;
   showTitle?: boolean;
+  disabledWidgetAreas?: string[];
 };
 
 type SiteSettings = {
@@ -253,6 +255,9 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
   const metaDescription = (item as Post)?.metaDescription || (item as Post)?.excerpt || settings?.siteDescription || '';
   const ogImage = item.featuredImageUrl || settings?.siteLogoUrl || '';
 
+  const disabledWidgetAreas = isPost ? [] : (item as Page).disabledWidgetAreas || [];
+  const isSidebarDisabled = disabledWidgetAreas.includes('Sidebar') || disabledWidgetAreas.includes('Page Sidebar');
+
   return (
     <>
       <Head>
@@ -269,8 +274,8 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
       <div className="font-sans">
           {isPost && <ReadingProgress targetRef={articleRef} />}
           <ThemeLayout HeaderComponent={() => <PublicHeader siteName={settings?.siteName} siteLogoUrl={settings?.siteLogoUrl} pageTitle={displayTitleInHeader ? item.title : undefined} />} FooterComponent={() => <PublicFooter siteName={settings?.siteName} />} pageId={pageId}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto">
-              <div className="lg:col-span-9">
+          <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-8 lg:max-w-7xl mx-auto", isSidebarDisabled && "lg:grid-cols-1")}>
+              <div className={cn("lg:col-span-9", isSidebarDisabled && "lg:col-span-1")}>
                   <article className="max-w-none" ref={articleRef}>
                   
                   {isPost ? (
@@ -338,13 +343,17 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
 
                   </article>
               </div>
-              <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
-                  <WidgetArea areaName="Sidebar" />
-                  <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
-              </aside>
+              {!isSidebarDisabled && (
+                <aside className="lg:col-span-3 space-y-8 lg:sticky lg:top-24 self-start">
+                    <WidgetArea areaName="Sidebar" />
+                    <WidgetArea areaName="Page Sidebar" isPageSpecific={!!pageId} pageId={pageId} />
+                </aside>
+              )}
           </div>
         </ThemeLayout>
       </div>
     </>
   );
 }
+
+    

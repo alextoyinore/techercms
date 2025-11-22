@@ -48,6 +48,7 @@ type Page = {
     updatedAt: Timestamp;
     builderEnabled?: boolean;
     showTitle?: boolean;
+    disabledWidgetAreas?: string[];
 };
 
 const pageWidgetAreas = [
@@ -75,6 +76,7 @@ export default function EditPagePage() {
   const [featuredImageCaption, setFeaturedImageCaption] = useState('');
   const [builderEnabled, setBuilderEnabled] = useState(false);
   const [showTitle, setShowTitle] = useState(true);
+  const [disabledWidgetAreas, setDisabledWidgetAreas] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitializingWidgets, setIsInitializingWidgets] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'draft' | 'published' | null>(null);
@@ -110,6 +112,7 @@ export default function EditPagePage() {
       setFeaturedImageCaption(page.featuredImageCaption || '');
       setBuilderEnabled(page.builderEnabled || false);
       setShowTitle(page.showTitle === undefined ? true : page.showTitle);
+      setDisabledWidgetAreas(page.disabledWidgetAreas || []);
     }
   }, [page]);
 
@@ -285,6 +288,7 @@ export default function EditPagePage() {
         status,
         builderEnabled,
         showTitle,
+        disabledWidgetAreas,
         authorId: auth.currentUser.uid,
         updatedAt: serverTimestamp(),
     };
@@ -340,6 +344,17 @@ export default function EditPagePage() {
     }
   };
   
+  const handleToggleWidgetArea = (areaName: string, isEnabled: boolean) => {
+    const newDisabledAreas = isEnabled
+        ? disabledWidgetAreas.filter(name => name !== areaName)
+        : [...disabledWidgetAreas, areaName];
+    setDisabledWidgetAreas(newDisabledAreas);
+    // Auto-save this change
+    if (pageRef) {
+        setDocumentNonBlocking(pageRef, { disabledWidgetAreas: newDisabledAreas }, { merge: true });
+    }
+  };
+
   if (isLoadingPage || isLoadingAreas) {
     return <Loading />
   }
@@ -592,7 +607,27 @@ export default function EditPagePage() {
         </TabsContent>
         <TabsContent value="widgets">
             {hasInitializedWidgets ? (
-              <WidgetsPage pageId={pageId} />
+              <div className="grid gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Visible Widget Areas</CardTitle>
+                        <CardDescription>Toggle which widget areas are visible on this specific page.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                        {pageWidgetAreas.map(area => (
+                            <div key={area.name} className="flex items-center justify-between">
+                                <Label htmlFor={`toggle-${area.name}`} className="font-medium">{area.name}</Label>
+                                <Switch
+                                    id={`toggle-${area.name}`}
+                                    checked={!disabledWidgetAreas.includes(area.name)}
+                                    onCheckedChange={(checked) => handleToggleWidgetArea(area.name, checked)}
+                                />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+                <WidgetsPage pageId={pageId} />
+              </div>
             ) : (
               <Card>
                 <CardHeader>
@@ -617,5 +652,7 @@ export default function EditPagePage() {
     </div>
   );
 }
+
+    
 
     

@@ -1,7 +1,7 @@
 
 'use client';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { useMemo } from 'react';
 import { RecentPostsWidget } from '@/components/widgets/RecentPostsWidget';
 import { CategoriesListWidget } from '@/components/widgets/CategoriesListWidget';
@@ -73,8 +73,19 @@ type WidgetArea = {
     pageId?: string;
 }
 
+type Page = {
+    id: string;
+    disabledWidgetAreas?: string[];
+}
+
 export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaName: string, isPageSpecific?: boolean, pageId?: string }) {
     const firestore = useFirestore();
+
+    const pageRef = useMemoFirebase(() => {
+        if(!firestore || !pageId) return null;
+        return doc(firestore, 'pages', pageId);
+    }, [firestore, pageId]);
+    const { data: pageData } = useDoc<Page>(pageRef);
 
     const widgetAreasQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -106,8 +117,10 @@ export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaN
         if (!widgetInstances) return [];
         return [...widgetInstances].sort((a, b) => a.order - b.order);
     }, [widgetInstances]);
+    
+    const isDisabled = pageData?.disabledWidgetAreas?.includes(areaName);
 
-    if (isLoadingAreas || isLoadingInstances) {
+    if (isDisabled || isLoadingAreas || isLoadingInstances) {
         return null;
     }
 
@@ -136,3 +149,5 @@ export function WidgetArea({ areaName, isPageSpecific = false, pageId }: { areaN
         </>
     );
 }
+
+    
