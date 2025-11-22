@@ -74,7 +74,6 @@ export default function DashboardLayout({
   }, []);
 
   const isAccessingAdminPage = adminOnlyPaths.some(p => pathname.startsWith(p));
-  const isNewPostPage = pathname === '/dashboard/posts/new';
 
   // Primary loading state check
   const isLoading = authLoading || roleLoading || !isClient;
@@ -129,9 +128,7 @@ export default function DashboardLayout({
                     <Link href="/dashboard/posts/new">
                         <PlusCircle className="h-4 w-4" />
                         <span className="hidden sm:inline ml-2">New Post</span>
-                        {isNewPostPage && (
-                          <span className="hidden sm:inline ml-2 text-muted-foreground">({postsTodayCount} today)</span>
-                        )}
+                        <span className="hidden sm:inline ml-2 text-muted-foreground">({postsTodayCount} today)</span>
                     </Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
