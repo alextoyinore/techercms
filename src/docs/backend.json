@@ -241,6 +241,13 @@
           "type": "string",
           "description": "The ID of the user who authored the post."
         },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of user IDs who have contributed to the post."
+        },
         "categoryIds": {
           "type": "array",
           "items": {

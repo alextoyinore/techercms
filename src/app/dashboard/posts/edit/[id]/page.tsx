@@ -30,7 +30,7 @@ import { ArrowLeft, PlusCircle, Loader2, X, Upload, Library, Sparkles, Megaphone
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useAuth, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, Timestamp, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, Timestamp, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import RichTextEditor from '@/components/rich-text-editor';
@@ -71,6 +71,7 @@ type Post = {
     status: 'draft' | 'published' | 'archived';
     isBreaking?: boolean;
     authorId: string;
+    contributors?: string[];
     categoryIds: string[];
     tagIds: string[];
     createdAt: Timestamp;
@@ -154,7 +155,7 @@ export default function EditPostPage() {
 
   const filteredCategories = useMemo(() => {
     if (!sortedCategories) return [];
-    if (!categorySearch) return sortedCategories;
+    if (!categorySearch) return [];
     return sortedCategories.filter(category =>
         category.name.toLowerCase().includes(categorySearch.toLowerCase())
     );
@@ -365,7 +366,7 @@ export default function EditPostPage() {
         return;
     }
 
-    if (!firestore || !auth?.currentUser || !postRef) {
+    if (!firestore || !auth?.currentUser || !postRef || !post) {
         toast({
             variant: "destructive",
             title: "Error",
@@ -469,14 +470,15 @@ export default function EditPostPage() {
         audioUrl: finalAudioUrl,
         status,
         isBreaking,
-        authorId: auth.currentUser.uid,
         categoryIds: selectedCategories,
         tagIds: finalTags, 
         updatedAt: serverTimestamp(),
     };
     
-    if (!post?.authorId) {
-        updatedPost.authorId = auth.currentUser.uid;
+    // Keep original author, add current user as contributor if different
+    const currentUser = auth.currentUser;
+    if (currentUser.uid !== post.authorId) {
+        updatedPost.contributors = arrayUnion(currentUser.uid) as any;
     }
 
 

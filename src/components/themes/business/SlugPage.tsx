@@ -29,6 +29,7 @@ import { ChartWidget } from '@/components/widgets/ChartWidget';
 import { v4 as uuidv4 } from 'uuid';
 import { PostAuthorBio } from '../PostAuthorBio';
 import { cn } from '@/lib/utils';
+import { PostContributors } from '../PostContributors';
 
 type Post = {
   id: string;
@@ -36,6 +37,7 @@ type Post = {
   content: string;
   slug: string;
   authorId: string;
+  contributors?: string[];
   featuredImageUrl: string;
   featuredImageCaption?: string;
   createdAt: Timestamp;
@@ -320,6 +322,10 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
                         <ShareButtons title={item.title} postId={item.id}/>
                         
                         <PostAuthorBio authorId={item.authorId} />
+                        
+                        {(item as Post).contributors && (item as Post).contributors!.length > 0 && (
+                            <PostContributors contributorIds={(item as Post).contributors!} />
+                        )}
 
                         {isPost && (item as Post).tagIds && (item as Post).tagIds!.length > 0 && (
                             <footer className="mt-12 pt-8 border-t">
