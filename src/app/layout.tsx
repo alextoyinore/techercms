@@ -20,11 +20,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: '95News',
     description: 'Breaking News, World News, Nigerian News, African News, Europe, Asia, North America, South America, US, Climate, Art, Culture, Music, Nigerian Music, Sports, Science, Tech, Innovation, Business, Markets, Photos, Video, Audio',
-    url: 'https://www.95news.com.ng',
+    url: 'https://95news.com.ng',
     siteName: '95News',
     images: [
       {
-        url: 'https://www.95news.com.ng/og-image.png', // IMPORTANT: Create this image in your public folder
+        url: 'https://95news.com.ng/og-image.png', // IMPORTANT: Create this image in your public folder
         width: 1200,
         height: 630,
       },
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '95News',
     description: 'Breaking News, World News, Nigerian News, African News, Europe, Asia, North America, South America, US, Climate, Art, Culture, Music, Nigerian Music, Sports, Science, Tech, Innovation, Business, Markets, Photos, Video, Audio',
-    images: ['https://www.95news.com.ng/og-image.png'], // IMPORTANT: Create this image in your public folder
+    images: ['https://95news.com.ng/og-image.png'], // IMPORTANT: Create this image in your public folder
   },
 };
 
