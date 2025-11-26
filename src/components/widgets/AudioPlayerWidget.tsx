@@ -1,14 +1,13 @@
 
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, orderBy, Timestamp, getDocs, limit, startAfter, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, SkipBack, SkipForward, Loader2, ListMusic } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PostAuthor } from '../themes/PostAuthor';
-import Link from 'next/link';
 
 type Post = {
     id: string;
@@ -24,14 +23,21 @@ type AudioPlayerWidgetProps = {
     tag?: string;
 };
 
+const POSTS_PER_PAGE = 10;
+
 export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' }: AudioPlayerWidgetProps) {
     const firestore = useFirestore();
     const [playlist, setPlaylist] = useState<Post[]>([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+    
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
 
-    const postsQuery = useMemoFirebase(() => {
+    const baseQuery = useMemo(() => {
         if (!firestore) return null;
         return query(
             collection(firestore, 'posts'),
@@ -41,19 +47,51 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
         );
     }, [firestore, tag]);
 
-    const { data: posts, isLoading } = useCollection<Post>(postsQuery);
+    const fetchPosts = async (lastVisibleDoc: QueryDocumentSnapshot | null = null) => {
+        if (!baseQuery) return;
 
-    useEffect(() => {
-        if (posts) {
-            setPlaylist(posts.filter(p => p.audioUrl));
+        const isInitialFetch = !lastVisibleDoc;
+        if(isInitialFetch) setIsLoading(true);
+        else setIsLoadingMore(true);
+
+        let q = query(baseQuery, limit(POSTS_PER_PAGE));
+
+        if (lastVisibleDoc) {
+            q = query(q, startAfter(lastVisibleDoc));
         }
-    }, [posts]);
+        
+        try {
+            const snapshot = await getDocs(q);
+            const newPosts = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Post))
+                .filter(p => p.audioUrl);
+            
+            setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
+            setHasMore(snapshot.docs.length === POSTS_PER_PAGE);
+
+            if (isInitialFetch) {
+                setPlaylist(newPosts);
+            } else {
+                setPlaylist(prev => [...prev, ...newPosts]);
+            }
+        } catch (error) {
+            console.error("Error fetching audio posts:", error);
+        } finally {
+             if(isInitialFetch) setIsLoading(false);
+             else setIsLoadingMore(false);
+        }
+    };
     
     useEffect(() => {
-        if (audioRef.current && playlist.length > 0) {
+        fetchPosts();
+    }, [baseQuery]);
+
+    
+    useEffect(() => {
+        if (audioRef.current && playlist.length > 0 && playlist[currentTrackIndex]) {
             audioRef.current.src = playlist[currentTrackIndex].audioUrl;
             if (isPlaying) {
-                audioRef.current.play();
+                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
             }
         }
     }, [currentTrackIndex, playlist, isPlaying]);
@@ -63,7 +101,7 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
         if (isPlaying) {
             audioRef.current.pause();
         } else {
-            audioRef.current.play();
+            audioRef.current.play().catch(e => console.error("Audio play failed:", e));
         }
         setIsPlaying(!isPlaying);
     };
@@ -101,8 +139,11 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
     if (playlist.length === 0) {
         return (
              <Card>
-                <CardContent className="p-4 text-center text-muted-foreground">
-                    <p>No audio articles found.</p>
+                <CardHeader>
+                    <CardTitle className="font-headline text-lg">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground text-center py-4">No audio articles found.</p>
                 </CardContent>
             </Card>
         )
@@ -129,9 +170,16 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
                 </div>
             </div>
             <CardContent className="p-0">
-                <div className="p-2 border-b flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                   <ListMusic className="h-4 w-4" />
-                   Up Next
+                <div className="p-2 border-b flex items-center justify-between text-sm font-semibold text-muted-foreground">
+                   <div className="flex items-center gap-2">
+                     <ListMusic className="h-4 w-4" />
+                     Up Next
+                   </div>
+                   {hasMore && (
+                       <Button variant="ghost" size="sm" onClick={() => fetchPosts(lastDoc)} disabled={isLoadingMore}>
+                           {isLoadingMore ? <Loader2 className="h-4 w-4 animate-spin"/> : "Load More"}
+                       </Button>
+                   )}
                 </div>
                 <ScrollArea className="h-64">
                     {playlist.map((track, index) => (
