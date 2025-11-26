@@ -75,6 +75,20 @@ type SiteSettings = {
 const parserOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
         if (domNode instanceof Element && domNode.attribs) {
+            if (domNode.name === 'iframe') {
+                return (
+                    <div className="aspect-video w-full my-6">
+                        <iframe
+                            className="w-full h-full"
+                            src={domNode.attribs.src}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="Embedded content"
+                        ></iframe>
+                    </div>
+                );
+            }
             if (domNode.attribs['data-type'] === 'related-post') {
                 const postId = domNode.attribs['data-id'];
                 if (postId) {
@@ -361,5 +375,3 @@ export default function SlugPage({ preloadedItem }: { preloadedItem?: Page | Pos
     </>
   );
 }
-
-    

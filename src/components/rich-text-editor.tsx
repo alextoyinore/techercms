@@ -4,6 +4,7 @@
 import { useEditor, EditorContent, Node } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Iframe from '@tiptap/extension-iframe';
 import TextAlign from '@tiptap/extension-text-align';
 import Table from '@tiptap/extension-table';
 import TableCell from '@tiptap/extension-table-cell';
@@ -44,6 +45,7 @@ import {
   Link as LinkIcon,
   Link2,
   BarChart,
+  Youtube,
 } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
@@ -287,16 +289,7 @@ const RichTextEditor = ({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        orderedList: {
-          HTMLAttributes: {
-            class: 'list-decimal pl-4',
-          },
-        },
-        bulletList: {
-          HTMLAttributes: {
-            class: 'list-disc pl-4',
-          },
-        },
+        // Other options
       }),
       Image,
       TextAlign.configure({
@@ -313,6 +306,7 @@ const RichTextEditor = ({
       Link.configure({
         openOnClick: false,
       }),
+      Iframe,
       RelatedPostNode,
       ChartNode,
     ],
@@ -343,6 +337,14 @@ const RichTextEditor = ({
     if (url && editor) {
         editor.chain().focus().insertContent(`<figure><img src="${url}"><figcaption></figcaption></figure>`).run();
         setIsMediaLibraryOpen(false);
+    }
+  }, [editor]);
+
+  const addIframe = useCallback(() => {
+    if (!editor) return;
+    const url = window.prompt('Enter Iframe URL');
+    if (url) {
+      editor.chain().focus().setIframe({ src: url }).run();
     }
   }, [editor]);
 
@@ -563,6 +565,9 @@ const RichTextEditor = ({
                 <ImageIcon className="h-4 w-4" />
             </Toggle>
         </MediaLibrary>
+        <Toggle size="sm" onClick={addIframe} disabled={disabled}>
+          <Youtube className="h-4 w-4" />
+        </Toggle>
         <Toggle
           size="sm"
           pressed={editor.isActive('codeBlock')}
