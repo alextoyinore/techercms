@@ -4,7 +4,6 @@
 import { useEditor, EditorContent, Node } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Iframe from '@tiptap/extension-iframe';
 import TextAlign from '@tiptap/extension-text-align';
 import Table from '@tiptap/extension-table';
 import TableCell from '@tiptap/extension-table-cell';
@@ -306,7 +305,6 @@ const RichTextEditor = ({
       Link.configure({
         openOnClick: false,
       }),
-      Iframe,
       RelatedPostNode,
       ChartNode,
     ],
@@ -337,14 +335,6 @@ const RichTextEditor = ({
     if (url && editor) {
         editor.chain().focus().insertContent(`<figure><img src="${url}"><figcaption></figcaption></figure>`).run();
         setIsMediaLibraryOpen(false);
-    }
-  }, [editor]);
-
-  const addIframe = useCallback(() => {
-    if (!editor) return;
-    const url = window.prompt('Enter Iframe URL');
-    if (url) {
-      editor.chain().focus().setIframe({ src: url }).run();
     }
   }, [editor]);
 
@@ -565,9 +555,6 @@ const RichTextEditor = ({
                 <ImageIcon className="h-4 w-4" />
             </Toggle>
         </MediaLibrary>
-        <Toggle size="sm" onClick={addIframe} disabled={disabled}>
-          <Youtube className="h-4 w-4" />
-        </Toggle>
         <Toggle
           size="sm"
           pressed={editor.isActive('codeBlock')}
