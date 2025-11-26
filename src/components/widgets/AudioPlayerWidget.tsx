@@ -1,9 +1,9 @@
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useFirestore } from '@/firebase';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, Timestamp, getDocs, limit, startAfter, type QueryDocumentSnapshot } from 'firebase/firestore';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, SkipBack, SkipForward, Loader2, ListMusic } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,7 +37,7 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
     const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
 
-    const baseQuery = useMemo(() => {
+    const baseQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(
             collection(firestore, 'posts'),
@@ -84,6 +84,7 @@ export function AudioPlayerWidget({ title = 'Listen to Articles', tag = 'audio' 
     
     useEffect(() => {
         fetchPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [baseQuery]);
 
     
