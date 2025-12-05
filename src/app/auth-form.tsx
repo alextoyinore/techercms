@@ -101,7 +101,7 @@ export function AuthForm() {
             bio: '',
             role: 'subscriber',
         };
-        // Save the new user's profile to Firestore
+        // Save the new user's profile to Firestore before redirecting
         await setDocumentNonBlocking(userDocRef, newUserProfile, { merge: true });
         router.push('/');
     } else {
@@ -118,11 +118,12 @@ export function AuthForm() {
                     router.push('/');
                 }
             } else {
+                // If user document doesn't exist for some reason, redirect to home
                 router.push('/');
             }
         } catch (error) {
             console.error("Error fetching user role:", error);
-            router.push('/'); // Fallback on error
+            router.push('/'); // Fallback to home on any error
         }
     }
   };
