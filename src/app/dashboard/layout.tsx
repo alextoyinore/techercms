@@ -89,7 +89,7 @@ export default function DashboardLayout({
       return;
     }
     
-    // If user data is loaded, check roles
+    // If user data is loaded (or has failed to load), check roles
     if (!roleLoading) {
       // If user has no authorized role, send them home
       if (!userRole || !authorizedRolesForDashboard.includes(userRole)) {
