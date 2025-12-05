@@ -19,7 +19,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Eye, EyeOff, Gem, Loader2 } from 'lucide-react';
-import { useAuth, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { useAuth, useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,16 +86,25 @@ export function AuthForm() {
   const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
   const onUserAuthenticated = async (user: User, isNewUser: boolean) => {
+    if (!firestore) {
+      router.push('/');
+      return;
+    }
+    
     if (isNewUser) {
-        // For new users, always redirect to home
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const newUserProfile = {
+            id: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email?.split('@')[0],
+            photoURL: user.photoURL,
+            bio: '',
+            role: 'subscriber',
+        };
+        // Save the new user's profile to Firestore
+        await setDocumentNonBlocking(userDocRef, newUserProfile, { merge: true });
         router.push('/');
     } else {
-        // For existing users, check their role
-        if (!firestore) {
-            router.push('/'); // Fallback if firestore is not available
-            return;
-        }
-
         try {
             const userDocRef = doc(firestore, 'users', user.uid);
             const userDoc = await (await import('firebase/firestore')).getDoc(userDocRef);
@@ -109,7 +118,6 @@ export function AuthForm() {
                     router.push('/');
                 }
             } else {
-                // If user document doesn't exist for an existing auth user, redirect to home
                 router.push('/');
             }
         } catch (error) {
