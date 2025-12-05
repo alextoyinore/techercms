@@ -26,9 +26,10 @@ import { Separator } from '@/components/ui/separator';
 
 const provider = new GoogleAuthProvider();
 
-function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => void, onSuccess: (user: User) => void }) {
+function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => void, onSuccess: (user: User, isNewUser: boolean) => void }) {
   const auth = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const firestore = useFirestore();
 
   const handleSignIn = async () => {
     if (!auth) return;
@@ -36,7 +37,11 @@ function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => voi
     setIsSigningIn(true);
     try {
       const result = await signInWithPopup(auth, provider);
-      onSuccess(result.user);
+      // Check if user is new by trying to get their document
+      const userDocRef = doc(firestore, 'users', result.user.uid);
+      const userDoc = await (await import('firebase/firestore')).getDoc(userDocRef);
+      const isNewUser = !userDoc.exists();
+      onSuccess(result.user, isNewUser);
     } catch (error) {
       console.error(error);
     } finally {
@@ -79,8 +84,12 @@ export function AuthForm() {
   }, [firestore]);
   const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
-  const onUserAuthenticated = (user: User) => {
-    router.push('/dashboard');
+  const onUserAuthenticated = (user: User, isNewUser: boolean) => {
+    if (isNewUser) {
+        router.push('/');
+    } else {
+        router.push('/dashboard');
+    }
   };
 
   const handleEmailAuth = async () => {
@@ -91,10 +100,11 @@ export function AuthForm() {
       let userCredential;
       if (isRegister) {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        onUserAuthenticated(userCredential.user, true); // New user
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
+        onUserAuthenticated(userCredential.user, false); // Existing user
       }
-      onUserAuthenticated(userCredential.user);
     } catch (error: any) {
       setAuthError(error.message);
       console.error(error);
