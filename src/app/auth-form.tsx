@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
+  getDoc,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
@@ -32,7 +33,7 @@ function GoogleSignInButton({ onAuthStart, onSuccess }: { onAuthStart: () => voi
   const firestore = useFirestore();
 
   const handleSignIn = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     onAuthStart();
     setIsSigningIn(true);
     try {
@@ -84,11 +85,37 @@ export function AuthForm() {
   }, [firestore]);
   const { data: settings } = useDoc<SiteSettings>(settingsRef);
 
-  const onUserAuthenticated = (user: User, isNewUser: boolean) => {
+  const onUserAuthenticated = async (user: User, isNewUser: boolean) => {
     if (isNewUser) {
+        // For new users, always redirect to home
         router.push('/');
     } else {
-        router.push('/dashboard');
+        // For existing users, check their role
+        if (!firestore) {
+            router.push('/'); // Fallback if firestore is not available
+            return;
+        }
+
+        try {
+            const userDocRef = doc(firestore, 'users', user.uid);
+            const userDoc = await (await import('firebase/firestore')).getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const role = userData.role;
+                if (role === 'superuser' || role === 'editor' || role === 'writer') {
+                    router.push('/dashboard');
+                } else {
+                    router.push('/');
+                }
+            } else {
+                // If user document doesn't exist for an existing auth user, redirect to home
+                router.push('/');
+            }
+        } catch (error) {
+            console.error("Error fetching user role:", error);
+            router.push('/'); // Fallback on error
+        }
     }
   };
 
@@ -100,10 +127,10 @@ export function AuthForm() {
       let userCredential;
       if (isRegister) {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        onUserAuthenticated(userCredential.user, true); // New user
+        await onUserAuthenticated(userCredential.user, true); // New user
       } else {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
-        onUserAuthenticated(userCredential.user, false); // Existing user
+        await onUserAuthenticated(userCredential.user, false); // Existing user
       }
     } catch (error: any) {
       setAuthError(error.message);
