@@ -34,6 +34,8 @@ const adminOnlyPaths = [
   '/dashboard/themes',
 ];
 
+const authorizedRolesForDashboard = ['superuser', 'editor', 'writer'];
+
 export default function DashboardLayout({
   children,
 }: {
@@ -81,33 +83,36 @@ export default function DashboardLayout({
   useEffect(() => {
     if (isLoading) return;
 
+    // If there's no user, redirect to login
     if (!user) {
-      router.push('/');
+      router.push('/login');
       return;
     }
     
-    // If user data is loaded and they are trying to access an admin page without the superuser role
-    if (userData && isAccessingAdminPage && userRole !== 'superuser') {
+    // If user data is loaded, check roles
+    if (!roleLoading) {
+      // If user has no authorized role, send them home
+      if (!userRole || !authorizedRolesForDashboard.includes(userRole)) {
+        router.push('/');
+        return;
+      }
+      
+      // If user is not a superuser but is trying to access an admin-only page
+      if (isAccessingAdminPage && userRole !== 'superuser') {
         router.push('/dashboard');
+      }
     }
-
-  }, [isLoading, user, userData, userRole, isAccessingAdminPage, router]);
+  }, [isLoading, user, roleLoading, userRole, isAccessingAdminPage, router]);
 
 
   if (isLoading) {
     return <Loading />;
   }
   
-  // If user is not authenticated after loading, they will be redirected by the effect above.
-  // Render loading to prevent flashing content during redirect.
-  if (!user) {
+  // If user is not authenticated or authorized after loading, they will be redirected by the effect.
+  // Render loading to prevent flashing content during the redirect.
+  if (!user || !userRole || !authorizedRolesForDashboard.includes(userRole)) {
      return <Loading />;
-  }
-  
-  // If the user's role is loaded, but they are not a superuser and are trying to access an admin page
-  if (userData && isAccessingAdminPage && userRole !== 'superuser') {
-    // The redirect has been initiated. Show a loading screen to prevent flashing the unauthorized page content.
-    return <Loading />;
   }
   
   if (authError) {
